@@ -1,0 +1,34 @@
+{
+  "bia": {
+    "nome": "Distillati bianchi",
+    "struttura": "sour 2 : 0,75 : 0,75 oppure highball 1 : 3"
+  },
+  "inv": {
+    "nome": "Distillati invecchiati",
+    "struttura": "stirred in stile Old Fashioned, o Manhattan 2 : 1 col vermouth"
+  },
+  "liq": {
+    "nome": "Liquori",
+    "struttura": "modificatore da 15–20 ml in un sour o in uno stirred"
+  },
+  "ama": {
+    "nome": "Amari e bitter",
+    "struttura": "stirred con vermouth (stile Negroni) o highball con soda"
+  },
+  "ver": {
+    "nome": "Vermouth e quinquina",
+    "struttura": "stirred 2 : 1 o long drink con soda e ghiaccio"
+  },
+  "vin": {
+    "nome": "Vini e fortificati",
+    "struttura": "spritz, cobbler o come modificatore in uno stirred"
+  },
+  "bir": {
+    "nome": "Birre e sidro",
+    "struttura": "long drink: 30 ml di base e colmato con la birra"
+  },
+  "sak": {
+    "nome": "Sake e bevande di riso",
+    "struttura": "highball delicato o stirred leggero"
+  }
+}

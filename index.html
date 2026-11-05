@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Flavour Lab</title>
+  <meta name="description" content="Profili aromatici degli alimenti, metodo di abbinamento e generatore di cocktail.">
+  <meta name="theme-color" content="#EEF0EC" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#121716" media="(prefers-color-scheme: dark)">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gloock&family=Hanken+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <h1 class="logo">Flavour Lab</h1>
+    <span class="logo-sub" id="stats">Profili aromatici e abbinamenti per la miscelazione</span>
+  </header>
+
+  <nav class="tabbar" id="tabbar" role="tablist" aria-label="Sezioni">
+    <button type="button" role="tab" id="tb-ruota" aria-controls="tab-ruota" aria-selected="true">Ruota e abbinamenti</button>
+    <button type="button" role="tab" id="tb-verifica" aria-controls="tab-verifica" aria-selected="false" tabindex="-1">Pairing Studio</button>
+    <button type="button" role="tab" id="tb-cocktail" aria-controls="tab-cocktail" aria-selected="false" tabindex="-1">Cocktail creator</button>
+  </nav>
+
+  <div id="tab-ruota" role="tabpanel" aria-labelledby="tb-ruota" class="tabpanel">
+    <div class="intro">
+      <div class="intro-t"><h2>Ruota degli abbinamenti</h2>
+        <p>Scegli un alimento. Al centro trovi i suoi cinque gusti, intorno gli alimenti con cui si sposa (linea piena se per concordanza, tratteggiata se per contrasto) e all'esterno gli alcolici adatti. Passa sopra un nodo per leggere il motivo, cliccalo per aprirlo.</p></div>
+      <div class="tools">
+        <div id="ruotaTools" class="tools">
+          <div class="seg" role="group" aria-label="Vista della ruota">
+            <button type="button" id="mEgo" aria-pressed="true">Abbinamenti</button>
+            <button type="button" id="mBrowse" aria-pressed="false">Esplora per gusto</button>
+          </div>
+          <button type="button" class="btn" id="rand">A caso</button>
+        </div>
+      </div>
+    </div>
+
+  <div class="main">
+    <section class="panel" aria-label="Ruota">
+      <div class="centerpick">
+        <label for="q-main" class="eyebrow">Al centro della ruota</label>
+        <div class="searchbox"><svg class="sicon" viewBox="0 0 20 20" aria-hidden="true"><circle cx="8.5" cy="8.5" r="5.5" style="fill:none;stroke:currentColor;stroke-width:2"/><path d="M13 13l4.5 4.5" style="stroke:currentColor;stroke-width:2;stroke-linecap:round"/></svg><div class="combo" id="mainSearch"></div><kbd title="Premi / per cercare">/</kbd></div>
+      </div>
+      <div class="wheel-head">
+        <span class="eyebrow" id="wheelCap">Gusto · alimento · abbinamenti · alcolici</span>
+        <span class="tiny muted" id="wheelHint">Passa sopra un nodo per il motivo, clicca per aprirlo.</span>
+      </div>
+      <svg id="wheel" viewBox="-520 -520 1040 1040" role="img" aria-label="Ruota degli abbinamenti"></svg>
+      <div class="legend" id="legend"></div>
+    </section>
+
+    <aside class="panel profile" id="profile" aria-label="Profilo aromatico"></aside>
+  </div>
+
+  <section id="pairs" aria-label="Abbinamenti alimentari">
+    <div class="sec-head">
+      <div><span class="eyebrow">Abbinamenti alimentari</span><h2 id="pairsTitle">Con cosa si sposa</h2></div>
+      <div class="seg" role="group" aria-label="Filtra per tipo">
+        <button type="button" data-f="all" aria-pressed="true">Tutti</button>
+        <button type="button" data-f="concordanza" aria-pressed="false">Concordanza</button>
+        <button type="button" data-f="contrasto" aria-pressed="false">Contrasto</button>
+      </div>
+    </div>
+    <div class="grid" id="pairGrid"></div>
+  </section>
+
+  </div>
+
+  <div id="tab-verifica" role="tabpanel" aria-labelledby="tb-verifica" class="tabpanel" hidden>
+    <div class="intro"><div class="intro-t"><h2>Pairing Studio</h2>
+      <p>Metti alla prova due o tre ingredienti, anche un alcolico. Il punteggio su 30 somma sei lenti da 0 a 5. Con due ingredienti scegli una lente (piramide, equilibrio, intensità o anello debole) e ti consiglio il terzo che la migliora; con tre vedi il triangolo, i ruoli e le dosi. Più sotto trovi come ragiona il metodo.</p></div></div>
+  <section id="check" aria-label="Verifica una coppia">
+    <div class="sec-head">
+      <div><span class="eyebrow">Compatibilità</span><h3 class="sec-t">Coppia o trio</h3></div>
+    </div>
+    <div class="check">
+      <div class="panel pick">
+        <label>Ingrediente A<div class="combo" id="cA"></div></label>
+        <label>Ingrediente B (anche un alcolico)<div class="combo" id="cB"></div></label>
+        <label>Ingrediente C<span class="cwrap"><div class="combo" id="cC"></div><button type="button" class="x" id="cClear" aria-label="Togli il terzo ingrediente" hidden>×</button></span></label>
+        <div id="lensPick" class="lenspick"></div>
+        <div id="thirdSug"></div>
+        <div id="checkSide"></div>
+      </div>
+      <div class="panel" id="checkOut"></div>
+    </div>
+  </section>
+
+  <section id="method" aria-label="Il metodo">
+    <div class="sec-head">
+      <div><span class="eyebrow">Come ragiona la ruota</span><h3 class="sec-t">Il metodo in breve</h3></div>
+    </div>
+    <div class="mstrip" id="lensCards"></div>
+  </section>
+  </div>
+
+  <div id="tab-cocktail" role="tabpanel" aria-labelledby="tb-cocktail" class="tabpanel" hidden>
+    <div class="intro"><div class="intro-t"><h2>Cocktail creator</h2>
+      <p>Inserisci da 1 a 5 ingredienti: ti suggerisco la base più vicina al loro profilo (un distillato, ma anche un bitter, un vermouth o un liquore), e puoi sceglierne un'altra. Poi scegli lo stile e ricevi le ricette complete: da bancone, da laboratorio e, quando la base è forte, a bassa gradazione.</p></div></div>
+    <div class="builder">
+      <section class="step" aria-labelledby="h-ing">
+        <header class="step-h"><span class="sn">1</span><h3 id="h-ing">Ingredienti</h3><span class="tiny muted" id="ckCount"></span></header>
+        <ul class="ings" id="ckIngs"></ul>
+        <div id="ckAddWrap"><div class="combo" id="ckAdd"></div></div>
+        <button type="button" class="link" id="ckFromWheel">Usa l'alimento aperto nella ruota e i suoi due abbinamenti migliori</button>
+        <div id="ckMix"></div>
+      </section>
+      <section class="step" aria-labelledby="h-base">
+        <header class="step-h"><span class="sn">2</span><h3 id="h-base">Base</h3><span class="tiny muted">per vicinanza aromatica e coerenza con lo stile</span></header>
+        <div id="ckBaseBox"></div>
+        <div class="force"><label class="tiny muted" for="ckBase">Oppure scegli tu</label><select id="ckBase" class="sel"></select><button type="button" class="link" id="ckReset" hidden>Torna al consigliato</button></div>
+      </section>
+      <section class="step wide" aria-labelledby="h-sty">
+        <header class="step-h"><span class="sn">3</span><h3 id="h-sty">Stile del drink</h3></header>
+        <div id="ckStyles" class="shelves"></div>
+      </section>
+    </div>
+    <section aria-label="Ricette"><div class="sec-head" style="margin-bottom:12px"><div><span class="eyebrow">Ricette</span><h2 id="ckVerTitle">Tre versioni, stessa idea</h2></div></div>
+    <div id="ckOut"></div></section>
+  </div>
+</div>
+<div id="tip" hidden></div>
+<script type="module" src="/src/main.js"></script>
+</body>
+</html>

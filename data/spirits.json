@@ -1,0 +1,1052 @@
+[
+  {
+    "nome": "Gin London Dry",
+    "esempi": "Tanqueray, Beefeater",
+    "gruppo": "bia",
+    "gusti": {"dolce": 0, "salato": 0, "acido": 0, "umami": 0, "amaro": 1},
+    "struttura": {"grassezza": 0, "piccantezza": 2, "astringenza": 0, "freschezza": 0},
+    "intensita": 3,
+    "origine": "N",
+    "aromi": {"ag": 3, "fl": 1, "er": 1, "sp": 2, "re": 5, "te": 1}
+  },
+  {
+    "nome": "Gin contemporaneo",
+    "esempi": "Hendrick's, Malfy",
+    "gruppo": "bia",
+    "gusti": {"dolce": 1, "salato": 0, "acido": 0, "umami": 0, "amaro": 1},
+    "struttura": {"grassezza": 0, "piccantezza": 2, "astringenza": 0, "freschezza": 0},
+    "intensita": 3,
+    "origine": "N",
+    "aromi": {"ag": 3, "fl": 3, "ve": 1, "er": 2, "re": 3}
+  },
+  {
+    "nome": "Gin Old Tom",
+    "esempi": "Hayman's, Ransom",
+    "gruppo": "bia",
+    "gusti": {"dolce": 3, "salato": 0, "acido": 0, "umami": 0, "amaro": 1},
+    "struttura": {"grassezza": 0, "piccantezza": 2, "astringenza": 0, "freschezza": 0},
+    "intensita": 3,
+    "origine": "N",
+    "aromi": {"ag": 2, "fl": 1, "sd": 2, "re": 4}
+  },
+  {
+    "nome": "Genever",
+    "esempi": "Bols",
+    "gruppo": "bia",
+    "gusti": {"dolce": 2, "salato": 0, "acido": 0, "umami": 0, "amaro": 1},
+    "struttura": {"grassezza": 0, "piccantezza": 2, "astringenza": 0, "freschezza": 0},
+    "intensita": 3,
+    "origine": "N",
+    "aromi": {"re": 3, "te": 1, "to": 3, "la": 1}
+  },
+  {
+    "nome": "Vodka",
+    "esempi": "neutra",
+    "gruppo": "bia",
+    "gusti": {"dolce": 1, "salato": 0, "acido": 0, "umami": 0, "amaro": 0},
+    "struttura": {"grassezza": 0, "piccantezza": 2, "astringenza": 0, "freschezza": 0},
+    "intensita": 1,
+    "origine": "N",
+    "aromi": {"to": 1, "la": 1}
+  },
+  {
+    "nome": "Rum bianco",
+    "esempi": "Plantation 3 Stars",
+    "gruppo": "bia",
+    "gusti": {"dolce": 2, "salato": 0, "acido": 0, "umami": 0, "amaro": 0},
+    "struttura": {"grassezza": 0, "piccantezza": 2, "astringenza": 0, "freschezza": 0},
+    "intensita": 2,
+    "origine": "T",
+    "aromi": {"ff": 1, "ft": 2, "to": 1, "la": 1}
+  },
+  {
+    "nome": "Rhum agricole",
+    "esempi": "Clément, Neisson",
+    "gruppo": "bia",
+    "gusti": {"dolce": 1, "salato": 0, "acido": 0, "umami": 0, "amaro": 1},
+    "struttura": {"grassezza": 0, "piccantezza": 2, "astringenza": 0, "freschezza": 0},
+    "intensita": 4,
+    "origine": "T",
+    "aromi": {"ft": 2, "ve": 4, "er": 1, "fu": 1}
+  },
+  {
+    "nome": "Rum giamaicano",
+    "esempi": "Hampden, Smith & Cross",
+    "gruppo": "inv",
+    "gusti": {"dolce": 2, "salato": 0, "acido": 0, "umami": 0, "amaro": 0},
+    "struttura": {"grassezza": 0, "piccantezza": 3, "astringenza": 0, "freschezza": 0},
+    "intensita": 5,
+    "origine": "T",
+    "aromi": {"ft": 5, "to": 2, "fu": 3}
+  },
+  {
+    "nome": "Batavia arrack",
+    "esempi": null,
+    "gruppo": "inv",
+    "gusti": {"dolce": 1, "salato": 0, "acido": 0, "umami": 0, "amaro": 1},
+    "struttura": {"grassezza": 0, "piccantezza": 2, "astringenza": 0, "freschezza": 0},
+    "intensita": 5,
+    "origine": "T",
+    "aromi": {"ft": 3, "te": 1, "af": 1, "fu": 4}
+  },
+  {
+    "nome": "Rum invecchiato",
+    "esempi": "Diplomático, El Dorado",
+    "gruppo": "inv",
+    "gusti": {"dolce": 3, "salato": 0, "acido": 0, "umami": 0, "amaro": 1},
+    "struttura": {"grassezza": 0, "piccantezza": 2, "astringenza": 1, "freschezza": 0},
+    "intensita": 4,
+    "origine": "T",
+    "aromi": {"ft": 2, "sd": 3, "te": 2, "to": 4}
+  },
+  {
+    "nome": "Cachaça",
+    "esempi": "prata",
+    "gruppo": "bia",
+    "gusti": {"dolce": 1, "salato": 0, "acido": 0, "umami": 0, "amaro": 0},
+    "struttura": {"grassezza": 0, "piccantezza": 2, "astringenza": 0, "freschezza": 0},
+    "intensita": 3,
+    "origine": "L",
+    "aromi": {"ft": 2, "ve": 3, "fe": 1}
+  },
+  {
+    "nome": "Tequila blanco",
+    "esempi": "100% agave",
+    "gruppo": "bia",
+    "gusti": {"dolce": 1, "salato": 0, "acido": 0, "umami": 0, "amaro": 1},
+    "struttura": {"grassezza": 0, "piccantezza": 2, "astringenza": 0, "freschezza": 0},
+    "intensita": 3,
+    "origine": "L",
+    "aromi": {"ag": 1, "ve": 4, "sp": 2, "te": 1, "mi": 1}
+  },
+  {
+    "nome": "Tequila añejo",
+    "esempi": "reposado e añejo",
+    "gruppo": "inv",
+    "gusti": {"dolce": 2, "salato": 0, "acido": 0, "umami": 0, "amaro": 1},
+    "struttura": {"grassezza": 0, "piccantezza": 2, "astringenza": 1, "freschezza": 0},
+    "intensita": 3,
+    "origine": "L",
+    "aromi": {"ve": 2, "sd": 3, "te": 2, "to": 2}
+  },
+  {
+    "nome": "Mezcal",
+    "esempi": "espadín",
+    "gruppo": "bia",
+    "gusti": {"dolce": 1, "salato": 0, "acido": 0, "umami": 0, "amaro": 1},
+    "struttura": {"grassezza": 0, "piccantezza": 3, "astringenza": 0, "freschezza": 0},
+    "intensita": 5,
+    "origine": "L",
+    "aromi": {"ve": 2, "te": 3, "af": 5, "fu": 1, "mi": 1}
+  },
+  {
+    "nome": "Pisco",
+    "esempi": "quebranta, italia",
+    "gruppo": "bia",
+    "gusti": {"dolce": 2, "salato": 0, "acido": 0, "umami": 0, "amaro": 0},
+    "struttura": {"grassezza": 0, "piccantezza": 2, "astringenza": 0, "freschezza": 0},
+    "intensita": 3,
+    "origine": "L",
+    "aromi": {"ff": 3, "fl": 4}
+  },
+  {
+    "nome": "Grappa",
+    "esempi": "giovane",
+    "gruppo": "bia",
+    "gusti": {"dolce": 1, "salato": 0, "acido": 0, "umami": 0, "amaro": 1},
+    "struttura": {"grassezza": 0, "piccantezza": 3, "astringenza": 0, "freschezza": 0},
+    "intensita": 3,
+    "origine": "M",
+    "aromi": {"ff": 2, "fl": 1, "ve": 3, "te": 1, "fu": 1}
+  },
+  {
+    "nome": "Eau-de-vie",
+    "esempi": "kirsch, williams",
+    "gruppo": "bia",
+    "gusti": {"dolce": 1, "salato": 0, "acido": 0, "umami": 0, "amaro": 0},
+    "struttura": {"grassezza": 0, "piccantezza": 3, "astringenza": 0, "freschezza": 0},
+    "intensita": 4,
+    "origine": "N",
+    "aromi": {"ff": 4, "sd": 1}
+  },
+  {
+    "nome": "Calvados",
+    "esempi": "Pays d'Auge",
+    "gruppo": "inv",
+    "gusti": {"dolce": 2, "salato": 0, "acido": 0, "umami": 0, "amaro": 0},
+    "struttura": {"grassezza": 0, "piccantezza": 2, "astringenza": 1, "freschezza": 0},
+    "intensita": 3,
+    "origine": "N",
+    "aromi": {"ff": 4, "te": 2, "to": 2, "ox": 1}
+  },
+  {
+    "nome": "Cognac",
+    "esempi": "VSOP",
+    "gruppo": "inv",
+    "gusti": {"dolce": 2, "salato": 0, "acido": 0, "umami": 0, "amaro": 0},
+    "struttura": {"grassezza": 0, "piccantezza": 2, "astringenza": 1, "freschezza": 0},
+    "intensita": 3,
+    "origine": "N",
+    "aromi": {"ft": 3, "fl": 2, "sd": 2, "te": 2, "ox": 1}
+  },
+  {
+    "nome": "Armagnac",
+    "esempi": null,
+    "gruppo": "inv",
+    "gusti": {"dolce": 2, "salato": 0, "acido": 0, "umami": 0, "amaro": 1},
+    "struttura": {"grassezza": 0, "piccantezza": 2, "astringenza": 2, "freschezza": 0},
+    "intensita": 4,
+    "origine": "N",
+    "aromi": {"ft": 3, "te": 3, "to": 3, "ox": 2}
+  },
+  {
+    "nome": "Brandy de Jerez",
+    "esempi": "solera",
+    "gruppo": "inv",
+    "gusti": {"dolce": 3, "salato": 0, "acido": 0, "umami": 0, "amaro": 1},
+    "struttura": {"grassezza": 0, "piccantezza": 2, "astringenza": 1, "freschezza": 0},
+    "intensita": 4,
+    "origine": "M",
+    "aromi": {"ft": 2, "sd": 1, "to": 3, "ox": 4}
+  },
+  {
+    "nome": "Bourbon",
+    "esempi": "Kentucky straight",
+    "gruppo": "inv",
+    "gusti": {"dolce": 3, "salato": 0, "acido": 0, "umami": 0, "amaro": 1},
+    "struttura": {"grassezza": 0, "piccantezza": 2, "astringenza": 2, "freschezza": 0},
+    "intensita": 4,
+    "origine": "L",
+    "aromi": {"ft": 1, "sd": 4, "te": 3, "to": 4}
+  },
+  {
+    "nome": "Rye whiskey",
+    "esempi": null,
+    "gruppo": "inv",
+    "gusti": {"dolce": 1, "salato": 0, "acido": 0, "umami": 0, "amaro": 2},
+    "struttura": {"grassezza": 0, "piccantezza": 2, "astringenza": 2, "freschezza": 0},
+    "intensita": 4,
+    "origine": "L",
+    "aromi": {"er": 1, "sp": 4, "te": 3, "to": 3}
+  },
+  {
+    "nome": "Scotch malt",
+    "esempi": "Speyside, Highland",
+    "gruppo": "inv",
+    "gusti": {"dolce": 2, "salato": 0, "acido": 0, "umami": 0, "amaro": 1},
+    "struttura": {"grassezza": 0, "piccantezza": 2, "astringenza": 1, "freschezza": 0},
+    "intensita": 3,
+    "origine": "N",
+    "aromi": {"ff": 3, "fl": 1, "te": 2, "to": 3, "la": 1}
+  },
+  {
+    "nome": "Irish whiskey",
+    "esempi": null,
+    "gruppo": "inv",
+    "gusti": {"dolce": 2, "salato": 0, "acido": 0, "umami": 0, "amaro": 1},
+    "struttura": {"grassezza": 0, "piccantezza": 1, "astringenza": 1, "freschezza": 0},
+    "intensita": 3,
+    "origine": "N",
+    "aromi": {"ff": 3, "fl": 1, "to": 2, "la": 2}
+  },
+  {
+    "nome": "Scotch torbato",
+    "esempi": "Islay",
+    "gruppo": "inv",
+    "gusti": {"dolce": 1, "salato": 0, "acido": 0, "umami": 0, "amaro": 2},
+    "struttura": {"grassezza": 0, "piccantezza": 2, "astringenza": 1, "freschezza": 0},
+    "intensita": 5,
+    "origine": "N",
+    "aromi": {"re": 1, "te": 1, "to": 2, "af": 5, "mi": 4}
+  },
+  {
+    "nome": "Whisky giapponese",
+    "esempi": "blended e malt",
+    "gruppo": "inv",
+    "gusti": {"dolce": 2, "salato": 0, "acido": 0, "umami": 0, "amaro": 1},
+    "struttura": {"grassezza": 0, "piccantezza": 1, "astringenza": 1, "freschezza": 0},
+    "intensita": 3,
+    "origine": "A",
+    "aromi": {"ff": 3, "fl": 2, "te": 3, "to": 2}
+  },
+  {
+    "nome": "Baijiu",
+    "esempi": "strong e sauce aroma",
+    "gruppo": "bia",
+    "gusti": {"dolce": 1, "salato": 0, "acido": 0, "umami": 0, "amaro": 1},
+    "struttura": {"grassezza": 0, "piccantezza": 4, "astringenza": 0, "freschezza": 0},
+    "intensita": 5,
+    "origine": "A",
+    "aromi": {"ft": 3, "fu": 4, "fe": 2}
+  },
+  {
+    "nome": "Shochu",
+    "esempi": "imo, mugi",
+    "gruppo": "bia",
+    "gusti": {"dolce": 1, "salato": 0, "acido": 0, "umami": 0, "amaro": 0},
+    "struttura": {"grassezza": 0, "piccantezza": 1, "astringenza": 0, "freschezza": 0},
+    "intensita": 2,
+    "origine": "A",
+    "aromi": {"ve": 1, "te": 2, "to": 1}
+  },
+  {
+    "nome": "Aquavit",
+    "esempi": null,
+    "gruppo": "bia",
+    "gusti": {"dolce": 1, "salato": 0, "acido": 0, "umami": 0, "amaro": 1},
+    "struttura": {"grassezza": 0, "piccantezza": 2, "astringenza": 0, "freschezza": 0},
+    "intensita": 3,
+    "origine": "N",
+    "aromi": {"er": 4, "sd": 3}
+  },
+  {
+    "nome": "Ouzo e raki",
+    "esempi": "ouzo, rakı, arak",
+    "gruppo": "bia",
+    "gusti": {"dolce": 1, "salato": 0, "acido": 0, "umami": 0, "amaro": 1},
+    "struttura": {"grassezza": 0, "piccantezza": 2, "astringenza": 0, "freschezza": 1},
+    "intensita": 4,
+    "origine": "M",
+    "aromi": {"er": 1, "sd": 5}
+  },
+  {
+    "nome": "Sotol",
+    "esempi": null,
+    "gruppo": "bia",
+    "gusti": {"dolce": 1, "salato": 0, "acido": 0, "umami": 0, "amaro": 1},
+    "struttura": {"grassezza": 0, "piccantezza": 2, "astringenza": 0, "freschezza": 0},
+    "intensita": 4,
+    "origine": "L",
+    "aromi": {"ve": 4, "re": 1, "te": 3, "mi": 2}
+  },
+  {
+    "nome": "Soju",
+    "esempi": null,
+    "gruppo": "bia",
+    "gusti": {"dolce": 1, "salato": 0, "acido": 0, "umami": 0, "amaro": 0},
+    "struttura": {"grassezza": 0, "piccantezza": 1, "astringenza": 0, "freschezza": 0},
+    "intensita": 1,
+    "origine": "A",
+    "aromi": {"ff": 1, "la": 1}
+  },
+  {
+    "nome": "Assenzio",
+    "esempi": "distillato verde",
+    "gruppo": "bia",
+    "gusti": {"dolce": 1, "salato": 0, "acido": 0, "umami": 0, "amaro": 3},
+    "struttura": {"grassezza": 0, "piccantezza": 3, "astringenza": 0, "freschezza": 0},
+    "intensita": 5,
+    "origine": "N",
+    "aromi": {"ve": 2, "er": 4, "sd": 5}
+  },
+  {
+    "nome": "Pastis",
+    "esempi": "Ricard, Pernod",
+    "gruppo": "liq",
+    "gusti": {"dolce": 2, "salato": 0, "acido": 0, "umami": 0, "amaro": 2},
+    "struttura": {"grassezza": 0, "piccantezza": 2, "astringenza": 0, "freschezza": 1},
+    "intensita": 4,
+    "origine": "M",
+    "aromi": {"er": 2, "sd": 5, "te": 1}
+  },
+  {
+    "nome": "Sambuca",
+    "esempi": null,
+    "gruppo": "liq",
+    "gusti": {"dolce": 5, "salato": 0, "acido": 0, "umami": 0, "amaro": 1},
+    "struttura": {"grassezza": 0, "piccantezza": 2, "astringenza": 0, "freschezza": 1},
+    "intensita": 4,
+    "origine": "M",
+    "aromi": {"fl": 1, "sd": 5}
+  },
+  {
+    "nome": "Licor 43",
+    "esempi": null,
+    "gruppo": "liq",
+    "gusti": {"dolce": 5, "salato": 0, "acido": 0, "umami": 0, "amaro": 0},
+    "struttura": {"grassezza": 0, "piccantezza": 0, "astringenza": 0, "freschezza": 0},
+    "intensita": 4,
+    "origine": "M",
+    "aromi": {"ag": 3, "sd": 5}
+  },
+  {
+    "nome": "Liquore di albicocca",
+    "esempi": "apricot brandy",
+    "gruppo": "liq",
+    "gusti": {"dolce": 5, "salato": 0, "acido": 1, "umami": 0, "amaro": 0},
+    "struttura": {"grassezza": 0, "piccantezza": 0, "astringenza": 0, "freschezza": 0},
+    "intensita": 3,
+    "origine": "N",
+    "aromi": {"ft": 5, "ox": 1}
+  },
+  {
+    "nome": "Crema di whisky",
+    "esempi": "Baileys",
+    "gruppo": "liq",
+    "gusti": {"dolce": 5, "salato": 0, "acido": 0, "umami": 0, "amaro": 0},
+    "struttura": {"grassezza": 3, "piccantezza": 0, "astringenza": 0, "freschezza": 0},
+    "intensita": 2,
+    "origine": "N",
+    "aromi": {"sd": 1, "to": 3, "la": 4}
+  },
+  {
+    "nome": "Triple sec",
+    "esempi": "Cointreau",
+    "gruppo": "liq",
+    "gusti": {"dolce": 4, "salato": 0, "acido": 1, "umami": 0, "amaro": 0},
+    "struttura": {"grassezza": 0, "piccantezza": 1, "astringenza": 0, "freschezza": 0},
+    "intensita": 3,
+    "origine": "N",
+    "aromi": {"ag": 5}
+  },
+  {
+    "nome": "Grand Marnier",
+    "esempi": "arancia e cognac",
+    "gruppo": "liq",
+    "gusti": {"dolce": 4, "salato": 0, "acido": 0, "umami": 0, "amaro": 1},
+    "struttura": {"grassezza": 0, "piccantezza": 1, "astringenza": 1, "freschezza": 0},
+    "intensita": 3,
+    "origine": "N",
+    "aromi": {"ag": 4, "te": 2, "to": 2}
+  },
+  {
+    "nome": "Maraschino",
+    "esempi": "Luxardo",
+    "gruppo": "liq",
+    "gusti": {"dolce": 4, "salato": 0, "acido": 0, "umami": 0, "amaro": 1},
+    "struttura": {"grassezza": 0, "piccantezza": 1, "astringenza": 0, "freschezza": 0},
+    "intensita": 4,
+    "origine": "M",
+    "aromi": {"ff": 3, "fl": 3, "sd": 2, "fu": 1}
+  },
+  {
+    "nome": "Amaretto",
+    "esempi": "Disaronno",
+    "gruppo": "liq",
+    "gusti": {"dolce": 5, "salato": 0, "acido": 0, "umami": 0, "amaro": 1},
+    "struttura": {"grassezza": 0, "piccantezza": 0, "astringenza": 0, "freschezza": 0},
+    "intensita": 4,
+    "origine": "M",
+    "aromi": {"ft": 2, "sd": 3, "ox": 3}
+  },
+  {
+    "nome": "Liquore di nocciola",
+    "esempi": "Frangelico",
+    "gruppo": "liq",
+    "gusti": {"dolce": 5, "salato": 0, "acido": 0, "umami": 0, "amaro": 0},
+    "struttura": {"grassezza": 0, "piccantezza": 0, "astringenza": 0, "freschezza": 0},
+    "intensita": 3,
+    "origine": "M",
+    "aromi": {"sd": 1, "to": 4, "ox": 2}
+  },
+  {
+    "nome": "Liquore al caffè",
+    "esempi": "Kahlúa, Mr Black",
+    "gruppo": "liq",
+    "gusti": {"dolce": 5, "salato": 0, "acido": 0, "umami": 0, "amaro": 3},
+    "struttura": {"grassezza": 0, "piccantezza": 0, "astringenza": 0, "freschezza": 0},
+    "intensita": 4,
+    "origine": "L",
+    "aromi": {"sd": 2, "to": 5}
+  },
+  {
+    "nome": "Crème de cacao",
+    "esempi": "bianca o scura",
+    "gruppo": "liq",
+    "gusti": {"dolce": 5, "salato": 0, "acido": 0, "umami": 0, "amaro": 2},
+    "struttura": {"grassezza": 0, "piccantezza": 0, "astringenza": 0, "freschezza": 0},
+    "intensita": 3,
+    "origine": null,
+    "aromi": {"sd": 2, "to": 4, "la": 1}
+  },
+  {
+    "nome": "Crème de cassis",
+    "esempi": null,
+    "gruppo": "liq",
+    "gusti": {"dolce": 5, "salato": 0, "acido": 2, "umami": 0, "amaro": 0},
+    "struttura": {"grassezza": 0, "piccantezza": 0, "astringenza": 1, "freschezza": 0},
+    "intensita": 4,
+    "origine": "N",
+    "aromi": {"ff": 5, "ve": 2}
+  },
+  {
+    "nome": "Liquore di sambuco",
+    "esempi": "St-Germain",
+    "gruppo": "liq",
+    "gusti": {"dolce": 5, "salato": 0, "acido": 1, "umami": 0, "amaro": 0},
+    "struttura": {"grassezza": 0, "piccantezza": 0, "astringenza": 0, "freschezza": 0},
+    "intensita": 3,
+    "origine": "N",
+    "aromi": {"ag": 1, "ft": 2, "fl": 5}
+  },
+  {
+    "nome": "Crème de violette",
+    "esempi": null,
+    "gruppo": "liq",
+    "gusti": {"dolce": 5, "salato": 0, "acido": 0, "umami": 0, "amaro": 1},
+    "struttura": {"grassezza": 0, "piccantezza": 0, "astringenza": 0, "freschezza": 0},
+    "intensita": 4,
+    "origine": "N",
+    "aromi": {"fl": 5}
+  },
+  {
+    "nome": "Crème de menthe",
+    "esempi": null,
+    "gruppo": "liq",
+    "gusti": {"dolce": 5, "salato": 0, "acido": 0, "umami": 0, "amaro": 1},
+    "struttura": {"grassezza": 0, "piccantezza": 0, "astringenza": 0, "freschezza": 5},
+    "intensita": 4,
+    "origine": "N",
+    "aromi": {"er": 5}
+  },
+  {
+    "nome": "Limoncello",
+    "esempi": null,
+    "gruppo": "liq",
+    "gusti": {"dolce": 5, "salato": 0, "acido": 2, "umami": 0, "amaro": 1},
+    "struttura": {"grassezza": 0, "piccantezza": 0, "astringenza": 0, "freschezza": 0},
+    "intensita": 4,
+    "origine": "M",
+    "aromi": {"ag": 5}
+  },
+  {
+    "nome": "Chartreuse verde",
+    "esempi": null,
+    "gruppo": "liq",
+    "gusti": {"dolce": 3, "salato": 0, "acido": 0, "umami": 0, "amaro": 3},
+    "struttura": {"grassezza": 0, "piccantezza": 2, "astringenza": 0, "freschezza": 1},
+    "intensita": 5,
+    "origine": "N",
+    "aromi": {"ve": 2, "er": 5, "sd": 2, "sp": 1, "re": 3}
+  },
+  {
+    "nome": "Chartreuse gialla",
+    "esempi": null,
+    "gruppo": "liq",
+    "gusti": {"dolce": 4, "salato": 0, "acido": 0, "umami": 0, "amaro": 2},
+    "struttura": {"grassezza": 0, "piccantezza": 1, "astringenza": 0, "freschezza": 0},
+    "intensita": 4,
+    "origine": "N",
+    "aromi": {"fl": 2, "er": 3, "sd": 3, "re": 1}
+  },
+  {
+    "nome": "Bénédictine",
+    "esempi": "D.O.M.",
+    "gruppo": "liq",
+    "gusti": {"dolce": 4, "salato": 0, "acido": 0, "umami": 0, "amaro": 2},
+    "struttura": {"grassezza": 0, "piccantezza": 0, "astringenza": 0, "freschezza": 0},
+    "intensita": 4,
+    "origine": "N",
+    "aromi": {"er": 3, "sd": 4, "re": 2}
+  },
+  {
+    "nome": "Strega",
+    "esempi": null,
+    "gruppo": "liq",
+    "gusti": {"dolce": 4, "salato": 0, "acido": 0, "umami": 0, "amaro": 2},
+    "struttura": {"grassezza": 0, "piccantezza": 0, "astringenza": 0, "freschezza": 0},
+    "intensita": 4,
+    "origine": "M",
+    "aromi": {"fl": 2, "er": 3, "sd": 3, "re": 1}
+  },
+  {
+    "nome": "Galliano",
+    "esempi": "L'Autentico",
+    "gruppo": "liq",
+    "gusti": {"dolce": 5, "salato": 0, "acido": 0, "umami": 0, "amaro": 1},
+    "struttura": {"grassezza": 0, "piccantezza": 0, "astringenza": 0, "freschezza": 0},
+    "intensita": 4,
+    "origine": "M",
+    "aromi": {"er": 2, "sd": 5}
+  },
+  {
+    "nome": "Drambuie",
+    "esempi": null,
+    "gruppo": "liq",
+    "gusti": {"dolce": 5, "salato": 0, "acido": 0, "umami": 0, "amaro": 1},
+    "struttura": {"grassezza": 0, "piccantezza": 0, "astringenza": 0, "freschezza": 0},
+    "intensita": 4,
+    "origine": "N",
+    "aromi": {"er": 1, "sd": 2, "to": 3, "af": 1}
+  },
+  {
+    "nome": "Falernum",
+    "esempi": null,
+    "gruppo": "liq",
+    "gusti": {"dolce": 4, "salato": 0, "acido": 2, "umami": 0, "amaro": 0},
+    "struttura": {"grassezza": 0, "piccantezza": 1, "astringenza": 0, "freschezza": 0},
+    "intensita": 3,
+    "origine": "T",
+    "aromi": {"ag": 3, "ft": 1, "sd": 4}
+  },
+  {
+    "nome": "Pimento dram",
+    "esempi": "allspice dram",
+    "gruppo": "liq",
+    "gusti": {"dolce": 4, "salato": 0, "acido": 0, "umami": 0, "amaro": 2},
+    "struttura": {"grassezza": 0, "piccantezza": 2, "astringenza": 0, "freschezza": 0},
+    "intensita": 5,
+    "origine": "T",
+    "aromi": {"sd": 5, "sp": 2}
+  },
+  {
+    "nome": "Nocino",
+    "esempi": null,
+    "gruppo": "liq",
+    "gusti": {"dolce": 4, "salato": 0, "acido": 0, "umami": 0, "amaro": 3},
+    "struttura": {"grassezza": 0, "piccantezza": 0, "astringenza": 1, "freschezza": 0},
+    "intensita": 4,
+    "origine": "M",
+    "aromi": {"sd": 3, "te": 2, "ox": 4}
+  },
+  {
+    "nome": "Mirto",
+    "esempi": "liquore di bacche",
+    "gruppo": "liq",
+    "gusti": {"dolce": 4, "salato": 0, "acido": 0, "umami": 0, "amaro": 2},
+    "struttura": {"grassezza": 0, "piccantezza": 0, "astringenza": 1, "freschezza": 0},
+    "intensita": 3,
+    "origine": "M",
+    "aromi": {"ff": 3, "re": 4}
+  },
+  {
+    "nome": "Génépy",
+    "esempi": null,
+    "gruppo": "liq",
+    "gusti": {"dolce": 3, "salato": 0, "acido": 0, "umami": 0, "amaro": 3},
+    "struttura": {"grassezza": 0, "piccantezza": 0, "astringenza": 0, "freschezza": 0},
+    "intensita": 4,
+    "origine": "N",
+    "aromi": {"fl": 2, "er": 4, "re": 2}
+  },
+  {
+    "nome": "Cherry Heering",
+    "esempi": null,
+    "gruppo": "liq",
+    "gusti": {"dolce": 5, "salato": 0, "acido": 1, "umami": 0, "amaro": 0},
+    "struttura": {"grassezza": 0, "piccantezza": 0, "astringenza": 1, "freschezza": 0},
+    "intensita": 3,
+    "origine": "N",
+    "aromi": {"ff": 4, "sd": 2, "ox": 1}
+  },
+  {
+    "nome": "Sloe gin",
+    "esempi": "prugnolo",
+    "gruppo": "liq",
+    "gusti": {"dolce": 3, "salato": 0, "acido": 3, "umami": 0, "amaro": 2},
+    "struttura": {"grassezza": 0, "piccantezza": 0, "astringenza": 2, "freschezza": 0},
+    "intensita": 3,
+    "origine": "N",
+    "aromi": {"ff": 4, "sd": 1, "re": 2, "ox": 1}
+  },
+  {
+    "nome": "Bitter rosso",
+    "esempi": "Campari",
+    "gruppo": "ama",
+    "gusti": {"dolce": 3, "salato": 0, "acido": 0, "umami": 0, "amaro": 4},
+    "struttura": {"grassezza": 0, "piccantezza": 0, "astringenza": 0, "freschezza": 0},
+    "intensita": 5,
+    "origine": "M",
+    "aromi": {"ag": 4, "sd": 1, "re": 2, "te": 1}
+  },
+  {
+    "nome": "Aperitivo",
+    "esempi": "Aperol, Select",
+    "gruppo": "ama",
+    "gusti": {"dolce": 4, "salato": 0, "acido": 2, "umami": 0, "amaro": 2},
+    "struttura": {"grassezza": 0, "piccantezza": 0, "astringenza": 0, "freschezza": 0},
+    "intensita": 3,
+    "origine": "M",
+    "aromi": {"ag": 4, "ft": 2, "ve": 1}
+  },
+  {
+    "nome": "Fernet",
+    "esempi": "Fernet-Branca",
+    "gruppo": "ama",
+    "gusti": {"dolce": 1, "salato": 0, "acido": 0, "umami": 0, "amaro": 5},
+    "struttura": {"grassezza": 0, "piccantezza": 0, "astringenza": 0, "freschezza": 3},
+    "intensita": 5,
+    "origine": "M",
+    "aromi": {"er": 5, "sd": 1, "re": 3, "te": 3}
+  },
+  {
+    "nome": "Amaro al carciofo",
+    "esempi": "Cynar",
+    "gruppo": "ama",
+    "gusti": {"dolce": 3, "salato": 0, "acido": 0, "umami": 0, "amaro": 4},
+    "struttura": {"grassezza": 0, "piccantezza": 0, "astringenza": 0, "freschezza": 0},
+    "intensita": 4,
+    "origine": "M",
+    "aromi": {"ve": 3, "te": 3, "to": 2}
+  },
+  {
+    "nome": "Amaro alpino",
+    "esempi": "Braulio",
+    "gruppo": "ama",
+    "gusti": {"dolce": 2, "salato": 0, "acido": 0, "umami": 0, "amaro": 4},
+    "struttura": {"grassezza": 0, "piccantezza": 0, "astringenza": 0, "freschezza": 0},
+    "intensita": 4,
+    "origine": "N",
+    "aromi": {"er": 4, "re": 3, "te": 2}
+  },
+  {
+    "nome": "Amaro siciliano",
+    "esempi": "Averna, Montenegro",
+    "gruppo": "ama",
+    "gusti": {"dolce": 4, "salato": 0, "acido": 0, "umami": 0, "amaro": 3},
+    "struttura": {"grassezza": 0, "piccantezza": 0, "astringenza": 0, "freschezza": 0},
+    "intensita": 4,
+    "origine": "M",
+    "aromi": {"ag": 3, "sd": 3, "to": 2}
+  },
+  {
+    "nome": "Amaro al rabarbaro",
+    "esempi": "Zucca",
+    "gruppo": "ama",
+    "gusti": {"dolce": 3, "salato": 0, "acido": 0, "umami": 0, "amaro": 4},
+    "struttura": {"grassezza": 0, "piccantezza": 0, "astringenza": 1, "freschezza": 0},
+    "intensita": 4,
+    "origine": "M",
+    "aromi": {"ag": 1, "te": 3, "af": 3}
+  },
+  {
+    "nome": "Bitter alla genziana",
+    "esempi": "Suze",
+    "gruppo": "ama",
+    "gusti": {"dolce": 2, "salato": 0, "acido": 0, "umami": 0, "amaro": 5},
+    "struttura": {"grassezza": 0, "piccantezza": 0, "astringenza": 0, "freschezza": 0},
+    "intensita": 4,
+    "origine": "N",
+    "aromi": {"ag": 1, "fl": 1, "te": 3}
+  },
+  {
+    "nome": "Bitter bianco",
+    "esempi": "Mancino, Contratto",
+    "gruppo": "ama",
+    "gusti": {"dolce": 2, "salato": 0, "acido": 0, "umami": 0, "amaro": 4},
+    "struttura": {"grassezza": 0, "piccantezza": 0, "astringenza": 0, "freschezza": 0},
+    "intensita": 4,
+    "origine": "M",
+    "aromi": {"ag": 3, "fl": 2, "er": 2, "te": 1}
+  },
+  {
+    "nome": "Amer Picon",
+    "esempi": null,
+    "gruppo": "ama",
+    "gusti": {"dolce": 3, "salato": 0, "acido": 0, "umami": 0, "amaro": 4},
+    "struttura": {"grassezza": 0, "piccantezza": 0, "astringenza": 0, "freschezza": 0},
+    "intensita": 4,
+    "origine": "N",
+    "aromi": {"ag": 4, "sd": 1, "te": 2}
+  },
+  {
+    "nome": "Amaro alle erbe",
+    "esempi": "Jägermeister",
+    "gruppo": "ama",
+    "gusti": {"dolce": 4, "salato": 0, "acido": 0, "umami": 0, "amaro": 3},
+    "struttura": {"grassezza": 0, "piccantezza": 0, "astringenza": 0, "freschezza": 0},
+    "intensita": 4,
+    "origine": "N",
+    "aromi": {"er": 4, "sd": 3, "re": 1, "te": 2}
+  },
+  {
+    "nome": "Angostura",
+    "esempi": "bitters aromatici",
+    "gruppo": "ama",
+    "gusti": {"dolce": 1, "salato": 0, "acido": 0, "umami": 0, "amaro": 4},
+    "struttura": {"grassezza": 0, "piccantezza": 0, "astringenza": 0, "freschezza": 0},
+    "intensita": 5,
+    "origine": "T",
+    "aromi": {"er": 1, "sd": 5, "te": 1}
+  },
+  {
+    "nome": "Peychaud's",
+    "esempi": "bitters",
+    "gruppo": "ama",
+    "gusti": {"dolce": 2, "salato": 0, "acido": 0, "umami": 0, "amaro": 4},
+    "struttura": {"grassezza": 0, "piccantezza": 0, "astringenza": 0, "freschezza": 0},
+    "intensita": 4,
+    "origine": "L",
+    "aromi": {"ft": 1, "fl": 2, "sd": 3}
+  },
+  {
+    "nome": "Orange bitters",
+    "esempi": null,
+    "gruppo": "ama",
+    "gusti": {"dolce": 0, "salato": 0, "acido": 0, "umami": 0, "amaro": 5},
+    "struttura": {"grassezza": 0, "piccantezza": 0, "astringenza": 0, "freschezza": 0},
+    "intensita": 4,
+    "origine": null,
+    "aromi": {"ag": 5, "sd": 1}
+  },
+  {
+    "nome": "Vermouth dry",
+    "esempi": "Noilly Prat, Dolin",
+    "gruppo": "ver",
+    "gusti": {"dolce": 1, "salato": 0, "acido": 2, "umami": 0, "amaro": 2},
+    "struttura": {"grassezza": 0, "piccantezza": 0, "astringenza": 1, "freschezza": 0},
+    "intensita": 2,
+    "origine": "N",
+    "aromi": {"ag": 1, "fl": 2, "ve": 2, "er": 3}
+  },
+  {
+    "nome": "Vermouth bianco",
+    "esempi": null,
+    "gruppo": "ver",
+    "gusti": {"dolce": 4, "salato": 0, "acido": 1, "umami": 0, "amaro": 2},
+    "struttura": {"grassezza": 0, "piccantezza": 0, "astringenza": 0, "freschezza": 0},
+    "intensita": 3,
+    "origine": "M",
+    "aromi": {"ag": 1, "fl": 3, "er": 2, "sd": 2}
+  },
+  {
+    "nome": "Vermouth rosso",
+    "esempi": "Carpano, Cocchi Torino",
+    "gruppo": "ver",
+    "gusti": {"dolce": 4, "salato": 0, "acido": 1, "umami": 0, "amaro": 3},
+    "struttura": {"grassezza": 0, "piccantezza": 0, "astringenza": 1, "freschezza": 0},
+    "intensita": 4,
+    "origine": "M",
+    "aromi": {"ft": 3, "er": 2, "sd": 4, "te": 1, "to": 1}
+  },
+  {
+    "nome": "Quinquina",
+    "esempi": "Lillet, Cocchi Americano",
+    "gruppo": "ver",
+    "gusti": {"dolce": 3, "salato": 0, "acido": 2, "umami": 0, "amaro": 3},
+    "struttura": {"grassezza": 0, "piccantezza": 0, "astringenza": 0, "freschezza": 0},
+    "intensita": 3,
+    "origine": "N",
+    "aromi": {"ag": 3, "ft": 2, "fl": 2}
+  },
+  {
+    "nome": "Vino chinato",
+    "esempi": "Barolo chinato",
+    "gruppo": "ver",
+    "gusti": {"dolce": 3, "salato": 0, "acido": 2, "umami": 0, "amaro": 3},
+    "struttura": {"grassezza": 0, "piccantezza": 0, "astringenza": 2, "freschezza": 0},
+    "intensita": 4,
+    "origine": "M",
+    "aromi": {"ft": 2, "er": 1, "sd": 3, "te": 3}
+  },
+  {
+    "nome": "Champagne",
+    "esempi": "metodo classico",
+    "gruppo": "vin",
+    "gusti": {"dolce": 1, "salato": 0, "acido": 4, "umami": 0, "amaro": 0},
+    "struttura": {"grassezza": 0, "piccantezza": 0, "astringenza": 0, "freschezza": 0},
+    "intensita": 3,
+    "origine": "N",
+    "aromi": {"ff": 3, "to": 2, "la": 2}
+  },
+  {
+    "nome": "Prosecco",
+    "esempi": null,
+    "gruppo": "vin",
+    "gusti": {"dolce": 2, "salato": 0, "acido": 3, "umami": 0, "amaro": 0},
+    "struttura": {"grassezza": 0, "piccantezza": 0, "astringenza": 0, "freschezza": 0},
+    "intensita": 2,
+    "origine": "M",
+    "aromi": {"ff": 3, "fl": 2}
+  },
+  {
+    "nome": "Bianco aromatico",
+    "esempi": "Riesling, Gewürztraminer",
+    "gruppo": "vin",
+    "gusti": {"dolce": 3, "salato": 0, "acido": 4, "umami": 0, "amaro": 0},
+    "struttura": {"grassezza": 0, "piccantezza": 0, "astringenza": 0, "freschezza": 0},
+    "intensita": 3,
+    "origine": "N",
+    "aromi": {"ag": 2, "ft": 3, "fl": 4}
+  },
+  {
+    "nome": "Sauvignon blanc",
+    "esempi": null,
+    "gruppo": "vin",
+    "gusti": {"dolce": 1, "salato": 0, "acido": 4, "umami": 0, "amaro": 0},
+    "struttura": {"grassezza": 0, "piccantezza": 0, "astringenza": 0, "freschezza": 0},
+    "intensita": 3,
+    "origine": "N",
+    "aromi": {"ag": 3, "ft": 1, "ve": 4}
+  },
+  {
+    "nome": "Rosso tannico",
+    "esempi": "Nebbiolo, Cabernet",
+    "gruppo": "vin",
+    "gusti": {"dolce": 1, "salato": 0, "acido": 3, "umami": 0, "amaro": 2},
+    "struttura": {"grassezza": 0, "piccantezza": 0, "astringenza": 4, "freschezza": 0},
+    "intensita": 4,
+    "origine": "M",
+    "aromi": {"ff": 3, "fl": 1, "sd": 1, "te": 3}
+  },
+  {
+    "nome": "Rosso leggero",
+    "esempi": "Pinot nero, Gamay",
+    "gruppo": "vin",
+    "gusti": {"dolce": 1, "salato": 0, "acido": 3, "umami": 0, "amaro": 0},
+    "struttura": {"grassezza": 0, "piccantezza": 0, "astringenza": 1, "freschezza": 0},
+    "intensita": 3,
+    "origine": "N",
+    "aromi": {"ff": 4, "fl": 1, "te": 2}
+  },
+  {
+    "nome": "Sherry fino",
+    "esempi": "fino, manzanilla",
+    "gruppo": "vin",
+    "gusti": {"dolce": 0, "salato": 2, "acido": 3, "umami": 0, "amaro": 0},
+    "struttura": {"grassezza": 0, "piccantezza": 0, "astringenza": 0, "freschezza": 0},
+    "intensita": 3,
+    "origine": "M",
+    "aromi": {"la": 1, "ox": 5, "mi": 3}
+  },
+  {
+    "nome": "Sherry oloroso",
+    "esempi": "amontillado, oloroso",
+    "gruppo": "vin",
+    "gusti": {"dolce": 1, "salato": 0, "acido": 2, "umami": 0, "amaro": 2},
+    "struttura": {"grassezza": 0, "piccantezza": 0, "astringenza": 1, "freschezza": 0},
+    "intensita": 4,
+    "origine": "M",
+    "aromi": {"te": 2, "to": 3, "ox": 5}
+  },
+  {
+    "nome": "Pedro Ximénez",
+    "esempi": "sherry dolce",
+    "gruppo": "vin",
+    "gusti": {"dolce": 5, "salato": 0, "acido": 2, "umami": 0, "amaro": 1},
+    "struttura": {"grassezza": 0, "piccantezza": 0, "astringenza": 0, "freschezza": 0},
+    "intensita": 5,
+    "origine": "M",
+    "aromi": {"ft": 4, "sd": 2, "to": 4}
+  },
+  {
+    "nome": "Porto tawny",
+    "esempi": null,
+    "gruppo": "vin",
+    "gusti": {"dolce": 4, "salato": 0, "acido": 2, "umami": 0, "amaro": 1},
+    "struttura": {"grassezza": 0, "piccantezza": 0, "astringenza": 0, "freschezza": 0},
+    "intensita": 4,
+    "origine": "M",
+    "aromi": {"ft": 2, "to": 3, "ox": 4}
+  },
+  {
+    "nome": "Porto ruby",
+    "esempi": null,
+    "gruppo": "vin",
+    "gusti": {"dolce": 4, "salato": 0, "acido": 2, "umami": 0, "amaro": 1},
+    "struttura": {"grassezza": 0, "piccantezza": 0, "astringenza": 2, "freschezza": 0},
+    "intensita": 4,
+    "origine": "M",
+    "aromi": {"ff": 4, "ft": 2, "sd": 1}
+  },
+  {
+    "nome": "Madeira",
+    "esempi": null,
+    "gruppo": "vin",
+    "gusti": {"dolce": 3, "salato": 0, "acido": 4, "umami": 0, "amaro": 0},
+    "struttura": {"grassezza": 0, "piccantezza": 0, "astringenza": 0, "freschezza": 0},
+    "intensita": 4,
+    "origine": "M",
+    "aromi": {"ft": 1, "to": 3, "ox": 5}
+  },
+  {
+    "nome": "Marsala",
+    "esempi": "superiore, vergine",
+    "gruppo": "vin",
+    "gusti": {"dolce": 4, "salato": 0, "acido": 1, "umami": 0, "amaro": 1},
+    "struttura": {"grassezza": 0, "piccantezza": 0, "astringenza": 0, "freschezza": 0},
+    "intensita": 4,
+    "origine": "M",
+    "aromi": {"ft": 2, "sd": 1, "to": 3, "ox": 4}
+  },
+  {
+    "nome": "Sauternes",
+    "esempi": "passiti botritizzati",
+    "gruppo": "vin",
+    "gusti": {"dolce": 5, "salato": 0, "acido": 3, "umami": 0, "amaro": 0},
+    "struttura": {"grassezza": 0, "piccantezza": 0, "astringenza": 0, "freschezza": 0},
+    "intensita": 4,
+    "origine": "N",
+    "aromi": {"ft": 4, "fl": 2, "sd": 1, "la": 1}
+  },
+  {
+    "nome": "Lager",
+    "esempi": null,
+    "gruppo": "bir",
+    "gusti": {"dolce": 1, "salato": 0, "acido": 1, "umami": 0, "amaro": 2},
+    "struttura": {"grassezza": 0, "piccantezza": 0, "astringenza": 0, "freschezza": 0},
+    "intensita": 2,
+    "origine": "N",
+    "aromi": {"ve": 1, "re": 1, "to": 2}
+  },
+  {
+    "nome": "IPA",
+    "esempi": null,
+    "gruppo": "bir",
+    "gusti": {"dolce": 1, "salato": 0, "acido": 0, "umami": 0, "amaro": 3},
+    "struttura": {"grassezza": 0, "piccantezza": 0, "astringenza": 0, "freschezza": 0},
+    "intensita": 4,
+    "origine": "L",
+    "aromi": {"ag": 3, "ft": 3, "re": 3}
+  },
+  {
+    "nome": "Stout",
+    "esempi": null,
+    "gruppo": "bir",
+    "gusti": {"dolce": 2, "salato": 0, "acido": 0, "umami": 0, "amaro": 3},
+    "struttura": {"grassezza": 0, "piccantezza": 0, "astringenza": 1, "freschezza": 0},
+    "intensita": 4,
+    "origine": "N",
+    "aromi": {"to": 5, "af": 1, "la": 1}
+  },
+  {
+    "nome": "Sour",
+    "esempi": "lambic, gose",
+    "gruppo": "bir",
+    "gusti": {"dolce": 1, "salato": 0, "acido": 5, "umami": 0, "amaro": 0},
+    "struttura": {"grassezza": 0, "piccantezza": 0, "astringenza": 0, "freschezza": 0},
+    "intensita": 4,
+    "origine": "N",
+    "aromi": {"ff": 2, "fu": 3, "fe": 4}
+  },
+  {
+    "nome": "Weizen",
+    "esempi": "birra di frumento",
+    "gruppo": "bir",
+    "gusti": {"dolce": 2, "salato": 0, "acido": 2, "umami": 0, "amaro": 0},
+    "struttura": {"grassezza": 0, "piccantezza": 0, "astringenza": 0, "freschezza": 0},
+    "intensita": 3,
+    "origine": "N",
+    "aromi": {"ft": 3, "sd": 2}
+  },
+  {
+    "nome": "Sidro",
+    "esempi": null,
+    "gruppo": "bir",
+    "gusti": {"dolce": 2, "salato": 0, "acido": 4, "umami": 0, "amaro": 0},
+    "struttura": {"grassezza": 0, "piccantezza": 0, "astringenza": 1, "freschezza": 0},
+    "intensita": 2,
+    "origine": "N",
+    "aromi": {"ff": 4, "fu": 1, "fe": 1}
+  },
+  {
+    "nome": "Sake",
+    "esempi": "junmai, ginjo",
+    "gruppo": "sak",
+    "gusti": {"dolce": 2, "salato": 0, "acido": 0, "umami": 2, "amaro": 0},
+    "struttura": {"grassezza": 0, "piccantezza": 0, "astringenza": 0, "freschezza": 0},
+    "intensita": 2,
+    "origine": "A",
+    "aromi": {"ft": 3, "fl": 2, "la": 2, "ox": 1}
+  },
+  {
+    "nome": "Umeshu",
+    "esempi": null,
+    "gruppo": "sak",
+    "gusti": {"dolce": 5, "salato": 0, "acido": 3, "umami": 0, "amaro": 0},
+    "struttura": {"grassezza": 0, "piccantezza": 0, "astringenza": 0, "freschezza": 0},
+    "intensita": 3,
+    "origine": "A",
+    "aromi": {"ff": 3, "sd": 1, "ox": 2}
+  }
+]
