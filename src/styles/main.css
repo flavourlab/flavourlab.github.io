@@ -564,3 +564,13 @@ h2{font-weight:300}
 .lensd{margin-top:12px}
 .lensd summary{cursor:pointer;font-size:14px;color:var(--muted);padding:6px 0}
 .lensd[open] summary{color:var(--ink)}
+/* UX-04 · anteprima al tocco */
+.peek{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 14px;align-items:center;margin-top:12px;padding:12px 14px;border:1px solid var(--ink);border-radius:4px;background:var(--surface)}
+.peek>*{grid-column:1}
+.peek .pk-go{grid-column:2;grid-row:1/span 3;align-self:center;white-space:nowrap}
+.pk-t{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px}
+.pk-t b{font-size:17px;font-weight:500}
+.pk-t span,.pk-v,.pk-w{font-size:14px}
+.pk-v .vw{font-weight:600}
+@media (max-width:520px){.peek{grid-template-columns:minmax(0,1fr)}.peek .pk-go{grid-column:1;grid-row:auto;justify-self:start;margin-top:6px}}
+.glass.peeked{outline:1px solid var(--ink);outline-offset:2px}

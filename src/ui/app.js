@@ -70,6 +70,7 @@ function wrapName(name,max,two){if(name.length<=max)return[name];if(!two)return[
 function labelLines(r,a,lines,cls,fs,extra=''){if(lines.length<2)return labelAt(r,a,esc(lines[0]),cls,extra);
   const left=Math.cos(a*Math.PI/180)<-0.0001;const x=left?-r:r;const y0=(-fs*0.15).toFixed(1),y1=(fs*0.95).toFixed(1);
   return `<text class="${cls}" transform="rotate(${(left?a+180:a).toFixed(2)})"${left?' text-anchor="end"':''}${extra}><tspan x="${x}" y="${y0}">${esc(lines[0])}</tspan><tspan x="${x}" y="${y1}">${esc(lines[1])}</tspan></text>`;}
+const TOUCH=()=>matchMedia('(hover: none)').matches;
 const halo='paint-order:stroke;stroke:var(--surface);stroke-width:3.5px;stroke-linejoin:round';
 function topFams(I,n=3){return I.ar.map((v,i)=>[v,i]).filter(x=>x[0]>0).sort((a,b)=>b[0]-a[0]).slice(0,n).map(x=>FAM[x[1]][1].toLowerCase());}
 function dotsInt(n){return '●'.repeat(n)+'○'.repeat(5-n);}
@@ -155,7 +156,7 @@ function renderEgo(){
     h+=`<text text-anchor="middle" y="${(Math.min(lines.length,3)/2)*fs+12}" style="font-size:${Math.max(10,mu).toFixed(1)}px;fill:var(--muted);font-family:var(--f-mono);letter-spacing:.06em">${TLABEL[A.dom].toUpperCase()}</text>`;}
   $('#wheel').innerHTML=h;
   $('#wheelCap').textContent=`${TLABEL[A.dom]} › ${A.name} › ${parts.length} abbinamenti › ${sps.length} alcolici`;
-  $('#wheelHint').textContent='Passa sopra un nodo per il motivo, clicca per aprirlo.';
+  $('#wheelHint').textContent=TOUCH()?'Tocca un punto per leggerne il motivo, toccalo di nuovo per aprirlo.':'Passa sopra un punto per il motivo, clicca per aprirlo.';
   $('#legend').innerHTML=TORDER.map(k=>`<span><i style="width:10px;height:10px;border-radius:50%;background:${tcol(k)};display:inline-block"></i>${TLABEL[k]}</span>`).join('')+
     `<span><svg width="26" height="8"><line x1="0" y1="4" x2="26" y2="4" style="stroke:var(--concord);stroke-width:2.5"/></svg>Affinità</span>`+
     `<span><svg width="26" height="8"><line x1="0" y1="4" x2="26" y2="4" style="stroke:var(--contrast);stroke-width:2.5;stroke-dasharray:5 4"/></svg>Contrasto</span>`+
@@ -187,7 +188,7 @@ function renderBrowse(){
   $('#wheelHint').textContent=z?'Clicca un alimento per vederne gli abbinamenti.':'Clicca un gusto per ingrandirlo, o un alimento per aprirlo.';
   $('#legend').innerHTML=TORDER.map(k=>{const n=FOODS.filter(f=>f.dom===k).length;return `<span><i style="width:10px;height:10px;border-radius:50%;background:${tcol(k)};display:inline-block"></i>${TLABEL[k]} · ${n}</span>`;}).join('')+`<span>Anello interno: gusto dominante · medio: categoria · esterno: alimento</span>`;
 }
-function renderWheel(){if(!state.sel)state.mode='browse';state.mode==='ego'?renderEgo():renderBrowse();$('#mEgo').hidden=!state.sel;$('#mEgo').setAttribute('aria-pressed',String(state.mode==='ego'));$('#mBrowse').setAttribute('aria-pressed',String(state.mode==='browse'));}
+function renderWheel(){hidePeek();if(!state.sel)state.mode='browse';state.mode==='ego'?renderEgo():renderBrowse();$('#mEgo').hidden=!state.sel;$('#mEgo').setAttribute('aria-pressed',String(state.mode==='ego'));$('#mBrowse').setAttribute('aria-pressed',String(state.mode==='browse'));}
 // la dimensione dei testi dipende dalla larghezza della ruota: si ridisegna quando cambia
 let rzT=null;window.addEventListener('resize',()=>{clearTimeout(rzT);rzT=setTimeout(()=>{if(!$('#tab-ruota').hidden)renderWheel();},150);});
 
@@ -365,7 +366,7 @@ function showInfo(el){const html=tipHTML(el);if(!html)return;infoEl=el;tip.inner
   const r=el.getBoundingClientRect();const w=tip.offsetWidth,h=tip.offsetHeight;let x=r.left+r.width/2-w/2,y=r.bottom+8;
   if(y+h>innerHeight-8)y=r.top-h-8;x=Math.max(8,Math.min(innerWidth-w-8,x));tip.style.left=x+'px';tip.style.top=Math.max(8,y)+'px';}
 function hideInfo(){if(!infoEl)return;infoEl=null;tip.hidden=true;tip.classList.remove('infotip');}
-document.addEventListener('pointerover',e=>{const b=e.target.closest&&e.target.closest('.info[data-info],.glass[data-sty]');if(b)showInfo(b);});
+document.addEventListener('pointerover',e=>{if(e.pointerType==='touch')return;const b=e.target.closest&&e.target.closest('.info[data-info],.glass[data-sty]');if(b)showInfo(b);});
 document.addEventListener('pointerout',e=>{const b=e.target.closest&&e.target.closest('.info[data-info],.glass[data-sty]');if(b&&!b.contains(e.relatedTarget))hideInfo();});
 document.addEventListener('focusin',e=>{const b=e.target.closest&&e.target.closest('.info[data-info],.glass[data-sty]');if(b)showInfo(b);});
 document.addEventListener('focusout',e=>{if(e.target.closest&&e.target.closest('.info[data-info],.glass[data-sty]'))hideInfo();});
@@ -391,7 +392,7 @@ function highlight(id,kind){
 }
 function resetLinks(){$('#wheel').querySelectorAll('.lk').forEach(l=>l.style.opacity=.28);}
 const wheel=$('#wheel');
-wheel.addEventListener('pointerover',e=>{const g=e.target.closest('[data-id],[data-t]');if(!g)return;
+wheel.addEventListener('pointerover',e=>{if(e.pointerType==='touch')return;const g=e.target.closest('[data-id],[data-t]');if(!g)return;
   if(g.dataset.id){const B=BYID[g.dataset.id];
     if(state.mode==='ego'){const r=S(state.sel,B);highlight(B.id,g.dataset.kind);
       showTip(`<b>${esc(B.name)}</b> · ${vword(verdict(r.total)[0])} · ${TYPEUI[r.type].toLowerCase()} <span style="opacity:.7">${r.total}/30</span><br>${esc(r.summary.split(/(?<=\.)\s/)[0])}`,e);}
@@ -399,13 +400,32 @@ wheel.addEventListener('pointerover',e=>{const g=e.target.closest('[data-id],[da
   else if(g.dataset.cat)showTip(`<b>${esc(CATS[g.dataset.cat][0])}</b>`,e);
 });
 wheel.addEventListener('pointermove',moveTip);
-wheel.addEventListener('pointerout',e=>{const g=e.target.closest('[data-id],[data-t]');if(!g)return;if(g.contains(e.relatedTarget))return;hideTip();if(state.mode==='ego'){resetLinks();highlight(null);}});
+wheel.addEventListener('pointerout',e=>{if(e.pointerType==='touch')return;const g=e.target.closest('[data-id],[data-t]');if(!g)return;if(g.contains(e.relatedTarget))return;hideTip();if(state.mode==='ego'){resetLinks();highlight(null);}});
 function activate(g){if(!g)return;
   if(g.dataset.id){const B=BYID[g.dataset.id];hideTip();
     if(B.isSpirit){const c=document.querySelector(`.sp[data-sid="${B.id}"]`);if(c){const tr=$('#spTrack');tr.scrollTo({left:c.offsetLeft-tr.offsetLeft,behavior:'smooth'});$('#spirits').scrollIntoView({block:'nearest',behavior:'smooth'});c.classList.add('hl');}}
     else{state.mode='ego';select(B);}}
   else if(g.dataset.t!==undefined){const t=g.dataset.t;state.zoom=(t==='__all'||!t||state.zoom===t)?null:t;hideTip();renderWheel();}}
-wheel.addEventListener('click',e=>activate(e.target.closest('[data-id],[data-t]')));
+// ---------- anteprima al tocco (UX-04) ----------
+// col mouse il motivo è nel tooltip; al tocco il primo tocco seleziona e mostra l'anteprima, il secondo (o «Apri») apre
+let lastPT='mouse',peekId=null;
+wheel.addEventListener('pointerdown',e=>{lastPT=e.pointerType||'mouse';});
+function peekHTML(id){const B=BYID[id];if(!B)return'';
+  if(state.mode==='ego'&&state.sel){const r=S(state.sel,B);const [v]=verdict(r.total);
+    return `<div class="pk-t"><b>${esc(B.name)}</b><span class="muted">${esc(B.isSpirit?SGROUP[B.grp][0]:CATS[B.cat][0])}</span></div>
+      <p class="pk-v"><span class="vw">${vword(v)}</span> · ${TYPEUI[r.type].toLowerCase()} <span class="muted">${r.total}/30</span></p>
+      <p class="pk-w">${esc(firstSentence(r.summary))}</p>
+      <button type="button" class="btn pk-go" data-peek-open="${B.id}">${B.isSpirit?'Vedi come berlo':'Apri '+esc(B.name)}</button>`;}
+  return `<div class="pk-t"><b>${esc(B.name)}</b><span class="muted">${esc(CATS[B.cat][0])} · ${TLABEL[B.dom]}</span></div>
+    <p class="pk-w">Note principali: ${esc(topFams(B).join(', ')||'—')}</p>
+    <button type="button" class="btn pk-go" data-peek-open="${B.id}">Apri ${esc(B.name)}</button>`;}
+function showPeek(id,kind){peekId=id;const el=$('#wheelPeek');el.innerHTML=peekHTML(id);el.hidden=false;
+  if(state.mode==='ego'){highlight(id,kind);}else{wheel.querySelectorAll('.hl').forEach(n=>n.classList.remove('hl'));wheel.querySelector(`[data-id="${id}"]`)?.classList.add('hl');}}
+function hidePeek(){peekId=null;const el=$('#wheelPeek');if(el){el.hidden=true;el.innerHTML='';}}
+$('#wheelPeek').addEventListener('click',e=>{const b=e.target.closest('[data-peek-open]');if(!b)return;const g=wheel.querySelector(`[data-id="${b.dataset.peekOpen}"]`);hidePeek();activate(g);});
+wheel.addEventListener('click',e=>{const g=e.target.closest('[data-id],[data-t]');if(!g)return;
+  if(lastPT==='touch'&&g.dataset.id&&peekId!==g.dataset.id){showPeek(g.dataset.id,g.dataset.kind);return;}
+  hidePeek();activate(g);});
 wheel.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){const g=e.target.closest('[data-id]');if(g){e.preventDefault();activate(g);}}});
 wheel.addEventListener('focusin',e=>{const g=e.target.closest('[data-id]');if(g&&state.mode==='ego')highlight(g.dataset.id,g.dataset.kind);});
 
@@ -614,12 +634,21 @@ $('#ckReset').addEventListener('click',()=>{CK.base=null;renderCocktail();});
 
 // ---- 3. stile ----
 function renderStyles(){
+  stPeek=null;$('#ckStylePeek').hidden=true;
   $('#ckStyles').innerHTML=SHELVES.map(([lbl,ids])=>`<div class="shelf"><span class="shelf-l">${lbl}</span><div class="shelf-row">${ids.map(id=>{const s=STY[id];
     const fit=styleFit(effBaseFor(id),id);
     return `<button type="button" class="glass${fit.ok?'':' nofit'}" data-sty="${id}" aria-pressed="${id===CK.style}" aria-description="${esc(s.fam+'. '+s.desc+(fit.ok?'':' Non adatto: '+fit.why))}">${fit.ok?'':'<i class="nf" aria-hidden="true">×</i>'}${glassSVG(id,56,s.name)}<span>${esc(s.name)}</span></button>`;}).join('')}</div></div>`).join('');
   const st=STY[CK.style];
 }
-$('#ckStyles').addEventListener('click',e=>{const b=e.target.closest('[data-sty]');if(!b)return;CK.style=b.dataset.sty;renderCocktail();});
+let stPT='mouse',stPeek=null;
+$('#ckStyles').addEventListener('pointerdown',e=>{stPT=e.pointerType||'mouse';});
+$('#ckStyles').addEventListener('click',e=>{const b=e.target.closest('[data-sty]');if(!b)return;
+  // al tocco il primo tocco mostra la descrizione del bicchiere, il secondo lo sceglie (UX-04)
+  if(stPT==='touch'&&stPeek!==b.dataset.sty&&b.dataset.sty!==CK.style){stPeek=b.dataset.sty;const el=$('#ckStylePeek');
+    el.innerHTML=`<p class="pk-w">${tipHTML(b)}</p><button type="button" class="btn pk-go" data-pick-sty="${b.dataset.sty}">Scegli ${esc(STY[b.dataset.sty].name)}</button>`;el.hidden=false;
+    $('#ckStyles').querySelectorAll('.glass').forEach(x=>x.classList.toggle('peeked',x===b));return;}
+  stPeek=null;$('#ckStylePeek').hidden=true;CK.style=b.dataset.sty;renderCocktail();});
+$('#ckStylePeek').addEventListener('click',e=>{const b=e.target.closest('[data-pick-sty]');if(!b)return;stPeek=null;$('#ckStylePeek').hidden=true;CK.style=b.dataset.pickSty;renderCocktail();});
 
 // ---- 4. ricette ----
 function sheet(R,ins){
