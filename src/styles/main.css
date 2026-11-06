@@ -596,3 +596,5 @@ h2{font-weight:300}
 .bline .link{margin-left:auto}
 #ckBaseBox{display:flex;flex-direction:column;gap:14px}
 .builder{align-items:start}
+/* UX-12 · stile suggerito */
+.glass .sugtag{display:block;font-size:12px;color:var(--ink);font-weight:500;margin-top:2px}

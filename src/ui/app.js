@@ -676,9 +676,19 @@ function renderStyles(){
   stPeek=null;$('#ckStylePeek').hidden=true;
   $('#ckStyles').innerHTML=SHELVES.map(([lbl,ids])=>`<div class="shelf"><span class="shelf-l">${lbl}</span><div class="shelf-row">${ids.map(id=>{const s=STY[id];
     const fit=styleFit(effBaseFor(id),id);
-    return `<button type="button" class="glass${fit.ok?'':' nofit'}" data-sty="${id}" aria-pressed="${id===CK.style}" aria-description="${esc(s.fam+'. '+s.desc+(fit.ok?'':' Non adatto: '+fit.why))}">${fit.ok?'':'<i class="nf" aria-hidden="true">×</i>'}${glassSVG(id,56,s.name)}<span>${esc(s.name)}</span></button>`;}).join('')}</div></div>`).join('');
-  const st=STY[CK.style];
+    return `<button type="button" class="glass${fit.ok?'':' nofit'}" data-sty="${id}" aria-pressed="${id===CK.style}" aria-description="${esc(s.fam+'. '+s.desc+(fit.ok?'':' Non adatto: '+fit.why))}">${fit.ok?'':'<i class="nf" aria-hidden="true">×</i>'}${glassSVG(id,56,s.name)}<span>${esc(s.name)}</span>${CK.styleAuto&&id===CK.style?'<small class="sugtag">suggerito</small>':''}</button>`;}).join('')}</div></div>`).join('');
+  $('#ckStyHint').textContent=CK.styleAuto&&CK.style?`Suggerito: ${STY[CK.style].name}. Scegli un altro bicchiere per cambiare la ricetta.`:'';
 }
+// stile suggerito appena c'è un ingrediente (UX-12). Criterio: si tiene la base consigliata senza stile;
+// si scartano gli stili non adatti a quella base (styleFit) e quelli che la combinazione non regge (coherence);
+// tra i rimasti vince quello in cui la base è tipica (PREFB, via suggestBases().fit); a parità, il più versatile
+// secondo l'ordine qui sotto (dal più tollerante al più specifico).
+const STY_VERSATILE=['sour','highball','collins','spritz','negroni','oldfashioned','julep','martini','royale','sour_albume','flip','tiki','milkpunch'];
+function autoStyle(){const fs=ckFoods();const b0=CK.base||ingBase()||suggestBases(fs,null)[0]?.s||null;if(!b0)return null;
+  let best=null,bv=-1;STY_VERSATILE.filter(id=>STY[id]).forEach(id=>{if(!styleFit(b0,id).ok)return;let v=1;
+    if(!coherence(CK.ings,id,b0).block.length)v+=4;
+    if(fs.length&&suggestBases(fs,id).find(y=>y.s===b0)?.fit)v+=2;
+    if(v>bv){bv=v;best=id;}});return best;}
 let stPT='mouse',stPeek=null;
 $('#ckStyles').addEventListener('pointerdown',e=>{stPT=e.pointerType||'mouse';});
 $('#ckStyles').addEventListener('click',e=>{const b=e.target.closest('[data-sty]');if(!b)return;
@@ -686,8 +696,8 @@ $('#ckStyles').addEventListener('click',e=>{const b=e.target.closest('[data-sty]
   if(stPT==='touch'&&stPeek!==b.dataset.sty&&b.dataset.sty!==CK.style){stPeek=b.dataset.sty;const el=$('#ckStylePeek');
     el.innerHTML=`<p class="pk-w">${tipHTML(b)}</p><button type="button" class="btn pk-go" data-pick-sty="${b.dataset.sty}">Scegli ${esc(STY[b.dataset.sty].name)}</button>`;el.hidden=false;
     $('#ckStyles').querySelectorAll('.glass').forEach(x=>x.classList.toggle('peeked',x===b));return;}
-  stPeek=null;$('#ckStylePeek').hidden=true;CK.style=b.dataset.sty;renderCocktail();});
-$('#ckStylePeek').addEventListener('click',e=>{const b=e.target.closest('[data-pick-sty]');if(!b)return;stPeek=null;$('#ckStylePeek').hidden=true;CK.style=b.dataset.pickSty;renderCocktail();});
+  stPeek=null;$('#ckStylePeek').hidden=true;CK.style=b.dataset.sty;CK.styleAuto=false;renderCocktail();});
+$('#ckStylePeek').addEventListener('click',e=>{const b=e.target.closest('[data-pick-sty]');if(!b)return;stPeek=null;$('#ckStylePeek').hidden=true;CK.style=b.dataset.pickSty;CK.styleAuto=false;renderCocktail();});
 
 // ---- 4. ricette ----
 function sheet(R,ins){
@@ -728,12 +738,15 @@ function renderRecipes(){
       <span class="rtag ${r.mode}">${MODELBL[r.mode]}</span><b>${esc(drinkName(r,ins))}</b><span class="tk-m">${esc(r.base?r.base.name:r.mods[0]?.name||'')} · ~${fmt(r.abv)}% · ${r.vol} ml</span><span class="tk-d">${esc(MODEDESC[r.mode])}</span></button>`).join('')}</div>${sheet(R,ins)}`;
 }
 $('#ckOut').addEventListener('click',e=>{const b=e.target.closest('[data-view]');if(b){CK.view=b.dataset.view;renderRecipes();return;}
-  const s=e.target.closest('[data-gosty]');if(s){CK.style=s.dataset.gosty;renderCocktail();return;}
+  const s=e.target.closest('[data-gosty]');if(s){CK.style=s.dataset.gosty;CK.styleAuto=false;renderCocktail();return;}
   const g=e.target.closest('[data-gobase]');if(g){CK.base=BYID[g.dataset.gobase];renderCocktail();return;}
   const a=e.target.closest('[data-goadd]');if(a&&CK.ings.length<5){CK.ings.push(BYID[a.dataset.goadd]);renderCocktail();}});
 $('#ckFromWheel').addEventListener('click',()=>{if(!state.sel){showTab('ruota');$('#q-main').focus();return;}const p=state.parts.slice(0,2).map(r=>r.B);CK.ings=[state.sel,...p];CK.base=null;renderCocktail();});
 
-function renderCocktail(){renderIngs();renderBase();renderStyles();renderRecipes();}
+function renderCocktail(){
+  if(!CK.ings.length){if(CK.styleAuto){CK.style=null;CK.styleAuto=false;}}
+  else if(!CK.style||CK.styleAuto){CK.style=autoStyle();CK.styleAuto=!!CK.style;}
+  renderIngs();renderBase();renderStyles();renderRecipes();}
 
 function route(){const h=location.hash.slice(1);if(h==='verifica'||h==='cocktail'){showTab(h,true);return;}
   showTab('ruota',true);const f=BYID[h];if(f&&!f.isSpirit&&f!==state.sel){state.mode='ego';select(f,true);}}
