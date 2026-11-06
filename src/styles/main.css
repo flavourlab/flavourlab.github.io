@@ -9,23 +9,23 @@ img,svg{max-width:100%}
 /* Layout: minimale, monocromatico. Inchiostro su carta, un solo accento bordeaux, filetti sottili al posto di riquadri */
 :root{
   --bg:#FBFBFA; --surface:#FFFFFF; --sunk:#F3F3F1; --ink:#161616; --muted:#77777A; --line:#E4E4E1;
-  --accent:#7D2430; --concord:#161616; --contrast:#7D2430; --spirit:#8C7550;
-  --t-dolce:#B9727C; --t-acido:#9C9A3E; --t-amaro:#527D66; --t-umami:#9A6E50; --t-salato:#53789E;
-  --ok:#3E7A5A; --warn:#A97B34; --bad:#9E3B33;
+  --accent:#A3202F; --concord:#161616; --contrast:#A3202F; --spirit:#A8812F;
+  --t-dolce:#D9486A; --t-acido:#B59A00; --t-amaro:#23905A; --t-umami:#C8621F; --t-salato:#2A6FD6;
+  --ok:#23905A; --warn:#C9860F; --bad:#C8372C;
   --f-display:'Geist',system-ui,-apple-system,'Segoe UI',sans-serif;
   --f-body:'Geist',system-ui,-apple-system,'Segoe UI',sans-serif;
   --f-mono:'Geist Mono',ui-monospace,'SF Mono',Menlo,Consolas,monospace;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   --bg:#0F0F10; --surface:#141415; --sunk:#1B1B1D; --ink:#ECECEA; --muted:#8B8B8F; --line:#2A2A2D;
-  --accent:#C9737D; --concord:#ECECEA; --contrast:#C9737D; --spirit:#BFA77D;
-  --t-dolce:#D3959D; --t-acido:#C2C06E; --t-amaro:#86AE97; --t-umami:#C49C7E; --t-salato:#8DA9C7;
-  --ok:#7DB394; --warn:#D2A766; --bad:#D47A70; color-scheme:dark}}
+  --accent:#F2667A; --concord:#ECECEA; --contrast:#F2667A; --spirit:#E6B95A;
+  --t-dolce:#F57A96; --t-acido:#E8D23C; --t-amaro:#45C98D; --t-umami:#F69552; --t-salato:#6EA6F7;
+  --ok:#45C98D; --warn:#F2B443; --bad:#F27668; color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#0F0F10; --surface:#141415; --sunk:#1B1B1D; --ink:#ECECEA; --muted:#8B8B8F; --line:#2A2A2D;
-  --accent:#C9737D; --concord:#ECECEA; --contrast:#C9737D; --spirit:#BFA77D;
-  --t-dolce:#D3959D; --t-acido:#C2C06E; --t-amaro:#86AE97; --t-umami:#C49C7E; --t-salato:#8DA9C7;
-  --ok:#7DB394; --warn:#D2A766; --bad:#D47A70; color-scheme:dark}
+  --accent:#F2667A; --concord:#ECECEA; --contrast:#F2667A; --spirit:#E6B95A;
+  --t-dolce:#F57A96; --t-acido:#E8D23C; --t-amaro:#45C98D; --t-umami:#F69552; --t-salato:#6EA6F7;
+  --ok:#45C98D; --warn:#F2B443; --bad:#F27668; color-scheme:dark}
 *{box-sizing:border-box}
 body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5;
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 48px}
@@ -85,8 +85,8 @@ button{font:inherit;color:inherit}
 .wheel-head{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:baseline}
 #wheel{width:100%;height:auto;display:block;max-width:820px;margin:0 auto;touch-action:manipulation}
 #wheel text{font-family:var(--f-body);fill:var(--ink)}
-#wheel .lbl{font-size:14.5px}
-#wheel .slbl{font-size:13.5px;font-weight:600;fill:var(--spirit)}
+#wheel .lbl{font-size:16px}
+#wheel .slbl{font-size:14.5px;font-weight:500;fill:var(--spirit)}
 #wheel .node{cursor:pointer}
 #wheel .node:hover .lbl,#wheel .node:focus .lbl,#wheel .node.hl .lbl{font-weight:700}
 #wheel .dim{opacity:.18}

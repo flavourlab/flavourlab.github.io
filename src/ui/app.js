@@ -88,17 +88,17 @@ function makeCombo(host,{id,placeholder,source,onPick,keep}){
 }
 
 // ---------- ruota: abbinamenti ----------
-const R1a=72,R1b=128,RP=188,RS=374;
+const R1a=72,R1b=128,RP=188,RS=388;
 function renderEgo(){
   const A=state.sel,parts=state.parts,sps=state.sps;
   let h='';
-  TORDER.forEach((k,i)=>{const a0=-90+i*72-36;h+=`<path d="${arcPath(R1b+4,RS-16,a0+0.6,a0+71.4)}" style="fill:${tcol(k)};opacity:.06"/>`;});
+  TORDER.forEach((k,i)=>{const a0=-90+i*72-36;h+=`<path d="${arcPath(R1b+4,RS-16,a0+0.6,a0+71.4)}" style="fill:${tcol(k)};opacity:.09"/>`;});
   h+=`<circle r="${RP}" style="fill:none;stroke:var(--line);stroke-dasharray:2 5"/><circle r="${RS}" style="fill:none;stroke:var(--line);stroke-dasharray:2 5"/>`;
   // anello 1: gusti
   TORDER.forEach((k,i)=>{const a0=-90+i*72-36;const v=A.t[k];
     h+=`<path d="${arcPath(R1a,R1b,a0+0.8,a0+71.2)}" style="fill:${tcol(k)};opacity:${(0.16+v*0.165).toFixed(2)}"/>`;
     const [x,y]=pol((R1a+R1b)/2,-90+i*72);
-    h+=`<text x="${x}" y="${y-2}" text-anchor="middle" style="font-size:15px;font-weight:700;${halo}">${TLABEL[k]}</text><text x="${x}" y="${y+15}" text-anchor="middle" style="font-size:12.5px;font-family:var(--f-mono);${halo}">${v}/5</text>`;});
+    h+=`<text x="${x}" y="${y-2}" text-anchor="middle" style="font-size:17px;font-weight:600;${halo}">${TLABEL[k]}</text><text x="${x}" y="${y+16}" text-anchor="middle" style="font-size:13.5px;font-family:var(--f-mono);${halo}">${v}/5</text>`;});
   // nodi abbinamento
   const groups={};parts.forEach(r=>(groups[r.B.dom]=groups[r.B.dom]||[]).push(r));
   const nodes=[];TORDER.forEach((k,i)=>{const g=groups[k]||[];g.forEach((r,j)=>nodes.push({r,a:-90+i*72-36+(j+0.5)*72/g.length}));});
@@ -121,16 +121,16 @@ function renderEgo(){
     h+=`<g class="node anim" data-id="${r.B.id}" data-kind="p" tabindex="0" role="button" aria-label="${esc(r.B.name)}, ${TYPELBL[r.type]}, ${r.total} su 30">
       <circle cx="${x}" cy="${y}" r="${+rad+3.5}" style="fill:var(--surface);stroke:${typeCol(r.type)};stroke-width:2;${r.type==='contrasto'?'stroke-dasharray:3 2':''}"/>
       <circle cx="${x}" cy="${y}" r="${rad}" style="fill:${tcol(r.B.dom)}"/>
-      ${labelAt(RP+14,n.a,`${esc(trunc(r.B.name,18))}<tspan style="font-family:var(--f-mono);font-size:11.5px;fill:var(--muted)"> ${r.total}</tspan>`,'lbl')}</g>`;});
+      ${labelAt(RP+14,n.a,`${esc(trunc(r.B.name,16))}<tspan style="font-family:var(--f-mono);font-size:12.5px;fill:var(--muted)"> ${r.total}</tspan>`,'lbl')}</g>`;});
   // nodi alcolici
   snodes.forEach(s=>{const [x,y]=pol(RS,s.a);const B=s.rs.B;
     h+=`<g class="node anim" data-id="${B.id}" data-kind="s" tabindex="0" role="button" aria-label="${esc(B.name)}, ${s.rs.total} su 30">
       <rect x="${x-6}" y="${y-6}" width="12" height="12" transform="rotate(45 ${x} ${y})" style="fill:var(--spirit);stroke:var(--surface);stroke-width:2"/>
-      ${labelAt(RS+14,s.a,esc(trunc(B.name,17)),'slbl')}</g>`;});
+      ${labelAt(RS+14,s.a,esc(trunc(B.name,16)),'slbl')}</g>`;});
   // centro
   h+=`<circle r="64" style="fill:var(--surface);stroke:${tcol(A.dom)};stroke-width:2.5"/>`;
   const words=A.name.split(' ');const lines=[];words.forEach(w=>{if(lines.length&&(lines[lines.length-1]+' '+w).length<=12)lines[lines.length-1]+=' '+w;else lines.push(w);});
-  const fs=lines.some(l=>l.length>10)?18:22;
+  const fs=lines.some(l=>l.length>10)?20:24;
   lines.slice(0,3).forEach((l,i)=>{h+=`<text text-anchor="middle" y="${(i-(Math.min(lines.length,3)-1)/2)*fs+4}" style="font-family:var(--f-display);font-size:${fs}px">${esc(l)}</text>`;});
   h+=`<text text-anchor="middle" y="${(Math.min(lines.length,3)/2)*fs+12}" style="font-size:10px;fill:var(--muted);font-family:var(--f-mono);letter-spacing:.06em">${TLABEL[A.dom].toUpperCase()}</text>`;
   $('#wheel').innerHTML=h;
@@ -150,11 +150,11 @@ function renderBrowse(){
   const N=list.length,step=360/N,ang=i=>-90+i*step;let h='';
   runs(list,f=>f.dom).forEach(rn=>{const a0=ang(rn.s),a1=ang(rn.e);
     h+=`<path class="node" data-t="${rn.k}" d="${arcPath(72,140,a0+0.4,a1-0.4)}" style="fill:${tcol(rn.k)};opacity:.85"><title>${TLABEL[rn.k]}</title></path>`;
-    const span=a1-a0;if(span>14){const [x,y]=pol(106,(a0+a1)/2);h+=`<text x="${x}" y="${y+5}" text-anchor="middle" style="pointer-events:none;font-size:15px;font-weight:700;${halo}">${TLABEL[rn.k]}</text>`;}});
+    const span=a1-a0;if(span>14){const [x,y]=pol(106,(a0+a1)/2);h+=`<text x="${x}" y="${y+5}" text-anchor="middle" style="pointer-events:none;font-size:17px;font-weight:700;${halo}">${TLABEL[rn.k]}</text>`;}});
   let par=0;runs(list,f=>f.dom+'|'+f.cat).forEach(rn=>{const a0=ang(rn.s),a1=ang(rn.e);par++;const it=rn.it;
     h+=`<path class="node" data-t="${it.dom}" data-cat="${it.cat}" d="${arcPath(144,236,a0+0.25,a1-0.25)}" style="fill:${tcol(it.dom)};opacity:${par%2?.32:.5}"><title>${esc(CATS[it.cat][0])}</title></path>`;
-    const span=a1-a0;if(span>=6.5)h+=`<g style="pointer-events:none">${labelAt(150,(a0+a1)/2,esc(trunc(CATS[it.cat][1],14)),'',` style="font-size:12.5px;${halo}"`)}</g>`;});
-  const showL=step>=2.3,fs=Math.min(15,step*3.8).toFixed(1);
+    const span=a1-a0;if(span>=6.5)h+=`<g style="pointer-events:none">${labelAt(150,(a0+a1)/2,esc(trunc(CATS[it.cat][1],14)),'',` style="font-size:14px;${halo}"`)}</g>`;});
+  const showL=step>=2.3,fs=Math.min(16.5,step*4.2).toFixed(1);
   list.forEach((f,i)=>{const a0=ang(i),a1=ang(i+1),am=(a0+a1)/2;const on=f===state.sel;
     h+=`<g class="node" data-id="${f.id}" data-kind="b" tabindex="0" role="button" aria-label="${esc(f.name)}"><path d="${arcPath(240,280,a0+0.12,a1-0.12)}" style="fill:${tcol(f.dom)};opacity:${CATORD[f.cat]%2?.62:.9};${on?'stroke:var(--ink);stroke-width:2':''}"/>`+
       (showL?labelAt(288,am,esc(trunc(f.name,24)),'',` style="font-size:${fs}px;${on?'font-weight:700':''}"`):'')+`</g>`;});
