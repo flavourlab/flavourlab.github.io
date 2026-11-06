@@ -20,14 +20,14 @@
   </header>
 
   <nav class="tabbar" id="tabbar" role="tablist" aria-label="Sezioni">
-    <button type="button" role="tab" id="tb-ruota" aria-controls="tab-ruota" aria-selected="true"><span class="tb-t">Ruota e abbinamenti</span><span class="tb-d">Esplora un alimento, i suoi abbinamenti e gli alcolici</span></button>
-    <button type="button" role="tab" id="tb-verifica" aria-controls="tab-verifica" aria-selected="false" tabindex="-1"><span class="tb-t">Pairing Studio</span><span class="tb-d">Verifica una coppia o un trio di ingredienti</span></button>
-    <button type="button" role="tab" id="tb-cocktail" aria-controls="tab-cocktail" aria-selected="false" tabindex="-1"><span class="tb-t">Cocktail creator</span><span class="tb-d">Dagli ingredienti a una ricetta completa</span></button>
+    <button type="button" role="tab" id="tb-ruota" aria-controls="tab-ruota" aria-selected="true"><span class="tb-t">Esplora un ingrediente</span><span class="tb-d">Con cosa si abbina e cosa berci</span></button>
+    <button type="button" role="tab" id="tb-verifica" aria-controls="tab-verifica" aria-selected="false" tabindex="-1"><span class="tb-t">Prova un abbinamento</span><span class="tb-d">Due o tre ingredienti stanno bene insieme?</span></button>
+    <button type="button" role="tab" id="tb-cocktail" aria-controls="tab-cocktail" aria-selected="false" tabindex="-1"><span class="tb-t">Crea un drink</span><span class="tb-d">Da ciò che hai a una ricetta completa</span></button>
   </nav>
 
   <div id="tab-ruota" role="tabpanel" aria-labelledby="tb-ruota" class="tabpanel">
     <div class="intro">
-      <div class="intro-t"><h2>Ruota degli abbinamenti</h2>
+      <div class="intro-t"><h2>Esplora un ingrediente</h2>
         <p>Scegli un alimento: vedi con cosa si abbina e cosa berci.</p></div>
       <div class="tools">
         <div id="ruotaTools" class="tools">
@@ -72,7 +72,7 @@
       <div><span class="eyebrow">Abbinamenti alimentari</span><h2 id="pairsTitle">Con cosa si sposa</h2></div>
       <div class="rail-nav"><div class="seg" role="group" aria-label="Filtra per tipo">
         <button type="button" data-f="all" aria-pressed="true">Tutti</button>
-        <button type="button" data-f="concordanza" aria-pressed="false">Concordanza</button>
+        <button type="button" data-f="concordanza" aria-pressed="false">Affinità</button>
         <button type="button" data-f="contrasto" aria-pressed="false">Contrasto</button>
       </div><span class="rail-count" id="pairCount"></span><button type="button" class="rnav" data-rail="pairGrid" data-dir="-1" aria-label="Abbinamenti precedenti">←</button><button type="button" class="rnav" data-rail="pairGrid" data-dir="1" aria-label="Abbinamenti successivi">→</button></div>
     </div>
@@ -82,8 +82,8 @@
   </div>
 
   <div id="tab-verifica" role="tabpanel" aria-labelledby="tb-verifica" class="tabpanel" hidden>
-    <div class="intro"><div class="intro-t"><h2>Pairing Studio</h2>
-      <p>Metti alla prova due o tre ingredienti, anche un alcolico. Il punteggio su 30 somma sei lenti da 0 a 5. Con due ingredienti scegli una lente (piramide, equilibrio, intensità o anello debole) e ti consiglio il terzo che la migliora; con tre vedi il triangolo, i ruoli e le dosi. Più sotto trovi come ragiona il metodo.</p></div></div>
+    <div class="intro"><div class="intro-t"><h2>Prova un abbinamento</h2>
+      <p>Scegli due ingredienti, anche un alcolico: ti dico se stanno bene insieme, perché e quale terzo ingrediente li completa.</p></div></div>
   <section id="check" aria-label="Verifica una coppia">
     <div class="sec-head">
       <div><span class="eyebrow">Compatibilità</span><h3 class="sec-t">Coppia o trio</h3></div>
@@ -110,8 +110,8 @@
   </div>
 
   <div id="tab-cocktail" role="tabpanel" aria-labelledby="tb-cocktail" class="tabpanel" hidden>
-    <div class="intro"><div class="intro-t"><h2>Cocktail creator</h2>
-      <p>Inserisci da 1 a 5 ingredienti: ti suggerisco la base più vicina al loro profilo (un distillato, ma anche un bitter, un vermouth o un liquore), e puoi sceglierne un'altra. Poi scegli lo stile e ricevi le ricette complete: da bancone, da laboratorio e, quando la base è forte, a bassa gradazione.</p></div></div>
+    <div class="intro"><div class="intro-t"><h2>Crea un drink</h2>
+      <p>Aggiungi da 1 a 5 ingredienti: ti propongo subito una base e una ricetta, poi puoi cambiare base e bicchiere.</p></div></div>
     <div class="builder">
       <section class="step" aria-labelledby="h-ing">
         <header class="step-h"><span class="sn">1</span><h3 id="h-ing">Ingredienti</h3><span class="tiny muted" id="ckCount"></span></header>

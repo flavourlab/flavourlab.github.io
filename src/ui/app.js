@@ -1,7 +1,7 @@
-// Interfaccia: ruota, Pairing Studio e Cocktail creator.
+// Interfaccia: «Esplora un ingrediente», «Prova un abbinamento» e «Crea un drink».
 // ===== ICONE DEI BICCHIERI (tratto sottile) =====
 // s = tratto del bicchiere, lq = liquido, ac = garnish/dettagli. --c è il colore mostrato al passaggio del mouse.
-import { ALLERG, BYID, BYNAME, CATS, FAM, FOODS, ORIG, SGROUP, SPIRITS, TLABEL, TORDER, TYPELBL, norm } from '../domain/core.js';
+import { ALLERG, BYID, BYNAME, CATS, FAM, FOODS, ORIG, SGROUP, SPIRITS, TLABEL, TORDER, norm } from '../domain/core.js';
 import { S, howTo, listIt, monthsTxt, partnersOf, score, spiritsOf, trioSpirits, verdict } from '../domain/scoring.js';
 import { TLENS, fmtN, lensReason, roles, spiritsForTrio, suggestThird, trio } from '../domain/trio.js';
 import { ABV, BASES, BGROUPS, STY, abvOf, buildRecipe, coherence, fmt, styleFit, suggestBases } from '../domain/recipes.js';
@@ -40,6 +40,9 @@ let mainCombo=null;
 const $=s=>document.querySelector(s);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const CATORD={};Object.keys(CATS).forEach((k,i)=>CATORD[k]=i);
+// Nomi mostrati all'utente (glossario): i valori dei dati restano 'concordanza' e 'contrasto'
+const TYPEUI={concordanza:'Affinità',contrasto:'Contrasto'};
+const LENSUI={piramide:'Note complete',equilibrio:'Equilibrio di gusto',intensita:'Intensità',debole:'Coppia più debole'};
 const tcol=k=>`var(--t-${k})`;
 const typeCol=t=>t==='contrasto'?'var(--contrast)':'var(--concord)';
 function pol(r,a){const t=a*Math.PI/180;return [+(r*Math.cos(t)).toFixed(2),+(r*Math.sin(t)).toFixed(2)];}
@@ -134,7 +137,7 @@ function renderEgo(){
     h+=`<line class="ray anim" data-p="${r.B.id}" x1="${x0}" y1="${y0}" x2="${x1}" y2="${y1}" style="stroke:${typeCol(r.type)};stroke-width:${(1.2+(r.total-14)/4).toFixed(1)};${r.type==='contrasto'?'stroke-dasharray:5 4;':''}opacity:.7"/>`;});
   // nodi partner
   nodes.forEach(n=>{const r=n.r;const [x,y]=pol(RP,n.a);const rad=(4+(r.total-14)/3).toFixed(1);
-    h+=`<g class="node anim" data-id="${r.B.id}" data-kind="p" tabindex="0" role="button" aria-label="${esc(r.B.name)}, ${TYPELBL[r.type]}, ${r.total} su 30">
+    h+=`<g class="node anim" data-id="${r.B.id}" data-kind="p" tabindex="0" role="button" aria-label="${esc(r.B.name)}, ${TYPEUI[r.type]}, ${r.total} su 30">
       <circle cx="${x}" cy="${y}" r="${+rad+3.5}" style="fill:var(--surface);stroke:${typeCol(r.type)};stroke-width:2;${r.type==='contrasto'?'stroke-dasharray:3 2':''}"/>
       <circle cx="${x}" cy="${y}" r="${rad}" style="fill:${tcol(r.B.dom)}"/>
       <title>${esc(r.B.name)}</title>${showL?labelLines(RP+14,n.a,wrapName(r.B.name,Math.floor((RS-RP-34)/(0.55*fP)),nodes.length<=12),'lbl',fP,` style="font-size:${fP.toFixed(1)}px"`):''}</g>`;});
@@ -154,7 +157,7 @@ function renderEgo(){
   $('#wheelCap').textContent=`${TLABEL[A.dom]} › ${A.name} › ${parts.length} abbinamenti › ${sps.length} alcolici`;
   $('#wheelHint').textContent='Passa sopra un nodo per il motivo, clicca per aprirlo.';
   $('#legend').innerHTML=TORDER.map(k=>`<span><i style="width:10px;height:10px;border-radius:50%;background:${tcol(k)};display:inline-block"></i>${TLABEL[k]}</span>`).join('')+
-    `<span><svg width="26" height="8"><line x1="0" y1="4" x2="26" y2="4" style="stroke:var(--concord);stroke-width:2.5"/></svg>Concordanza</span>`+
+    `<span><svg width="26" height="8"><line x1="0" y1="4" x2="26" y2="4" style="stroke:var(--concord);stroke-width:2.5"/></svg>Affinità</span>`+
     `<span><svg width="26" height="8"><line x1="0" y1="4" x2="26" y2="4" style="stroke:var(--contrast);stroke-width:2.5;stroke-dasharray:5 4"/></svg>Contrasto</span>`+
     `<span><svg width="12" height="12"><rect x="2" y="2" width="8" height="8" transform="rotate(45 6 6)" style="fill:var(--spirit)"/></svg>Alcolico</span>`;
 }
@@ -234,7 +237,7 @@ function renderProfile(){
       <span class="chip">${A.season?'Stagione '+monthsTxt(A.season):'Tutto l\'anno'}</span>
       ${A.o?`<span class="chip">${ORIG[A.o]}</span>`:''}
     </div>
-    <p><b>Firma:</b> ${esc(topFams(A).join(' · ')||'neutro, solo gusto')}</p>
+    <p><b>Note principali:</b> ${esc(topFams(A).join(' · ')||'neutro, solo gusto')}</p>
   </div>
   <dl class="kv">
     <dt>Testa</dt><dd>${lv.testa.join(', ')||'—'}</dd>
@@ -259,7 +262,7 @@ function renderSpirits(){
 }
 function scoreBar(t,max=30){const [v]=verdict(t);const c=v==='forte'?'var(--ok)':v==='promettente'?'color-mix(in srgb,var(--ok) 55%,var(--warn))':v==='rischioso'?'var(--warn)':'var(--bad)';
   return `<span class="score"><span class="bar"><i style="width:${(t/max*100).toFixed(0)}%;background:${c}"></i></span>${t}/30</span>`;}
-function badge(r){return `<span class="badge ${r.type}">${r.type==='contrasto'?'⇄':'≈'} ${TYPELBL[r.type]}</span>${r.mixed?`<span class="badge plus">+ ${r.type==='contrasto'?'concordanza':'contrasto'}</span>`:''}`;}
+function badge(r){return `<span class="badge ${r.type}">${r.type==='contrasto'?'⇄':'≈'} ${TYPEUI[r.type]}</span>${r.mixed?`<span class="badge plus">+ ${r.type==='contrasto'?'affinità':'contrasto'}</span>`:''}`;}
 function spiritCard(A,r){const B=r.B;
   const trio=state.trio[B.id];
   return `<article class="card sp" data-sid="${B.id}">
@@ -268,7 +271,7 @@ function spiritCard(A,r){const B=r.B;
     <p class="sum">${esc(firstSentence(r.summary))}</p>
     <p class="tiny"><b>Come:</b> ${esc(SGROUP[B.grp][1].charAt(0).toUpperCase()+SGROUP[B.grp][1].slice(1))}.${trio?` <b>Trio:</b> aggiungi ${esc(trio.name)}.`:''}</p>
     <details><summary>Perché funziona</summary><p class="tiny">${esc(r.summary)}</p><p class="tiny"><b>Preparazione:</b> ${esc(howTo(A,B))}</p></details>
-    <div class="acts"><button class="link" data-mkck="${B.id}">Crea un cocktail →</button></div>
+    <div class="acts"><button class="link" data-mkck="${B.id}">Crea un drink →</button></div>
   </article>`;}
 
 // ---------- abbinamenti alimentari ----------
@@ -284,7 +287,7 @@ function renderPairs(){
     <div class="card-top"><div><h3>${esc(r.B.name)}</h3><span class="cat"><i style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${tcol(r.B.dom)};margin-right:5px"></i>${esc(CATS[r.B.cat][0])}</span></div>${scoreBar(r.total)}</div>
     <div class="chips">${badge(r)}</div>
     <p class="sum">${esc(firstSentence(r.summary))}</p>
-    <details><summary>Le sei lenti, dosi e test</summary><p class="tiny" style="margin-bottom:6px">${esc(r.summary)}</p>${lensTable(r)}<p class="tiny" style="margin-top:8px"><b>Rapporto:</b> ${esc(r.ratioTxt)}</p><p class="tiny"><b>Test rapido:</b> ${esc(testTxt(r))}</p></details>
+    <details><summary>I sei criteri, dosi e test</summary><p class="tiny" style="margin-bottom:6px">${esc(r.summary)}</p>${lensTable(r)}<p class="tiny" style="margin-top:8px"><b>Rapporto:</b> ${esc(r.ratioTxt)}</p><p class="tiny"><b>Test rapido:</b> ${esc(testTxt(r))}</p></details>
     <div class="acts"><button class="link" data-open="${r.B.id}">Apri ${esc(r.B.name)} →</button><button class="link" data-check="${r.B.id}">Verifica la coppia</button></div>
   </article>`).join(''):`<p class="muted">Nessun abbinamento di questo tipo sopra la soglia.</p>`;
   $('#pairGrid').scrollLeft=0;$('#pairCount').dataset.total=list.length;updateRail('pairGrid');
@@ -307,7 +310,7 @@ function renderPairOut(){
   const r=S(A,B);const [v,vt]=verdict(r.total);const vc=v==='forte'?'var(--ok)':v==='promettente'?'var(--ok)':v==='rischioso'?'var(--warn)':'var(--bad)';
   const trio=B.isSpirit?[]:trioSpirits(A,B,3);
   $('#checkOut').innerHTML=`
-    <div class="verdict"><span class="big">${r.total}<small>/30</small></span><div><div class="vtag" style="color:${vc}">${v}${info('score','punteggio')}</div><div class="chips" style="margin-top:4px">${badge(r)}${info('type','concordanza e contrasto')}</div></div></div>
+    <div class="verdict"><span class="big">${r.total}<small>/30</small></span><div><div class="vtag" style="color:${vc}">${v}${info('score','punteggio')}</div><div class="chips" style="margin-top:4px">${badge(r)}${info('type','affinità e contrasto')}</div></div></div>
     <div style="margin:10px 0 4px"><div class="scale"><i></i><i></i><i></i><i></i><b style="left:calc(${(r.total/30*100).toFixed(1)}% - 1.5px)"></b></div><div class="scale-l"><span>0</span><span>10</span><span>17</span><span>24</span><span>30</span></div></div>
     <p style="margin:8px 0"><b>${esc(A.name)} + ${esc(B.name)}.</b> ${esc(vt)} ${esc(r.summary)}</p>
     ${lensTable(r)}
@@ -320,7 +323,7 @@ function renderPairOut(){
 
 // ---------- metodo ----------
 const INFO={
-  'Ponte aromatico':'Quanto i due profili si sovrappongono sulle 18 famiglie aromatiche. Conta anche il ponte indiretto tra famiglie affini (agrumato ed erbe, tostato e ossidativo, lattico e tostato). È la lente della concordanza.',
+  'Ponte aromatico':'Quanto i due profili si sovrappongono sulle 18 famiglie aromatiche. Conta anche il ponte indiretto tra famiglie affini (agrumato ed erbe, tostato e ossidativo, lattico e tostato). È il criterio dell\'affinità.',
   'Bilanciamento di gusto':'Le regole classiche: l\'acido taglia il grasso, il sale esalta il dolce e attenua l\'amaro, l\'amaro dà profondità al dolce, il grasso ammorbidisce piccante e tannino. Include la sinergia umami. Toglie punti quando due amari, due acidi o due piccanti forti si sommano.',
   'Intensità e peso':'Due ingredienti di forza simile dialogano alla pari. Se la distanza è grande, il più delicato va in dose maggiore o rischia di sparire.',
   'Copertura piramide':'Testa (agrumi, erbe, verde, frutta fresca), cuore (frutta matura, fiori, spezie pungenti, resine) e fondo (tostato, legno, vaniglia, lattico, carnoso). Una coppia che copre tutti e tre i livelli è più completa.',
@@ -333,10 +336,10 @@ const INFO={
   'Intensità':'Distanza tra l\'ingrediente più forte e il più delicato del trio: più è piccola, più i tre dialogano alla pari.',
   'Anello debole':'Un trio vale quanto la sua coppia peggiore. Se il terzo ingrediente lega bene con i due della coppia debole fa da ponte e alza il voto.',
   'Tradizione e territorio':'Media di stagione, area d\'origine e tradizione delle tre coppie.',
-  score:'Somma di sei lenti da 0 a 5. 24–30 forte, da provare subito · 17–23 promettente, va calibrato in dose o con un terzo ingrediente · 10–16 rischioso, serve un ingrediente ponte · sotto 10 sconsigliato.',
-  type:'Concordanza: i due condividono famiglie aromatiche o si rinforzano (sinergia umami). Contrasto: un gusto bilancia l\'altro (acido contro grasso, sale contro dolce). Vince il più forte; se anche l\'altro supera 3 il badge lo segnala con «+».',
-  structure:'Armonia: tre coppie in concordanza. Contrasto: tre coppie in contrasto. Triangolo: base, complemento e accento, con coppie dei due tipi. Ponte aromatico: il terzo ingrediente unisce una coppia che da sola dialoga poco.',
-  third:'Per la lente scelta provo ogni alimento come terzo ingrediente e ordino i risultati: a parità di voto della lente vince il punteggio del trio. Al massimo due proposte per categoria.',
+  score:'Somma di sei criteri da 0 a 5. 24–30 forte, da provare subito · 17–23 promettente, va calibrato in dose o con un terzo ingrediente · 10–16 rischioso, serve un ingrediente ponte · sotto 10 sconsigliato.',
+  type:'Affinità: i due condividono famiglie aromatiche o si rinforzano (sinergia umami). Contrasto: un gusto bilancia l\'altro (acido contro grasso, sale contro dolce). Vince il più forte; se anche l\'altro supera 3 il badge lo segnala con «+».',
+  structure:'Armonia: tre coppie per affinità. Contrasto: tre coppie in contrasto. Triangolo: base, complemento e accento, con coppie dei due tipi. Ponte aromatico: il terzo ingrediente unisce una coppia che da sola dialoga poco.',
+  third:'Per il criterio scelto provo ogni alimento come terzo ingrediente e ordino i risultati: a parità di voto del criterio vince il punteggio del trio. Al massimo due proposte per categoria.',
   roles:'Base: il corpo del trio (il più strutturato, o l\'alcolico). Accento: il più intenso o pungente, in piccola dose. Complemento: quello che resta. Il rapporto è un punto di partenza da correggere all\'assaggio.',
   spirits:'Alcolici ordinati per il loro abbinamento peggiore con i tre ingredienti: così nessuno dei tre resta scoperto.',
 };
@@ -344,8 +347,8 @@ function info(k,label){const t=INFO[k];if(!t)return'';return `<button type="butt
 function renderMethod(){
   $('#lensCards').innerHTML=`
   <div class="mcol"><h4>Il profilo</h4><p>Ogni alimento ha i cinque gusti, la struttura (grassezza, piccantezza, astringenza, freschezza) e diciotto famiglie aromatiche, tutto da 0 a 5. Il gusto più alto decide il settore della ruota. Sono alimenti gli ingredienti singoli, anche trasformati (pop-corn, miso); i piatti restano fuori.</p></div>
-  <div class="mcol"><h4>Concordanza e contrasto</h4><p><span class="mline"><svg width="26" height="8"><line x1="0" y1="4" x2="26" y2="4" style="stroke:var(--concord);stroke-width:2.5"/></svg><b>Concordanza</b></span> i due condividono note aromatiche o si rinforzano.</p><p><span class="mline"><svg width="26" height="8"><line x1="0" y1="4" x2="26" y2="4" style="stroke:var(--contrast);stroke-width:2.5;stroke-dasharray:5 4"/></svg><b>Contrasto</b></span> un gusto bilancia l'altro: acido contro grasso, sale contro dolce.</p></div>
-  <div class="mcol"><h4>Il punteggio</h4><div class="scale"><i></i><i></i><i></i><i></i></div><div class="scale-l"><span>0</span><span>10</span><span>17</span><span>24</span><span>30</span></div><p>Sei lenti da 0 a 5. <b>24–30</b> forte, <b>17–23</b> promettente, <b>10–16</b> rischioso, sotto 10 sconsigliato. Passa sulle <span class="info static">i</span> per la spiegazione di ogni lente.</p></div>`;
+  <div class="mcol"><h4>Affinità e contrasto</h4><p><span class="mline"><svg width="26" height="8"><line x1="0" y1="4" x2="26" y2="4" style="stroke:var(--concord);stroke-width:2.5"/></svg><b>Affinità</b></span> i due condividono note aromatiche o si rinforzano.</p><p><span class="mline"><svg width="26" height="8"><line x1="0" y1="4" x2="26" y2="4" style="stroke:var(--contrast);stroke-width:2.5;stroke-dasharray:5 4"/></svg><b>Contrasto</b></span> un gusto bilancia l'altro: acido contro grasso, sale contro dolce.</p></div>
+  <div class="mcol"><h4>Il punteggio</h4><div class="scale"><i></i><i></i><i></i><i></i></div><div class="scale-l"><span>0</span><span>10</span><span>17</span><span>24</span><span>30</span></div><p>Sei criteri da 0 a 5. <b>24–30</b> forte, <b>17–23</b> promettente, <b>10–16</b> rischioso, sotto 10 sconsigliato. Passa sulle <span class="info static">i</span> per la spiegazione di ogni criterio.</p></div>`;
 }
 
 // ---------- tooltip e interazioni ----------
@@ -379,7 +382,7 @@ function highlight(id,kind){
     const on=isLk?(n.dataset.p===id||n.dataset.s===id):keep.has(k);if(!on)n.classList.add('dim');else if(isLk)n.style.opacity=.9;});
   svg.querySelector(`[data-id="${id}"]`)?.classList.add('hl');
   const B=BYID[id];if(B&&state.mode==='ego'){$('#radars').innerHTML=renderRadars(state.sel,B);const r=S(state.sel,B);
-    $('#cmp').innerHTML=`Confronto con <b>${esc(B.name)}</b> (tratteggio) · ${TYPELBL[r.type].toLowerCase()} · ${r.total}/30`;
+    $('#cmp').innerHTML=`Confronto con <b>${esc(B.name)}</b> (tratteggio) · ${TYPEUI[r.type].toLowerCase()} · ${r.total}/30`;
     if(kind==='s')document.querySelector(`.sp[data-sid="${id}"]`)?.classList.add('hl');else document.querySelector(`.card[data-pid="${id}"]`)?.classList.add('hl');}
 }
 function resetLinks(){$('#wheel').querySelectorAll('.lk').forEach(l=>l.style.opacity=.28);}
@@ -387,8 +390,8 @@ const wheel=$('#wheel');
 wheel.addEventListener('pointerover',e=>{const g=e.target.closest('[data-id],[data-t]');if(!g)return;
   if(g.dataset.id){const B=BYID[g.dataset.id];
     if(state.mode==='ego'){const r=S(state.sel,B);highlight(B.id,g.dataset.kind);
-      showTip(`<b>${esc(B.name)}</b> · ${TYPELBL[r.type]} · ${r.total}/30<br>${esc(r.summary.split(/(?<=\.)\s/)[0])}`,e);}
-    else showTip(`<b>${esc(B.name)}</b><br>${esc(CATS[B.cat][0])} · ${TLABEL[B.dom]}<br>Firma: ${esc(topFams(B).join(', ')||'—')}`,e);}
+      showTip(`<b>${esc(B.name)}</b> · ${TYPEUI[r.type]} · ${r.total}/30<br>${esc(r.summary.split(/(?<=\.)\s/)[0])}`,e);}
+    else showTip(`<b>${esc(B.name)}</b><br>${esc(CATS[B.cat][0])} · ${TLABEL[B.dom]}<br>Note principali: ${esc(topFams(B).join(', ')||'—')}`,e);}
   else if(g.dataset.cat)showTip(`<b>${esc(CATS[g.dataset.cat][0])}</b>`,e);
 });
 wheel.addEventListener('pointermove',moveTip);
@@ -447,17 +450,17 @@ function triangleSVG(t){
   h+=`<text x="180" y="166" text-anchor="middle" style="font-family:var(--f-display);font-size:19px;fill:var(--ink)">${t.structure}</text><text x="180" y="184" text-anchor="middle" style="font-family:var(--f-mono);font-size:10px;letter-spacing:.08em;fill:var(--muted)">STRUTTURA</text>`;
   return h+'</svg>';
 }
-function triCap(){return `<p class="tiny muted tricap"><span><svg width="22" height="8"><line x1="0" y1="4" x2="22" y2="4" style="stroke:var(--concord);stroke-width:2.5"/></svg>concordanza</span><span><svg width="22" height="8"><line x1="0" y1="4" x2="22" y2="4" style="stroke:var(--contrast);stroke-width:2.5;stroke-dasharray:5 4"/></svg>contrasto</span><span>spessore = punteggio</span></p>`;}
+function triCap(){return `<p class="tiny muted tricap"><span><svg width="22" height="8"><line x1="0" y1="4" x2="22" y2="4" style="stroke:var(--concord);stroke-width:2.5"/></svg>affinità</span><span><svg width="22" height="8"><line x1="0" y1="4" x2="22" y2="4" style="stroke:var(--contrast);stroke-width:2.5;stroke-dasharray:5 4"/></svg>contrasto</span><span>spessore = punteggio</span></p>`;}
 
 // ---- render ----
 function renderLensPick(){
-  $('#lensPick').innerHTML=`<span class="eyebrow">Lente del trio</span><div class="lensbar" role="group" aria-label="Lente del trio">${TLENS.map(l=>`<button type="button" data-lens="${l[0]}" aria-pressed="${state.lens===l[0]}">${l[1]}</button>`).join('')}</div><p class="tiny muted">${TLENS.find(l=>l[0]===state.lens)[2]}</p>`;
+  $('#lensPick').innerHTML=`<span class="eyebrow">Criterio per il terzo ingrediente</span><div class="lensbar" role="group" aria-label="Criterio per il terzo ingrediente">${TLENS.map(l=>`<button type="button" data-lens="${l[0]}" aria-pressed="${state.lens===l[0]}">${LENSUI[l[0]]}</button>`).join('')}</div><p class="tiny muted">${TLENS.find(l=>l[0]===state.lens)[2]}</p>`;
 }
 function renderSuggest(){
   const A=state.A,B=state.B;const host=$('#thirdSug');
   if(!A||!B||A===B){host.innerHTML='';return;}
   const L=TLENS.find(l=>l[0]===state.lens);const list=suggestThird(A,B,state.lens);
-  host.innerHTML=`<span class="eyebrow">Terzo ingrediente consigliato · ${L[1]} ${info('third','terzo ingrediente')}</span><ul class="sug">${list.map(x=>`<li><button type="button" data-setc="${x.C.id}" class="${state.C===x.C?'on':''}"><i style="background:${tcol(x.C.dom)}"></i><span class="sg-n"><b>${esc(x.C.name)}</b><small>${esc(lensReason(state.lens,A,B,x.C,x.t))}</small></span><span class="sg-s"><b>${fmtN(x.lv)}</b><em>/5</em><small>trio ${fmtN(x.t.total)}</small></span></button></li>`).join('')}</ul>`;
+  host.innerHTML=`<span class="eyebrow">Terzo ingrediente consigliato · ${LENSUI[state.lens]} ${info('third','terzo ingrediente')}</span><ul class="sug">${list.map(x=>`<li><button type="button" data-setc="${x.C.id}" class="${state.C===x.C?'on':''}"><i style="background:${tcol(x.C.dom)}"></i><span class="sg-n"><b>${esc(x.C.name)}</b><small>${esc(lensReason(state.lens,A,B,x.C,x.t))}</small></span><span class="sg-s"><b>${fmtN(x.lv)}</b><em>/5</em><small>trio ${fmtN(x.t.total)}</small></span></button></li>`).join('')}</ul>`;
 }
 function renderSide(){
   const A=state.A,B=state.B,C=state.C;if(!A||!B){$('#checkSide').innerHTML='';return;}
@@ -476,7 +479,7 @@ function renderTrioOut(){
       <div>
         <div class="verdict"><span class="big">${fmtN(t.total)}<small>/30</small></span><div><div class="vtag" style="color:${vc}">${v}${info('score','punteggio')}</div><div class="chips" style="margin-top:4px"><span class="chip">${t.structure}</span>${info('structure','struttura')}</div></div></div>
         <div style="margin:10px 0 4px"><div class="scale"><i></i><i></i><i></i><i></i><b style="left:calc(${(t.total/30*100).toFixed(1)}% - 1.5px)"></b></div><div class="scale-l"><span>0</span><span>10</span><span>17</span><span>24</span><span>30</span></div></div>
-        <p style="margin:10px 0 0"><b>${esc(t.T.map(I=>I.name).join(' + '))}.</b> ${esc(vt)} La coppia più forte è ${esc(best.p.A.name)} + ${esc(best.p.B.name)} (${fmtN(best.p.total)}, ${TYPELBL[best.p.type].toLowerCase()}).</p>
+        <p style="margin:10px 0 0"><b>${esc(t.T.map(I=>I.name).join(' + '))}.</b> ${esc(vt)} La coppia più forte è ${esc(best.p.A.name)} + ${esc(best.p.B.name)} (${fmtN(best.p.total)}, ${TYPEUI[best.p.type].toLowerCase()}).</p>
         <p class="lensfocus"><b>${esc(sel.n)} · ${fmtN(sel.v)}/5.</b> ${esc(sel.why)}</p>
       </div>
       <div>${triangleSVG(t)}${triCap()}</div>
@@ -529,7 +532,7 @@ const MODELBL={classic:'Classica',lab:'Laboratorio',low:'A bassa gradazione'};
 const MODEDESC={classic:'Tecniche da bancone: succhi freschi, sciroppi, infusioni a freddo, pestato.',lab:'Roner, fat-wash, acidi corretti con citrico e malico, carbonazione.',low:'Stessa idea con un vino aromatizzato o fortificato come base.'};
 
 
-const SHELVES=[['Stirred',['oldfashioned','martini','negroni']],['Shaken',['sour','sour_albume','flip','royale']],['Lunghi e costruiti',['collins','highball','spritz','julep']],['Speciali',['tiki','milkpunch']]];
+const SHELVES=[['Mescolati',['oldfashioned','martini','negroni']],['Shakerati',['sour','sour_albume','flip','royale']],['Lunghi',['collins','highball','spritz','julep']],['Speciali',['tiki','milkpunch']]];
 const MODEICON={classic:'Bancone',lab:'Roner e acidi',low:'Low ABV'};
 const ckFoods=()=>CK.ings.filter(i=>!i.isSpirit);
 const ingBase=()=>CK.ings.find(i=>i.isSpirit&&(i.grp==='bia'||i.grp==='inv'))||null;
@@ -580,7 +583,7 @@ function renderBase(){
       <span class="bmeter"><span class="bar"><i style="width:${(x.mean/30*100).toFixed(0)}%"></i></span><span class="num">${fmt(x.mean)}<em>/30</em></span></span>
       <span class="bwhy">${x.ov.length?'Ponte: '+esc(listIt(x.ov)):'Contrasto più che affinità'}</span>
       ${x.fit?`<span class="bfit">Tipico dello stile</span>`:''}
-      <span class="bnote">Lega meglio con ${esc(x.best.f.name)}: ${esc(TYPELBL[x.best.r.type].toLowerCase())}.</span>
+      <span class="bnote">Lega meglio con ${esc(x.best.f.name)}: ${esc(TYPEUI[x.best.r.type].toLowerCase())}.</span>
       <div class="bradar" aria-hidden="true">${radar(FAM.map(()=>({t:''})),[{v:mixAr,c:'var(--muted)',fo:.12},{v:x.s.ar,c:'var(--spirit)',fo:.28}],56,4)}</div>
       <ul class="bper" aria-label="Punteggio con ogni ingrediente">${x.per.map(p=>`<li><span>${esc(p.f.name)}</span><span class="bar"><i style="width:${(p.r.total/30*100).toFixed(0)}%"></i></span><b>${fmt(p.r.total)}</b></li>`).join('')}</ul>
     </button>`;};
