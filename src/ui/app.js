@@ -654,14 +654,19 @@ function renderBase(){
       <ul class="bper" aria-label="Punteggio con ogni ingrediente">${x.per.map(p=>`<li><span>${esc(p.f.name)}</span><span class="bar"><i style="width:${(p.r.total/30*100).toFixed(0)}%"></i></span><b>${fmt(p.r.total)}</b></li>`).join('')}</ul>
     </button>`;};
   const chips=`<div class="bfilter" role="group" aria-label="Tipo di base">${[['all','Tutte']].concat(BGROUPS.map(g=>[g[0],g[1]])).filter(g=>g[0]==='all'||suggestBases(fs.length?fs:[FOODS[0]],CK.style,g[0]).length).map(g=>`<button type="button" data-bg="${g[0]}" aria-pressed="${CK.bgroup===g[0]}">${g[1]}</button>`).join('')}</div>`;
-  host.innerHTML=fs.length?chips+`<div class="bcards">${top.map(x=>card(x,sug.findIndex(y=>y.s===x.s))).join('')}</div>`
-    :`<p class="note">Aggiungi almeno un alimento: il suggerimento confronta il profilo di ogni base (distillati, amari, vermouth, liquori) con quello degli ingredienti.</p>`;
+  // la base in una riga; «Cambia» apre filtri, carte e tendina (UX-11)
+  const open=CK.baseOpen&&fs.length>0;
+  if(!eb){host.innerHTML=`<p class="note">Aggiungi un ingrediente: ti propongo la base più adatta.</p>`;$('.force').hidden=true;}
+  else{const ex=sug.find(x=>x.s===eb);const lbl=CK.base?'Base scelta da te':ib?'Base dai tuoi ingredienti':'Base consigliata';
+    host.innerHTML=`<div class="bline"><span class="bl-l">${lbl}:</span> <b>${esc(eb.name)}</b>${ex&&ex.ov.length?`<span class="bl-w">note in comune: ${esc(listIt(ex.ov))}</span>`:''}${fs.length?`<button type="button" class="link" data-bopen aria-expanded="${open}">${open?'Chiudi':'Cambia'}</button>`:''}</div>`
+      +(open?chips+`<div class="bcards">${top.map(x=>card(x,sug.findIndex(y=>y.s===x.s))).join('')}</div>`:'');
+    $('.force').hidden=!open;}
   const sel=$('#ckBase');
   sel.innerHTML=`<option value="">${ib&&!CK.base?'Dai tuoi ingredienti: '+esc(ib.name):'Consigliato'+(sug[0]?': '+esc(sug[0].s.name):'')}</option>`+
     BGROUPS.map(([g,l,fn])=>`<optgroup label="${l}">${BASES.filter(fn).filter(s=>CK.style!=='spritz'||!(s.grp==='bia'||s.grp==='inv')||true).map(s=>{const x=sug.find(y=>y.s===s);const ok=styleFit(s,CK.style).ok;return `<option value="${s.id}"${CK.base===s?' selected':''}>${esc(s.name)}${x?' · '+fmt(x.mean)+'/30':''}${ok?'':' · non adatto allo stile'}</option>`;}).join('')}</optgroup>`).join('');
   $('#ckReset').hidden=!CK.base;
 }
-$('#ckBaseBox').addEventListener('click',e=>{const g=e.target.closest('[data-bg]');if(g){CK.bgroup=g.dataset.bg;renderBase();return;}const b=e.target.closest('[data-base]');if(!b)return;const s=BYID[b.dataset.base];
+$('#ckBaseBox').addEventListener('click',e=>{if(e.target.closest('[data-bopen]')){CK.baseOpen=!CK.baseOpen;renderBase();return;}const g=e.target.closest('[data-bg]');if(g){CK.bgroup=g.dataset.bg;renderBase();return;}const b=e.target.closest('[data-base]');if(!b)return;const s=BYID[b.dataset.base];
   const sug=suggestBases(ckFoods(),CK.style);const auto=ingBase()||sug[0]?.s;CK.base=s===auto?null:s;renderCocktail();});
 $('#ckBase').addEventListener('change',e=>{CK.base=BYID[e.target.value]||null;renderCocktail();});
 $('#ckReset').addEventListener('click',()=>{CK.base=null;renderCocktail();});
