@@ -66,17 +66,19 @@ function catOf(I){return I.isSpirit?SGROUP[I.grp][0]:CATS[I.cat][0];}
 const state={sel:null,mode:'browse',zoom:null,filter:'all',A:null,B:null,parts:[],sps:[],trio:{}};
 
 // ---------- combobox ----------
-function makeCombo(host,{id,placeholder,source,onPick,keep}){
+function makeCombo(host,{id,placeholder,source,onPick,keep,onClear}){
   host.innerHTML=`<input type="search" id="${id}" role="combobox" aria-expanded="false" aria-autocomplete="list" autocomplete="off" placeholder="${esc(placeholder)}"><div class="list" role="listbox" hidden></div>`;
-  const inp=host.querySelector('input'),list=host.querySelector('.list');let opts=[],act=0;
+  const inp=host.querySelector('input'),list=host.querySelector('.list');let opts=[],act=0,cur=null;
   function show(){const q=norm(inp.value.trim());
     opts=source().filter(it=>!q||norm(it.name).includes(q)).sort((a,b)=>{const sa=norm(a.name).startsWith(q)?0:1,sb=norm(b.name).startsWith(q)?0:1;return sa-sb||a.name.localeCompare(b.name,'it');}).slice(0,60);
     list.innerHTML=opts.map((it,i)=>`<div class="opt" role="option" data-i="${i}" aria-selected="${i===act}"><span>${esc(it.name)}</span><small>${esc(it.isSpirit?SGROUP[it.grp][0]:CATS[it.cat][1]+' · '+TLABEL[it.dom])}</small></div>`).join('');
     list.hidden=!opts.length;inp.setAttribute('aria-expanded',String(!list.hidden));}
-  function pick(it){if(!it)return;list.hidden=true;inp.setAttribute('aria-expanded','false');inp.value=keep?it.name:'';if(!keep)inp.blur();onPick(it);}
-  inp.addEventListener('input',()=>{act=0;show();});
+  function pick(it){if(!it)return;cur=keep?it:null;list.hidden=true;inp.setAttribute('aria-expanded','false');inp.value=keep?it.name:'';if(!keep)inp.blur();onPick(it);}
+  // svuotare il campo toglie davvero la scelta
+  inp.addEventListener('input',()=>{act=0;if(keep&&onClear&&cur&&!inp.value.trim()){cur=null;onClear();}show();});
   inp.addEventListener('focus',()=>{if(keep)inp.select();act=0;show();});
-  inp.addEventListener('blur',()=>setTimeout(()=>{list.hidden=true;inp.setAttribute('aria-expanded','false');},160));
+  // testo scritto ma non scelto: il campo torna a mostrare la scelta attiva
+  inp.addEventListener('blur',()=>setTimeout(()=>{list.hidden=true;inp.setAttribute('aria-expanded','false');if(keep&&document.activeElement!==inp)inp.value=cur?cur.name:'';},160));
   inp.addEventListener('keydown',e=>{
     if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();if(list.hidden)show();act=Math.max(0,Math.min(opts.length-1,act+(e.key==='ArrowDown'?1:-1)));
       list.querySelectorAll('.opt').forEach((o,i)=>o.setAttribute('aria-selected',String(i===act)));list.children[act]?.scrollIntoView({block:'nearest'});}
@@ -84,7 +86,7 @@ function makeCombo(host,{id,placeholder,source,onPick,keep}){
     else if(e.key==='Escape'){list.hidden=true;}
   });
   list.addEventListener('pointerdown',e=>{const o=e.target.closest('.opt');if(o){e.preventDefault();pick(opts[+o.dataset.i]);}});
-  return {set(it){inp.value=it?it.name:'';}};
+  return {set(it){cur=keep?(it||null):null;inp.value=it?it.name:'';}};
 }
 
 // ---------- ruota: abbinamenti ----------
@@ -398,8 +400,8 @@ mainCombo=makeCombo($('#mainSearch'),{id:'q-main',placeholder:`Cerca tra ${FOODS
 mainCombo.set(state.sel);
 $('#q-main').addEventListener('blur',()=>setTimeout(()=>{if(document.activeElement!==$('#q-main'))mainCombo.set(state.sel);},200));
 document.addEventListener('keydown',e=>{if(e.key!=='/'||e.ctrlKey||e.metaKey)return;const t=e.target;if(t.closest&&t.closest('input,textarea,select'))return;if($('#tab-ruota').hidden)return;e.preventDefault();$('#q-main').focus();});
-const comboA=makeCombo($('#cA'),{id:'q-a',placeholder:'Alimento A',source:()=>FOODS,keep:true,onPick:f=>{state.A=f;renderCheck();}});
-const comboB=makeCombo($('#cB'),{id:'q-b',placeholder:'Alimento o alcolico B',source:()=>FOODS.concat(SPIRITS),keep:true,onPick:f=>{state.B=f;renderCheck();}});
+const comboA=makeCombo($('#cA'),{id:'q-a',placeholder:'Alimento A',source:()=>FOODS,keep:true,onPick:f=>{state.A=f;renderCheck();},onClear:()=>{state.A=null;renderCheck();}});
+const comboB=makeCombo($('#cB'),{id:'q-b',placeholder:'Alimento o alcolico B',source:()=>FOODS.concat(SPIRITS),keep:true,onPick:f=>{state.B=f;renderCheck();},onClear:()=>{state.B=null;renderCheck();}});
 comboA.set(state.A);comboB.set(state.B);
 $('#stats').textContent=`${FOODS.length} alimenti · ${Object.keys(CATS).length} categorie · ${SPIRITS.length} alcolici`;
 renderMethod();
@@ -474,7 +476,7 @@ function renderCheck(){
   if(state.C)renderTrioOut();else renderPairOut();
   $('#cClear').hidden=!state.C;
 }
-var comboC=makeCombo($('#cC'),{id:'q-c',placeholder:'Terzo ingrediente (facoltativo)',source:()=>FOODS.concat(SPIRITS),keep:true,onPick:f=>{state.C=f;renderCheck();}});
+var comboC=makeCombo($('#cC'),{id:'q-c',placeholder:'Terzo ingrediente (facoltativo)',source:()=>FOODS.concat(SPIRITS),keep:true,onPick:f=>{state.C=f;renderCheck();},onClear:()=>{state.C=null;renderCheck();}});
 $('#cClear').addEventListener('click',()=>{state.C=null;comboC.set(null);renderCheck();});
 $('#lensPick').addEventListener('click',e=>{const b=e.target.closest('[data-lens]');if(!b)return;state.lens=b.dataset.lens;renderCheck();});
 $('#thirdSug').addEventListener('click',e=>{const b=e.target.closest('[data-setc]');if(!b)return;state.C=BYID[b.dataset.setc];comboC.set(state.C);renderCheck();});
