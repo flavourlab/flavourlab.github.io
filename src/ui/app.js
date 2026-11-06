@@ -108,7 +108,8 @@ function renderEgo(){
   // su schermi stretti le etichette non entrano leggibili: si tolgono e la ruota si stringe sugli anelli
   const showL=minU(1080)<=26,VB=showL?540:410;
   $('#wheel').setAttribute('viewBox',`${-VB} ${-VB} ${2*VB} ${2*VB}`);
-  const A=state.sel,parts=state.parts,sps=state.sps;
+  // di default i migliori 10 alimenti e 5 alcolici; «Mostra tutti» ripristina l'elenco completo (UX-08)
+  const A=state.sel,parts=state.egoAll?state.parts:state.parts.slice(0,10),sps=state.egoAll?state.sps:state.sps.slice(0,5);
   let h='';
   TORDER.forEach((k,i)=>{const a0=-90+i*72-36;h+=`<path d="${arcPath(R1b+4,RS-16,a0+0.6,a0+71.4)}" style="fill:${tcol(k)};opacity:.09"/>`;});
   h+=`<circle r="${RP}" style="fill:none;stroke:var(--line);stroke-dasharray:2 5"/><circle r="${RS}" style="fill:none;stroke:var(--line);stroke-dasharray:2 5"/>`;
@@ -155,7 +156,9 @@ function renderEgo(){
   if(showL){lines.slice(0,3).forEach((l,i)=>{h+=`<text text-anchor="middle" y="${(i-(Math.min(lines.length,3)-1)/2)*fs+4}" style="font-family:var(--f-display);font-size:${fs}px">${esc(l)}</text>`;});
     h+=`<text text-anchor="middle" y="${(Math.min(lines.length,3)/2)*fs+12}" style="font-size:${Math.max(10,mu).toFixed(1)}px;fill:var(--muted);font-family:var(--f-mono);letter-spacing:.06em">${TLABEL[A.dom].toUpperCase()}</text>`;}
   $('#wheel').innerHTML=h;
-  $('#wheelCap').textContent=`${TLABEL[A.dom]} › ${A.name} › ${parts.length} abbinamenti › ${sps.length} alcolici`;
+  const more=state.parts.length>parts.length||state.sps.length>sps.length;
+  $('#wheelCap').textContent=state.egoAll||!more?`${A.name} · ${parts.length} abbinamenti · ${sps.length} alcolici`:`${A.name} · i migliori ${parts.length} abbinamenti e ${sps.length} alcolici`;
+  const ea=$('#egoAll');ea.hidden=!(more||state.egoAll);ea.textContent=state.egoAll?'Mostra solo i migliori':`Mostra tutti (${state.parts.length} + ${state.sps.length})`;
   $('#wheelHint').textContent=TOUCH()?'Tocca un punto per leggerne il motivo, toccalo di nuovo per aprirlo.':'Passa sopra un punto per il motivo, clicca per aprirlo.';
   $('#legend').innerHTML=TORDER.map(k=>`<span><i style="width:10px;height:10px;border-radius:50%;background:${tcol(k)};display:inline-block"></i>${TLABEL[k]}</span>`).join('')+
     `<span><svg width="26" height="8"><line x1="0" y1="4" x2="26" y2="4" style="stroke:var(--concord);stroke-width:2.5"/></svg>Affinità</span>`+
@@ -184,6 +187,7 @@ function renderBrowse(){
   if(z){h+=`<text text-anchor="middle" y="-4" style="pointer-events:none;font-family:var(--f-display);font-size:22px">${TLABEL[z]}</text><text text-anchor="middle" y="16" style="pointer-events:none;font-size:11px;fill:var(--muted)">${N} alimenti</text><text text-anchor="middle" y="34" style="pointer-events:none;font-size:11px;fill:var(--concord);font-weight:600">← tutti i gusti</text>`;}
   else h+=`<text text-anchor="middle" y="-2" style="pointer-events:none;font-family:var(--f-display);font-size:24px">${N}</text><text text-anchor="middle" y="16" style="pointer-events:none;font-size:11px;fill:var(--muted)">alimenti</text>`;
   $('#wheel').innerHTML=h;
+  $('#egoAll').hidden=true;
   $('#wheelCap').textContent=z?`Gusto ${TLABEL[z]} › categorie › alimenti`:'Gusti › categorie › alimenti';
   $('#wheelHint').textContent=z?'Clicca un alimento per vederne gli abbinamenti.':'Clicca un gusto per ingrandirlo, o un alimento per aprirlo.';
   $('#legend').innerHTML=TORDER.map(k=>{const n=FOODS.filter(f=>f.dom===k).length;return `<span><i style="width:10px;height:10px;border-radius:50%;background:${tcol(k)};display:inline-block"></i>${TLABEL[k]} · ${n}</span>`;}).join('')+`<span>Anello interno: gusto dominante · medio: categoria · esterno: alimento</span>`;
@@ -429,6 +433,7 @@ wheel.addEventListener('click',e=>{const g=e.target.closest('[data-id],[data-t]'
 wheel.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){const g=e.target.closest('[data-id]');if(g){e.preventDefault();activate(g);}}});
 wheel.addEventListener('focusin',e=>{const g=e.target.closest('[data-id]');if(g&&state.mode==='ego')highlight(g.dataset.id,g.dataset.kind);});
 
+$('#egoAll').addEventListener('click',()=>{state.egoAll=!state.egoAll;renderWheel();});
 $('#mEgo').addEventListener('click',()=>{if(!state.sel)return;state.mode='ego';renderWheel();});
 $('#mBrowse').addEventListener('click',()=>{state.mode='browse';state.zoom=state.sel?state.sel.dom:null;renderWheel();});
 $('#rand').addEventListener('click',()=>{let f;do{f=FOODS[Math.floor(Math.random()*FOODS.length)];}while(f===state.sel);state.mode='ego';select(f);});
@@ -441,7 +446,7 @@ $('#pairGrid').addEventListener('click',e=>{const o=e.target.closest('[data-open
 function assignTrio(){const used={};state.trio={};
   state.sps.forEach(rs=>{let best=null,bv=-1;state.parts.forEach(p=>{const sp=S(p.B,rs.B).total;if(sp<15)return;const v=p.total+sp-2.5*(used[p.B.id]||0);if(v>bv){bv=v;best=p.B;}});
     if(best){state.trio[rs.B.id]=best;used[best.id]=(used[best.id]||0)+1;}});}
-function select(f,fromHash){state.sel=f;state.parts=partnersOf(f);state.sps=spiritsOf(f);assignTrio();if(state.mode==='browse')state.zoom=f.dom;
+function select(f,fromHash){state.sel=f;state.egoAll=false;state.parts=partnersOf(f);state.sps=spiritsOf(f);assignTrio();if(state.mode==='browse')state.zoom=f.dom;
   renderWheel();renderProfile();renderPairs();if(mainCombo)mainCombo.set(f);
   if(!fromHash){showTab('ruota',true);if(location.hash!=='#'+f.id){try{history.replaceState(null,'','#'+f.id);}catch(e){location.hash=f.id;}}}}
 
