@@ -278,8 +278,10 @@ function firstSentence(t){return (t.match(/^.*?[.!?](\s|$)/)||[t])[0].trim();}
 function renderSpirits(){
   const A=state.sel;$('#spirits').hidden=!A;if(!A)return;
   $('#spTitle').textContent=`Da bere con ${A.name}`;
-  $('#spTrack').innerHTML=state.sps.map(r=>spiritCard(A,r)).join('');
-  $('#spTrack').scrollLeft=0;updateRail('spTrack');
+  // griglia con i primi 6 e «Mostra altri» al posto del carosello (UX-13)
+  const all=state.sps,shown=state.spAll?all:all.slice(0,6);
+  $('#spTrack').innerHTML=shown.map(r=>spiritCard(A,r)).join('');
+  moreBtn('#spMore',all.length,shown.length,state.spAll);
 }
 // verdetto in parola per primo, il numero /30 è secondario (UX-07)
 const vcol=v=>v==='forte'?'var(--ok)':v==='promettente'?'color-mix(in srgb,var(--ok) 55%,var(--warn))':v==='rischioso'?'var(--warn)':'var(--bad)';
@@ -308,26 +310,20 @@ function renderPairs(){
   const A=state.sel;$('#pairsTitle').textContent=`Con cosa si sposa ${A.name}`;
   const list=state.parts.filter(r=>state.filter==='all'||r.type===state.filter);
   document.querySelectorAll('#pairs .seg button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.f===state.filter)));
-  $('#pairGrid').innerHTML=list.length?list.map(r=>`<article class="card" data-pid="${r.B.id}">
+  const total=list.length;const shown=state.pAll?list:list.slice(0,6);
+  $('#pairGrid').innerHTML=list.length?shown.map(r=>`<article class="card" data-pid="${r.B.id}">
     <div class="card-top"><div><h3>${esc(r.B.name)}</h3><span class="cat"><i style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${tcol(r.B.dom)};margin-right:5px"></i>${esc(CATS[r.B.cat][0])}</span></div>${scoreBar(r.total)}</div>
     <div class="chips">${badge(r)}</div>
     <p class="sum">${esc(firstSentence(r.summary))}</p>
     <details><summary>I sei criteri, dosi e test</summary><p class="tiny" style="margin-bottom:6px">${esc(r.summary)}</p>${lensTable(r)}<p class="tiny" style="margin-top:8px"><b>Rapporto:</b> ${esc(r.ratioTxt)}</p><p class="tiny"><b>Test rapido:</b> ${esc(testTxt(r))}</p></details>
     <div class="acts"><button class="link" data-open="${r.B.id}">Apri ${esc(r.B.name)} →</button><button class="link" data-check="${r.B.id}">Verifica la coppia</button></div>
   </article>`).join(''):`<p class="muted">Nessun abbinamento di questo tipo sopra la soglia.</p>`;
-  $('#pairGrid').scrollLeft=0;$('#pairCount').dataset.total=list.length;updateRail('pairGrid');
+  moreBtn('#pairMore',total,shown.length,state.pAll);
 }
-// ---------- caroselli ----------
-function railStep(tr){const c=tr.querySelector('.card');if(!c)return tr.clientWidth;const gap=parseFloat(getComputedStyle(tr).columnGap)||0;return c.offsetWidth+gap;}
-function updateRail(id){const tr=document.getElementById(id);if(!tr)return;const cards=tr.querySelectorAll('.card');const n=cards.length;
-  const st=railStep(tr);const per=Math.max(1,Math.round(tr.clientWidth/st));const first=Math.min(n,Math.round(tr.scrollLeft/st)+1);const last=Math.min(n,first+per-1);
-  const cnt=document.getElementById(id==='spTrack'?'spCount':'pairCount');if(cnt)cnt.textContent=n?`${first}–${last} di ${n}`:'';
-  document.querySelectorAll(`.rnav[data-rail="${id}"]`).forEach(b=>{const d=+b.dataset.dir;b.disabled=!n||(d<0?tr.scrollLeft<=2:tr.scrollLeft+tr.clientWidth>=tr.scrollWidth-2);});}
-document.addEventListener('click',e=>{const b=e.target.closest('.rnav');if(!b)return;const tr=document.getElementById(b.dataset.rail);const st=railStep(tr);const per=Math.max(1,Math.round(tr.clientWidth/st));
-  tr.scrollBy({left:+b.dataset.dir*st*per,behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});});
-['spTrack','pairGrid'].forEach(id=>{const tr=document.getElementById(id);let t=null;tr.addEventListener('scroll',()=>{cancelAnimationFrame(t);t=requestAnimationFrame(()=>updateRail(id));},{passive:true});
-  tr.addEventListener('keydown',e=>{if(e.key==='ArrowRight'||e.key==='ArrowLeft'){e.preventDefault();document.querySelector(`.rnav[data-rail="${id}"][data-dir="${e.key==='ArrowRight'?1:-1}"]`)?.click();}});});
-window.addEventListener('resize',()=>{updateRail('spTrack');updateRail('pairGrid');});
+// ---------- elenchi con «Mostra altri» ----------
+function moreBtn(sel,total,shown,all){const b=$(sel);b.hidden=total<=6;b.textContent=all?'Mostra meno':`Mostra altri ${total-shown}`;b.setAttribute('aria-expanded',String(!!all));}
+$('#spMore').addEventListener('click',()=>{state.spAll=!state.spAll;renderSpirits();if(!state.spAll)$('#spirits').scrollIntoView({block:'nearest'});});
+$('#pairMore').addEventListener('click',()=>{state.pAll=!state.pAll;renderPairs();if(!state.pAll)$('#pairs').scrollIntoView({block:'nearest'});});
 
 // ---------- verifica ----------
 function renderPairOut(){
@@ -423,7 +419,8 @@ wheel.addEventListener('pointermove',moveTip);
 wheel.addEventListener('pointerout',e=>{if(e.pointerType==='touch')return;const g=e.target.closest('[data-id],[data-t]');if(!g)return;if(g.contains(e.relatedTarget))return;hideTip();if(state.mode==='ego'){resetLinks();highlight(null);}});
 function activate(g){if(!g)return;
   if(g.dataset.id){const B=BYID[g.dataset.id];hideTip();
-    if(B.isSpirit){const c=document.querySelector(`.sp[data-sid="${B.id}"]`);if(c){const tr=$('#spTrack');tr.scrollTo({left:c.offsetLeft-tr.offsetLeft,behavior:'smooth'});$('#spirits').scrollIntoView({block:'nearest',behavior:'smooth'});c.classList.add('hl');}}
+    if(B.isSpirit){if(!document.querySelector(`.sp[data-sid="${B.id}"]`)){state.spAll=true;renderSpirits();}
+      const c=document.querySelector(`.sp[data-sid="${B.id}"]`);if(c){c.scrollIntoView({block:'nearest',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});c.classList.add('hl');}}
     else{state.mode='ego';select(B);}}
   else if(g.dataset.cat){state.cat=state.cat===g.dataset.cat?null:g.dataset.cat;hideTip();renderWheel();
     if(state.cat)$('#catList').scrollIntoView({block:'nearest',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});}
@@ -471,7 +468,7 @@ $('#mBrowse').addEventListener('click',()=>{state.mode='browse';state.zoom=state
 $('#catList').addEventListener('click',e=>{const o=e.target.closest('[data-cl-open]');if(o){state.mode='ego';state.cat=null;select(BYID[o.dataset.clOpen]);$('#wheel').scrollIntoView({block:'nearest'});return;}
   if(e.target.closest('[data-cl-close]')){state.cat=null;renderWheel();}});
 $('#rand').addEventListener('click',()=>{let f;do{f=FOODS[Math.floor(Math.random()*FOODS.length)];}while(f===state.sel);state.mode='ego';select(f);});
-document.querySelectorAll('#pairs .seg button').forEach(b=>b.addEventListener('click',()=>{state.filter=b.dataset.f;renderPairs();}));
+document.querySelectorAll('#pairs .seg button').forEach(b=>b.addEventListener('click',()=>{state.filter=b.dataset.f;state.pAll=false;renderPairs();}));
 $('#spTrack').addEventListener('click',e=>{const b=e.target.closest('[data-mkck]');if(!b||!state.sel)return;CK.ings=[state.sel];CK.base=BYID[b.dataset.mkck];showTab('cocktail');window.scrollTo({top:0});});
 $('#pairGrid').addEventListener('click',e=>{const o=e.target.closest('[data-open]'),c=e.target.closest('[data-check]');
   if(o){select(BYID[o.dataset.open]);window.scrollTo({top:0,behavior:'smooth'});}
@@ -480,7 +477,7 @@ $('#pairGrid').addEventListener('click',e=>{const o=e.target.closest('[data-open
 function assignTrio(){const used={};state.trio={};
   state.sps.forEach(rs=>{let best=null,bv=-1;state.parts.forEach(p=>{const sp=S(p.B,rs.B).total;if(sp<15)return;const v=p.total+sp-2.5*(used[p.B.id]||0);if(v>bv){bv=v;best=p.B;}});
     if(best){state.trio[rs.B.id]=best;used[best.id]=(used[best.id]||0)+1;}});}
-function select(f,fromHash){state.sel=f;state.egoAll=false;state.parts=partnersOf(f);state.sps=spiritsOf(f);assignTrio();if(state.mode==='browse')state.zoom=f.dom;
+function select(f,fromHash){state.sel=f;state.egoAll=false;state.spAll=false;state.pAll=false;state.parts=partnersOf(f);state.sps=spiritsOf(f);assignTrio();if(state.mode==='browse')state.zoom=f.dom;
   renderWheel();renderProfile();renderPairs();if(mainCombo)mainCombo.set(f);
   if(!fromHash){showTab('ruota',true);if(location.hash!=='#'+f.id){try{history.replaceState(null,'','#'+f.id);}catch(e){location.hash=f.id;}}}}
 

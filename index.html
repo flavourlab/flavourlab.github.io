@@ -65,9 +65,9 @@
   <section id="spirits" class="rail" aria-label="Abbinamenti alcolici" hidden>
     <div class="rail-head">
       <div><span class="eyebrow">Abbinamenti alcolici</span><h2 id="spTitle">Da bere con</h2></div>
-      <div class="rail-nav"><span class="rail-count" id="spCount"></span><button type="button" class="rnav" data-rail="spTrack" data-dir="-1" aria-label="Alcolici precedenti">←</button><button type="button" class="rnav" data-rail="spTrack" data-dir="1" aria-label="Alcolici successivi">→</button></div>
     </div>
-    <div class="rail-track" id="spTrack" tabindex="0" aria-label="Elenco degli alcolici abbinati"></div>
+    <div class="rail-track" id="spTrack" aria-label="Elenco degli alcolici abbinati"></div>
+    <button type="button" class="btn more" id="spMore" hidden></button>
   </section>
 
   <section id="pairs" class="rail" aria-label="Abbinamenti alimentari">
@@ -77,9 +77,10 @@
         <button type="button" data-f="all" aria-pressed="true">Tutti</button>
         <button type="button" data-f="concordanza" aria-pressed="false">Affinità</button>
         <button type="button" data-f="contrasto" aria-pressed="false">Contrasto</button>
-      </div><span class="rail-count" id="pairCount"></span><button type="button" class="rnav" data-rail="pairGrid" data-dir="-1" aria-label="Abbinamenti precedenti">←</button><button type="button" class="rnav" data-rail="pairGrid" data-dir="1" aria-label="Abbinamenti successivi">→</button></div>
+      </div></div>
     </div>
-    <div class="rail-track" id="pairGrid" tabindex="0" aria-label="Elenco degli alimenti abbinati"></div>
+    <div class="rail-track" id="pairGrid" aria-label="Elenco degli alimenti abbinati"></div>
+    <button type="button" class="btn more" id="pairMore" hidden></button>
   </section>
 
   </div>
