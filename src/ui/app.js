@@ -212,30 +212,38 @@ function labelMid(r,a,text,extra,fs){
 function renderBrowse(){
   const z=state.zoom,B=minU(1000)>28?BWN:BW,narrow=B===BWN;
   const list=FOODS.filter(f=>!z||f.dom===z).slice().sort((a,b)=>TORDER.indexOf(a.dom)-TORDER.indexOf(b.dom)||CATORD[a.cat]-CATORD[b.cat]||a.name.localeCompare(b.name,'it'));
-  const N=list.length,step=360/N,ang=i=>-90+i*step;let h='',tl='';
+  // i 5 gusti stanno sempre negli stessi settori di 72°, come nella ruota degli abbinamenti (Dolce in alto)
+  const SEC=k=>-126+TORDER.indexOf(k)*72;
+  const N=list.length,A0=[],A1=[];let h='',tl='';
+  if(z){const st=360/N;list.forEach((f,i)=>{A0.push(SEC(z)+i*st);A1.push(SEC(z)+(i+1)*st);});}
+  else{const cnt={},seen={};list.forEach(f=>cnt[f.dom]=(cnt[f.dom]||0)+1);
+    list.forEach(f=>{const j=seen[f.dom]=(seen[f.dom]||0),st=72/cnt[f.dom];seen[f.dom]++;A0.push(SEC(f.dom)+j*st);A1.push(SEC(f.dom)+(j+1)*st);});}
+  const ang=i=>A0[i],angE=i=>A1[i-1];
   $('#wheel').classList.remove('two');
   $('#wheel').setAttribute('viewBox',`${-B.vb} ${-B.vb} ${2*B.vb} ${2*B.vb}`);
   const mu=minU(2*B.vb),fT=Math.max(17,mu),fL=Math.max(14,mu),f1=Math.max(12,mu);
   const sep='stroke:var(--surface);stroke-width:1.5;stroke-linejoin:round';
-  const lbl=` style="pointer-events:none;font-size:${fL.toFixed(1)}px;${halo}"`;
-  // anello dei gusti
-  runs(list,f=>f.dom).forEach(rn=>{const a0=ang(rn.s),a1=ang(rn.e),span=a1-a0;
-    h+=`<path class="node" data-t="${rn.k}" data-nav tabindex="-1" role="button" aria-label="Gusto ${TLABEL[rn.k]}, ${rn.e-rn.s} alimenti${z?', torna a tutti i gusti':''}" d="${arcPath(B.t0,B.t1,a0,a1)}" style="fill:${tcol(rn.k)};${sep}"><title>${TLABEL[rn.k]}</title></path>`;
-    const am=(a0+a1)/2;if(!z&&span>14){const [x,y]=pol((B.t0+B.t1)/2,am);tl+=`<text x="${x}" y="${(y+fT*.35).toFixed(1)}" text-anchor="middle" style="pointer-events:none;font-size:${fT.toFixed(1)}px;font-weight:700;${halo}">${TLABEL[rn.k]}</text>`;}});
+  const lbl=` class="wl" style="pointer-events:none;font-size:${fL.toFixed(1)}px"`;
+  // anello dei gusti: sempre tutti e 5 nella stessa posizione; con lo zoom quello aperto è pieno, gli altri attenuati
+  TORDER.forEach(k=>{const a0=SEC(k),a1=a0+72,n=FOODS.filter(f=>f.dom===k).length,on=!z||z===k;
+    h+=`<path class="node" data-t="${k}" data-nav tabindex="-1" role="button" aria-label="Gusto ${TLABEL[k]}, ${n} alimenti${z===k?', torna a tutti i gusti':''}" d="${arcPath(B.t0,B.t1,a0,a1)}" style="fill:${tcol(k)};fill-opacity:${on?1:.28};${sep}"><title>${TLABEL[k]}</title></path>`;
+    const [x,y]=pol((B.t0+B.t1)/2,a0+36);tl+=`<text class="wl" x="${x}" y="${(y+fT*.35).toFixed(1)}" text-anchor="middle" style="pointer-events:none;font-size:${fT.toFixed(1)}px;font-weight:700;${on?'':'opacity:.6'}">${TLABEL[k]}</text>`;});
   // anello delle categorie
   const c1=z?B.cMid:B.cOut;let par=0;
-  runs(list,f=>f.dom+'|'+f.cat).forEach(rn=>{const a0=ang(rn.s),a1=ang(rn.e);par++;const it=rn.it;const ck=it.dom+'|'+it.cat,on=state.cat===ck,n=rn.e-rn.s;
+  runs(list,f=>f.dom+'|'+f.cat).forEach(rn=>{const a0=ang(rn.s),a1=angE(rn.e);par++;const it=rn.it;const ck=it.dom+'|'+it.cat,on=state.cat===ck,n=rn.e-rn.s;
     h+=`<path class="node" data-t="${it.dom}" data-cat="${ck}" data-nav tabindex="-1" role="button" aria-label="${esc(CATS[it.cat][0])}, gusto ${TLABEL[it.dom]}, ${n} ${n===1?'alimento':'alimenti'}" d="${arcPath(B.c0,c1,a0,a1)}" style="fill:${tcol(it.dom)};fill-opacity:${on?.95:par%2?.42:.6};${sep}${on?';stroke:var(--ink);stroke-width:2.5':''}"><title>${esc(CATS[it.cat][0])}</title></path>`;
     h+=radLabel(B.c0,c1,(a0+a1)/2,a1-a0,CATS[it.cat][1],fL,lbl);});
   // anello degli alimenti, solo con lo zoom
-  if(z)list.forEach((f,i)=>{const a0=ang(i),a1=ang(i+1),am=(a0+a1)/2;const on=f===state.sel;
+  if(z)list.forEach((f,i)=>{const a0=A0[i],a1=A1[i],am=(a0+a1)/2;const on=f===state.sel;
     h+=`<g class="node" data-id="${f.id}" data-kind="b" data-nav tabindex="-1" role="button" aria-label="${esc(f.name)}"><title>${esc(f.name)}</title><path d="${arcPath(B.f0,B.f1,a0,a1)}" style="fill:${tcol(f.dom)};fill-opacity:${CATORD[f.cat]%2?.5:.7};${sep}${on?';stroke:var(--ink);stroke-width:2.5':''}"/>`+
-      radLabel(B.f0,B.f1,am,a1-a0,f.name,fL,` style="pointer-events:none;font-size:${fL.toFixed(1)}px;${on?'font-weight:700;':''}${halo}"`)+`</g>`;});
+      radLabel(B.f0,B.f1,am,a1-a0,f.name,fL,` class="wl" style="pointer-events:none;font-size:${fL.toFixed(1)}px;${on?'font-weight:700;':''}"`)+`</g>`;});
   // centro: sempre il numero di alimenti; con lo zoom diventa anche il ritorno a tutti i gusti
   h+=`<circle r="${B.hub}" class="node hub" data-t="${z?'__all':''}" style="fill:var(--surface);stroke:var(--line);stroke-width:1.5${z?';cursor:pointer':''}"><title>${z?'Torna a tutti i gusti':''}</title></circle>`;
   // centro: titolo e conteggio in entrambi gli stati; con lo zoom anche il ritorno
   const fH=narrow?f1*1.25:Math.max(24,mu*1.5);
-  if(z)h+=`<text text-anchor="middle" y="${(-f1*0.9).toFixed(1)}" style="pointer-events:none;font-family:var(--f-display);font-size:${fH.toFixed(1)}px">${TLABEL[z]}</text>${narrow?'':`<text text-anchor="middle" y="${(f1*0.9).toFixed(1)}" style="pointer-events:none;font-size:${f1.toFixed(1)}px;fill:var(--muted)">${N} alimenti</text>`}<text text-anchor="middle" y="${(narrow?f1*0.9:f1*2.6).toFixed(1)}" style="pointer-events:none;font-size:${f1.toFixed(1)}px;fill:var(--ink);text-decoration:underline">↩ tutti</text>`;
+  // telefono con lo zoom: il gusto aperto si vede già pieno nella corona, al centro resta solo il ritorno
+  if(z&&narrow)h+=`<text text-anchor="middle" y="${(f1*0.35).toFixed(1)}" style="pointer-events:none;font-size:${f1.toFixed(1)}px;fill:var(--ink);text-decoration:underline">↩ tutti</text>`;
+  else if(z)h+=`<text text-anchor="middle" y="${(-f1*0.9).toFixed(1)}" style="pointer-events:none;font-family:var(--f-display);font-size:${fH.toFixed(1)}px">${TLABEL[z]}</text>${narrow?'':`<text text-anchor="middle" y="${(f1*0.9).toFixed(1)}" style="pointer-events:none;font-size:${f1.toFixed(1)}px;fill:var(--muted)">${N} alimenti</text>`}<text text-anchor="middle" y="${(narrow?f1*0.9:f1*2.6).toFixed(1)}" style="pointer-events:none;font-size:${f1.toFixed(1)}px;fill:var(--ink);text-decoration:underline">↩ tutti</text>`;
   else h+=`<text text-anchor="middle" y="${(fH*0.15).toFixed(1)}" style="pointer-events:none;font-family:var(--f-display);font-size:${fH.toFixed(1)}px">${N}</text><text text-anchor="middle" y="${(fH*0.15+f1*1.6).toFixed(1)}" style="pointer-events:none;font-size:${f1.toFixed(1)}px;fill:var(--muted)">alimenti</text>`;
   h+=tl; // i nomi dei gusti sopra il centro, così non vengono coperti sugli schermi stretti
   const anim=lastZoom!==undefined&&lastZoom!==z;lastZoom=z;

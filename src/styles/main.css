@@ -704,3 +704,9 @@ h3 .info[data-spinfo]{vertical-align:.18em}
 /* il profilo del mix occupa tutta la larghezza della colonna; il testo resta a misura reale */
 .mixradar{max-width:none}
 .mixradar text{font-size:var(--rfs,13px)}
+
+/* ===== Etichette della ruota per gusto: contrasto pieno sugli spicchi colorati ===== */
+:root{--wl:#111112;--wl-halo:rgba(255,255,255,.88)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--wl:#FFFFFF;--wl-halo:rgba(0,0,0,.62)}}
+:root[data-theme="dark"]{--wl:#FFFFFF;--wl-halo:rgba(0,0,0,.62)}
+#wheel .wl{fill:var(--wl);font-weight:600;letter-spacing:.01em;paint-order:stroke;stroke:var(--wl-halo);stroke-width:3.2px;stroke-linejoin:round}
