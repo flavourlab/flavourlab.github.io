@@ -524,3 +524,18 @@ h2{font-weight:300}
 .spec li{padding:10px 0}
 .steps{gap:12px}
 .combo input::-webkit-search-cancel-button{-webkit-appearance:none;display:none}
+
+/* ===== Usabilità (revisione UX del 6 novembre 2026) ===== */
+/* UX-14 · telefono e testi piccoli */
+.eyebrow,.logo-sub,.shelf-l,.btag,.sheet h4,.rcard h4,.rstats dt,.tb em{font-size:12px}
+.scale-l{font-size:12px}
+.sg-s em,.sg-s small{font-size:12px}
+@media (hover:none){.searchbox kbd{display:none}.searchbox .combo input{padding-right:12px}}
+@media (max-width:620px){
+  .tabbar{grid-template-columns:repeat(3,minmax(0,1fr));overflow:visible}
+  .tabbar button{padding:12px 10px;white-space:normal;justify-content:center}
+  .tabbar .tb-t{font-size:14px;line-height:1.25}
+  .tabbar .tb-d{display:none}
+  .panel.stage,.panel,.step{padding:16px}
+  .intro-t p{font-size:15px}
+}

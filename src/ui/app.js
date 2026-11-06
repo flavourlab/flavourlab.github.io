@@ -58,6 +58,15 @@ function labelAt(r,a,text,cls,extra=''){
   return left?`<text class="${cls}" transform="rotate(${(a+180).toFixed(2)})" x="${-r}" y="4" text-anchor="end"${extra}>${text}</text>`
              :`<text class="${cls}" transform="rotate(${a.toFixed(2)})" x="${r}" y="4"${extra}>${text}</text>`;
 }
+// unità SVG che corrispondono a 12 px reali: sotto questa soglia un testo della ruota non si legge
+function minU(vb){const w=$('#wheel').getBoundingClientRect().width||Math.min(820,innerWidth-64);return 12*vb/w;}
+// etichetta radiale su una o due righe: il nome va a capo invece di essere tagliato, se c'è spazio
+function wrapName(name,max,two){if(name.length<=max)return[name];if(!two)return[trunc(name,max)];
+  const w=name.split(' ');let a='';while(w.length&&(a?a+' '+w[0]:w[0]).length<=max)a=a?a+' '+w.shift():w.shift();
+  if(!a)return[trunc(name,max)];const b=w.join(' ');return [a,trunc(b,max)];}
+function labelLines(r,a,lines,cls,fs,extra=''){if(lines.length<2)return labelAt(r,a,esc(lines[0]),cls,extra);
+  const left=Math.cos(a*Math.PI/180)<-0.0001;const x=left?-r:r;const y0=(-fs*0.15).toFixed(1),y1=(fs*0.95).toFixed(1);
+  return `<text class="${cls}" transform="rotate(${(left?a+180:a).toFixed(2)})"${left?' text-anchor="end"':''}${extra}><tspan x="${x}" y="${y0}">${esc(lines[0])}</tspan><tspan x="${x}" y="${y1}">${esc(lines[1])}</tspan></text>`;}
 const halo='paint-order:stroke;stroke:var(--surface);stroke-width:3.5px;stroke-linejoin:round';
 function topFams(I,n=3){return I.ar.map((v,i)=>[v,i]).filter(x=>x[0]>0).sort((a,b)=>b[0]-a[0]).slice(0,n).map(x=>FAM[x[1]][1].toLowerCase());}
 function dotsInt(n){return '●'.repeat(n)+'○'.repeat(5-n);}
@@ -92,16 +101,20 @@ function makeCombo(host,{id,placeholder,source,onPick,keep,onClear}){
 // ---------- ruota: abbinamenti ----------
 const R1a=72,R1b=128,RP=188,RS=388;
 function renderEgo(){
-  $('#wheel').setAttribute('viewBox','-540 -540 1080 1080');
+  // su schermi stretti le etichette non entrano leggibili: si tolgono e la ruota si stringe sugli anelli
+  const showL=minU(1080)<=26,VB=showL?540:410;
+  $('#wheel').setAttribute('viewBox',`${-VB} ${-VB} ${2*VB} ${2*VB}`);
   const A=state.sel,parts=state.parts,sps=state.sps;
   let h='';
   TORDER.forEach((k,i)=>{const a0=-90+i*72-36;h+=`<path d="${arcPath(R1b+4,RS-16,a0+0.6,a0+71.4)}" style="fill:${tcol(k)};opacity:.09"/>`;});
   h+=`<circle r="${RP}" style="fill:none;stroke:var(--line);stroke-dasharray:2 5"/><circle r="${RS}" style="fill:none;stroke:var(--line);stroke-dasharray:2 5"/>`;
   // anello 1: gusti
+  const mu=minU(2*VB),fT=Math.max(17,mu),fP=Math.max(16,mu),fS=Math.max(14.5,mu);
   TORDER.forEach((k,i)=>{const a0=-90+i*72-36;const v=A.t[k];
     h+=`<path d="${arcPath(R1a,R1b,a0+0.8,a0+71.2)}" style="fill:${tcol(k)};opacity:${(0.16+v*0.165).toFixed(2)}"/>`;
     const [x,y]=pol((R1a+R1b)/2,-90+i*72);
-    h+=`<text x="${x}" y="${y-2}" text-anchor="middle" style="font-size:17px;font-weight:600;${halo}">${TLABEL[k]}</text><text x="${x}" y="${y+16}" text-anchor="middle" style="font-size:13.5px;font-family:var(--f-mono);${halo}">${v}/5</text>`;});
+    h+=showL?`<text x="${x}" y="${y-2}" text-anchor="middle" style="font-size:${fT}px;font-weight:600;${halo}">${TLABEL[k]}</text><text x="${x}" y="${y+fT-1}" text-anchor="middle" style="font-size:${Math.max(13.5,mu)}px;font-family:var(--f-mono);${halo}">${v}/5</text>`
+      :`<text x="${x}" y="${y+fT*.35}" text-anchor="middle" style="font-size:${fT}px;font-weight:600;${halo}">${TLABEL[k]}</text>`;});
   // nodi abbinamento
   const groups={};parts.forEach(r=>(groups[r.B.dom]=groups[r.B.dom]||[]).push(r));
   const nodes=[];TORDER.forEach((k,i)=>{const g=groups[k]||[];g.forEach((r,j)=>nodes.push({r,a:-90+i*72-36+(j+0.5)*72/g.length}));});
@@ -124,18 +137,19 @@ function renderEgo(){
     h+=`<g class="node anim" data-id="${r.B.id}" data-kind="p" tabindex="0" role="button" aria-label="${esc(r.B.name)}, ${TYPELBL[r.type]}, ${r.total} su 30">
       <circle cx="${x}" cy="${y}" r="${+rad+3.5}" style="fill:var(--surface);stroke:${typeCol(r.type)};stroke-width:2;${r.type==='contrasto'?'stroke-dasharray:3 2':''}"/>
       <circle cx="${x}" cy="${y}" r="${rad}" style="fill:${tcol(r.B.dom)}"/>
-      ${labelAt(RP+14,n.a,`${esc(trunc(r.B.name,16))}<tspan style="font-family:var(--f-mono);font-size:12.5px;fill:var(--muted)"> ${r.total}</tspan>`,'lbl')}</g>`;});
+      <title>${esc(r.B.name)}</title>${showL?labelLines(RP+14,n.a,wrapName(r.B.name,Math.floor((RS-RP-34)/(0.55*fP)),nodes.length<=12),'lbl',fP,` style="font-size:${fP.toFixed(1)}px"`):''}</g>`;});
   // nodi alcolici
   snodes.forEach(s=>{const [x,y]=pol(RS,s.a);const B=s.rs.B;
     h+=`<g class="node anim" data-id="${B.id}" data-kind="s" tabindex="0" role="button" aria-label="${esc(B.name)}, ${s.rs.total} su 30">
       <rect x="${x-6}" y="${y-6}" width="12" height="12" transform="rotate(45 ${x} ${y})" style="fill:var(--spirit);stroke:var(--surface);stroke-width:2"/>
-      ${labelAt(RS+14,s.a,esc(trunc(B.name,16)),'slbl')}</g>`;});
+      <title>${esc(B.name)}</title>${showL?labelLines(RS+14,s.a,wrapName(B.name,Math.floor((540-RS-18)/(0.55*fS)),snodes.length<=6),'slbl',fS,` style="font-size:${fS.toFixed(1)}px"`):''}</g>`;});
   // centro
   h+=`<circle r="64" style="fill:var(--surface);stroke:${tcol(A.dom)};stroke-width:2.5"/>`;
   const words=A.name.split(' ');const lines=[];words.forEach(w=>{if(lines.length&&(lines[lines.length-1]+' '+w).length<=12)lines[lines.length-1]+=' '+w;else lines.push(w);});
-  const fs=lines.some(l=>l.length>10)?20:24;
-  lines.slice(0,3).forEach((l,i)=>{h+=`<text text-anchor="middle" y="${(i-(Math.min(lines.length,3)-1)/2)*fs+4}" style="font-family:var(--f-display);font-size:${fs}px">${esc(l)}</text>`;});
-  h+=`<text text-anchor="middle" y="${(Math.min(lines.length,3)/2)*fs+12}" style="font-size:10px;fill:var(--muted);font-family:var(--f-mono);letter-spacing:.06em">${TLABEL[A.dom].toUpperCase()}</text>`;
+  const fs=Math.max(lines.some(l=>l.length>10)?20:24,mu);
+  // al centro il nome solo se ci sta leggibile; altrimenti è già nella ricerca e nella scheda
+  if(showL){lines.slice(0,3).forEach((l,i)=>{h+=`<text text-anchor="middle" y="${(i-(Math.min(lines.length,3)-1)/2)*fs+4}" style="font-family:var(--f-display);font-size:${fs}px">${esc(l)}</text>`;});
+    h+=`<text text-anchor="middle" y="${(Math.min(lines.length,3)/2)*fs+12}" style="font-size:${Math.max(10,mu).toFixed(1)}px;fill:var(--muted);font-family:var(--f-mono);letter-spacing:.06em">${TLABEL[A.dom].toUpperCase()}</text>`;}
   $('#wheel').innerHTML=h;
   $('#wheelCap').textContent=`${TLABEL[A.dom]} › ${A.name} › ${parts.length} abbinamenti › ${sps.length} alcolici`;
   $('#wheelHint').textContent='Passa sopra un nodo per il motivo, clicca per aprirlo.';
@@ -171,6 +185,8 @@ function renderBrowse(){
   $('#legend').innerHTML=TORDER.map(k=>{const n=FOODS.filter(f=>f.dom===k).length;return `<span><i style="width:10px;height:10px;border-radius:50%;background:${tcol(k)};display:inline-block"></i>${TLABEL[k]} · ${n}</span>`;}).join('')+`<span>Anello interno: gusto dominante · medio: categoria · esterno: alimento</span>`;
 }
 function renderWheel(){if(!state.sel)state.mode='browse';state.mode==='ego'?renderEgo():renderBrowse();$('#mEgo').disabled=!state.sel;$('#mEgo').setAttribute('aria-pressed',String(state.mode==='ego'));$('#mBrowse').setAttribute('aria-pressed',String(state.mode==='browse'));}
+// la dimensione dei testi dipende dalla larghezza della ruota: si ridisegna quando cambia
+let rzT=null;window.addEventListener('resize',()=>{clearTimeout(rzT);rzT=setTimeout(()=>{if(!$('#tab-ruota').hidden)renderWheel();},150);});
 
 // ---------- radar ----------
 function radar(labels,series,R,pad){
@@ -396,7 +412,7 @@ function select(f,fromHash){state.sel=f;state.parts=partnersOf(f);state.sps=spir
   renderWheel();renderProfile();renderPairs();if(mainCombo)mainCombo.set(f);
   if(!fromHash){showTab('ruota',true);if(location.hash!=='#'+f.id){try{history.replaceState(null,'','#'+f.id);}catch(e){location.hash=f.id;}}}}
 
-mainCombo=makeCombo($('#mainSearch'),{id:'q-main',placeholder:`Cerca tra ${FOODS.length} alimenti…`,source:()=>FOODS,keep:true,onPick:f=>{state.mode='ego';select(f);$('#q-main').blur();}});
+mainCombo=makeCombo($('#mainSearch'),{id:'q-main',placeholder:'Cerca un alimento',source:()=>FOODS,keep:true,onPick:f=>{state.mode='ego';select(f);$('#q-main').blur();}});
 mainCombo.set(state.sel);
 $('#q-main').addEventListener('blur',()=>setTimeout(()=>{if(document.activeElement!==$('#q-main'))mainCombo.set(state.sel);},200));
 document.addEventListener('keydown',e=>{if(e.key!=='/'||e.ctrlKey||e.metaKey)return;const t=e.target;if(t.closest&&t.closest('input,textarea,select'))return;if($('#tab-ruota').hidden)return;e.preventDefault();$('#q-main').focus();});
@@ -487,6 +503,7 @@ const TABS=['ruota','verifica','cocktail'];
 function showTab(t,silent){
   TABS.forEach(k=>{$('#tab-'+k).hidden=k!==t;const b=$('#tb-'+k);b.setAttribute('aria-selected',String(k===t));b.tabIndex=k===t?0:-1;});
   $('#ruotaTools').hidden=t!=='ruota';
+  if(t==='ruota')renderWheel();
   if(!silent){const h=t==='ruota'?(state.sel?'#'+state.sel.id:''):'#'+t;if(location.hash!==h){try{history.replaceState(null,'',h||location.pathname+location.search);}catch(e){location.hash=h;}}}
   if(t==='cocktail')renderCocktail();
 }
