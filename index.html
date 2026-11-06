@@ -29,15 +29,6 @@
     <div class="intro">
       <div class="intro-t"><h2>Esplora un ingrediente</h2>
         <p>Scegli un alimento: vedi con cosa si abbina e cosa berci.</p></div>
-      <div class="tools">
-        <div id="ruotaTools" class="tools">
-          <div class="seg" role="group" aria-label="Vista della ruota">
-            <button type="button" id="mEgo" aria-pressed="true">Abbinamenti</button>
-            <button type="button" id="mBrowse" aria-pressed="false">Esplora per gusto</button>
-          </div>
-          <button type="button" class="btn" id="rand">A caso</button>
-        </div>
-      </div>
     </div>
 
   <div class="centerpick finder">
@@ -49,8 +40,14 @@
   <div class="main">
     <section class="panel stage" aria-label="Ruota">
       <div class="wheel-head">
-        <span class="eyebrow" id="wheelCap">Gusto · alimento · abbinamenti · alcolici</span>
+        <div class="seg" id="wheelMode" role="group" aria-label="Vista della ruota">
+          <button type="button" id="mEgo" aria-pressed="true">Abbinamenti</button>
+          <button type="button" id="mBrowse" aria-pressed="false">Esplora per gusto</button>
+        </div>
         <span class="tiny muted" id="wheelHint"></span>
+      </div>
+      <div class="wheel-sub">
+        <span class="eyebrow" id="wheelCap">Gusto · alimento · abbinamenti · alcolici</span>
         <button type="button" class="link" id="egoAll" hidden></button>
       </div>
       <svg id="wheel" viewBox="-540 -540 1080 1080" role="img" aria-label="Ruota degli abbinamenti"></svg>

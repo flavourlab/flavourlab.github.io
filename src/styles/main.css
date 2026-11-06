@@ -664,3 +664,30 @@ h2{font-weight:300}
 .pager button:hover:not([disabled]){border-color:var(--ink)}
 .pager button[disabled]{opacity:.35;cursor:default}
 #thirdSug .sug{touch-action:pan-y}
+
+/* ===== Ordine della pagina «Esplora» ===== */
+/* «A caso» chiude la riga degli esempi, separato da un filetto */
+.ex-sep{width:1px;height:22px;background:var(--line);margin-inline:4px}
+.ex-rand{border-style:dashed;color:var(--ink)}
+.ex-rand svg{width:15px;height:15px;flex:none}
+.ex-rand:hover svg{transform:rotate(-12deg)}
+@media (prefers-reduced-motion:no-preference){.ex-rand svg{transition:transform .2s}}
+/* il cambio di vista sta nel pannello che controlla: la ruota */
+.wheel-head{align-items:center}
+.wheel-sub{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:6px 16px;margin-top:14px}
+/* ruota e scheda sono alte uguali; la ruota resta centrata nello spazio */
+.main{align-items:stretch}
+.main>.stage{display:flex;flex-direction:column}
+.main>.stage #wheel{margin-block:auto}
+.main>.stage .legend{margin-top:16px}
+.finder{max-width:840px}
+/* in fondo alla scheda: scorciatoie alle due liste, ancorate al bordo basso */
+.profile .pjump{margin-top:auto;padding-top:16px;border-top:1px solid var(--line);display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 18px}
+.profile .pjump .link{font-size:14px}
+#spirits h2:focus,#pairs h2:focus{outline:none}
+/* «i» degli alcolici: allineata al testo del nome, anche dentro i chip */
+h3 .info[data-spinfo]{vertical-align:.18em}
+.chip .info[data-spinfo]{width:14px;height:14px;font-size:9.5px;margin-left:5px;vertical-align:.08em}
+.bline .info[data-spinfo]{vertical-align:.12em}
+.infotip{max-width:min(340px,calc(100vw - 32px))}
+@media (max-width:620px){.ex-sep{display:none}}
