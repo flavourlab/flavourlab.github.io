@@ -574,3 +574,17 @@ h2{font-weight:300}
 .pk-v .vw{font-weight:600}
 @media (max-width:520px){.peek{grid-template-columns:minmax(0,1fr)}.peek .pk-go{grid-column:1;grid-row:auto;justify-self:start;margin-top:6px}}
 .glass.peeked{outline:1px solid var(--ink);outline-offset:2px}
+/* UX-05 · focus visibile nella ruota */
+#wheel [data-nav]:focus{outline:none}
+#wheel [data-nav]:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+#wheel path[data-nav]:focus-visible{outline:none;stroke:var(--ink);stroke-width:3}
+/* UX-09 · elenco degli alimenti di una categoria */
+.catlist{margin-top:14px;border-top:1px solid var(--line);padding-top:14px}
+.cl-h{display:flex;align-items:baseline;gap:6px 12px;flex-wrap:wrap;margin-bottom:10px}
+.cl-h h3{font-size:20px}
+.cl-h .link{margin-left:auto}
+.catlist ul{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:4px 16px}
+.catlist li button{display:flex;align-items:center;gap:8px;width:100%;text-align:left;background:none;border:0;border-bottom:1px solid var(--line);padding:10px 2px;font-size:15px;cursor:pointer;min-height:44px}
+.catlist li button:hover{border-bottom-color:var(--ink)}
+.catlist li i{width:8px;height:8px;border-radius:50%;flex:none}
+#wheel.two{max-width:600px}

@@ -76,7 +76,7 @@ function topFams(I,n=3){return I.ar.map((v,i)=>[v,i]).filter(x=>x[0]>0).sort((a,
 function dotsInt(n){return '●'.repeat(n)+'○'.repeat(5-n);}
 function catOf(I){return I.isSpirit?SGROUP[I.grp][0]:CATS[I.cat][0];}
 
-const state={sel:null,mode:'browse',zoom:null,filter:'all',A:null,B:null,parts:[],sps:[],trio:{}};
+const state={sel:null,mode:'browse',zoom:null,cat:null,filter:'all',A:null,B:null,parts:[],sps:[],trio:{}};
 
 // ---------- combobox ----------
 function makeCombo(host,{id,placeholder,source,onPick,keep,onClear}){
@@ -105,6 +105,7 @@ function makeCombo(host,{id,placeholder,source,onPick,keep,onClear}){
 // ---------- ruota: abbinamenti ----------
 const R1a=72,R1b=128,RP=188,RS=388;
 function renderEgo(){
+  $('#wheel').classList.remove('two');
   // su schermi stretti le etichette non entrano leggibili: si tolgono e la ruota si stringe sugli anelli
   const showL=minU(1080)<=26,VB=showL?540:410;
   $('#wheel').setAttribute('viewBox',`${-VB} ${-VB} ${2*VB} ${2*VB}`);
@@ -139,13 +140,13 @@ function renderEgo(){
     h+=`<line class="ray anim" data-p="${r.B.id}" x1="${x0}" y1="${y0}" x2="${x1}" y2="${y1}" style="stroke:${typeCol(r.type)};stroke-width:${(1.2+(r.total-14)/4).toFixed(1)};${r.type==='contrasto'?'stroke-dasharray:5 4;':''}opacity:.7"/>`;});
   // nodi partner
   nodes.forEach(n=>{const r=n.r;const [x,y]=pol(RP,n.a);const rad=(4+(r.total-14)/3).toFixed(1);
-    h+=`<g class="node anim" data-id="${r.B.id}" data-kind="p" tabindex="0" role="button" aria-label="${esc(r.B.name)}, ${verdict(r.total)[0]}, ${TYPEUI[r.type].toLowerCase()}, ${r.total} su 30">
+    h+=`<g class="node anim" data-id="${r.B.id}" data-kind="p" data-nav tabindex="-1" role="button" aria-label="${esc(r.B.name)}, ${verdict(r.total)[0]}, ${TYPEUI[r.type].toLowerCase()}, ${r.total} su 30">
       <circle cx="${x}" cy="${y}" r="${+rad+3.5}" style="fill:var(--surface);stroke:${typeCol(r.type)};stroke-width:2;${r.type==='contrasto'?'stroke-dasharray:3 2':''}"/>
       <circle cx="${x}" cy="${y}" r="${rad}" style="fill:${tcol(r.B.dom)}"/>
       <title>${esc(r.B.name)}</title>${showL?labelLines(RP+14,n.a,wrapName(r.B.name,Math.floor((RS-RP-34)/(0.55*fP)),nodes.length<=12),'lbl',fP,` style="font-size:${fP.toFixed(1)}px"`):''}</g>`;});
   // nodi alcolici
   snodes.forEach(s=>{const [x,y]=pol(RS,s.a);const B=s.rs.B;
-    h+=`<g class="node anim" data-id="${B.id}" data-kind="s" tabindex="0" role="button" aria-label="${esc(B.name)}, alcolico, ${verdict(s.rs.total)[0]}, ${s.rs.total} su 30">
+    h+=`<g class="node anim" data-id="${B.id}" data-kind="s" data-nav tabindex="-1" role="button" aria-label="${esc(B.name)}, alcolico, ${verdict(s.rs.total)[0]}, ${s.rs.total} su 30">
       <rect x="${x-6}" y="${y-6}" width="12" height="12" transform="rotate(45 ${x} ${y})" style="fill:var(--spirit);stroke:var(--surface);stroke-width:2"/>
       <title>${esc(B.name)}</title>${showL?labelLines(RS+14,s.a,wrapName(B.name,Math.floor((540-RS-18)/(0.55*fS)),snodes.length<=6),'slbl',fS,` style="font-size:${fS.toFixed(1)}px"`):''}</g>`;});
   // centro
@@ -169,30 +170,40 @@ function renderEgo(){
 // ---------- ruota: esplora ----------
 function runs(list,key){const out=[];list.forEach((it,i)=>{const k=key(it);const last=out[out.length-1];if(last&&last.k===k)last.e=i+1;else out.push({k,s:i,e:i+1,it});});return out;}
 function renderBrowse(){
+  // senza zoom solo gusto e categoria; un clic su una categoria mostra l'elenco dei suoi alimenti (UX-09)
   const z=state.zoom;
   const list=FOODS.filter(f=>!z||f.dom===z).slice().sort((a,b)=>TORDER.indexOf(a.dom)-TORDER.indexOf(b.dom)||CATORD[a.cat]-CATORD[b.cat]||a.name.localeCompare(b.name,'it'));
   const N=list.length,step=360/N,ang=i=>-90+i*step;let h='';
+  $('#wheel').classList.toggle('two',!z);
+  const fsF=Math.min(16.5,step*4.2),VB=z?460:250,mu=minU(2*VB),showL=z&&fsF>=mu;
+  $('#wheel').setAttribute('viewBox',`${-VB} ${-VB} ${2*VB} ${2*VB}`);
+  const fT=Math.max(17,mu),fC=Math.max(14,mu);
   runs(list,f=>f.dom).forEach(rn=>{const a0=ang(rn.s),a1=ang(rn.e);
-    h+=`<path class="node" data-t="${rn.k}" d="${arcPath(72,140,a0+0.4,a1-0.4)}" style="fill:${tcol(rn.k)};opacity:.85"><title>${TLABEL[rn.k]}</title></path>`;
-    const span=a1-a0;if(span>14){const [x,y]=pol(106,(a0+a1)/2);h+=`<text x="${x}" y="${y+5}" text-anchor="middle" style="pointer-events:none;font-size:17px;font-weight:700;${halo}">${TLABEL[rn.k]}</text>`;}});
-  let par=0;runs(list,f=>f.dom+'|'+f.cat).forEach(rn=>{const a0=ang(rn.s),a1=ang(rn.e);par++;const it=rn.it;
-    h+=`<path class="node" data-t="${it.dom}" data-cat="${it.cat}" d="${arcPath(144,236,a0+0.25,a1-0.25)}" style="fill:${tcol(it.dom)};opacity:${par%2?.32:.5}"><title>${esc(CATS[it.cat][0])}</title></path>`;
-    const span=a1-a0;if(span>=6.5)h+=`<g style="pointer-events:none">${labelAt(150,(a0+a1)/2,esc(trunc(CATS[it.cat][1],14)),'',` style="font-size:14px;${halo}"`)}</g>`;});
-  const showL=step>=2.3,fs=Math.min(16.5,step*4.2).toFixed(1);
-  $('#wheel').setAttribute('viewBox',showL?'-460 -460 920 920':'-300 -300 600 600');
-  list.forEach((f,i)=>{const a0=ang(i),a1=ang(i+1),am=(a0+a1)/2;const on=f===state.sel;
-    h+=`<g class="node" data-id="${f.id}" data-kind="b" tabindex="0" role="button" aria-label="${esc(f.name)}"><path d="${arcPath(240,280,a0+0.12,a1-0.12)}" style="fill:${tcol(f.dom)};opacity:${CATORD[f.cat]%2?.62:.9};${on?'stroke:var(--ink);stroke-width:2':''}"/>`+
-      (showL?labelAt(288,am,esc(trunc(f.name,24)),'',` style="font-size:${fs}px;${on?'font-weight:700':''}"`):'')+`</g>`;});
+    h+=`<path class="node" data-t="${rn.k}" data-nav tabindex="-1" role="button" aria-label="Gusto ${TLABEL[rn.k]}, ${rn.e-rn.s} alimenti${z?', torna a tutti i gusti':''}" d="${arcPath(72,140,a0+0.4,a1-0.4)}" style="fill:${tcol(rn.k)};opacity:.85"><title>${TLABEL[rn.k]}</title></path>`;
+    const span=a1-a0;if(span>14){const [x,y]=pol(106,(a0+a1)/2);h+=`<text x="${x}" y="${y+fT*.3}" text-anchor="middle" style="pointer-events:none;font-size:${fT.toFixed(1)}px;font-weight:700;${halo}">${TLABEL[rn.k]}</text>`;}});
+  let par=0;runs(list,f=>f.dom+'|'+f.cat).forEach(rn=>{const a0=ang(rn.s),a1=ang(rn.e);par++;const it=rn.it;const ck=it.dom+'|'+it.cat,on=state.cat===ck,n=rn.e-rn.s;
+    h+=`<path class="node" data-t="${it.dom}" data-cat="${ck}" data-nav tabindex="-1" role="button" aria-label="${esc(CATS[it.cat][0])}, gusto ${TLABEL[it.dom]}, ${n} ${n===1?'alimento':'alimenti'}" d="${arcPath(144,236,a0+0.25,a1-0.25)}" style="fill:${tcol(it.dom)};opacity:${on?.9:par%2?.32:.5}${on?';stroke:var(--ink);stroke-width:2':''}"><title>${esc(CATS[it.cat][0])}</title></path>`;
+    const span=a1-a0;if(span>=Math.max(6.5,fC*.42))h+=`<g style="pointer-events:none">${labelAt(150,(a0+a1)/2,esc(trunc(CATS[it.cat][1],Math.floor(80/(0.55*fC)))),'',` style="font-size:${fC.toFixed(1)}px;${halo}"`)}</g>`;});
+  if(z)list.forEach((f,i)=>{const a0=ang(i),a1=ang(i+1),am=(a0+a1)/2;const on=f===state.sel;
+    h+=`<g class="node" data-id="${f.id}" data-kind="b" data-nav tabindex="-1" role="button" aria-label="${esc(f.name)}"><title>${esc(f.name)}</title><path d="${arcPath(240,280,a0+0.12,a1-0.12)}" style="fill:${tcol(f.dom)};opacity:${CATORD[f.cat]%2?.62:.9};${on?'stroke:var(--ink);stroke-width:2':''}"/>`+
+      (showL?labelAt(288,am,esc(trunc(f.name,24)),'',` style="font-size:${fsF.toFixed(1)}px;${on?'font-weight:700':''}"`):'')+`</g>`;});
+  const f1=Math.max(11,mu);
   h+=`<circle r="64" class="node" data-t="${z?'__all':''}" style="fill:var(--surface);stroke:var(--line);stroke-width:1.5"/>`;
-  if(z){h+=`<text text-anchor="middle" y="-4" style="pointer-events:none;font-family:var(--f-display);font-size:22px">${TLABEL[z]}</text><text text-anchor="middle" y="16" style="pointer-events:none;font-size:11px;fill:var(--muted)">${N} alimenti</text><text text-anchor="middle" y="34" style="pointer-events:none;font-size:11px;fill:var(--concord);font-weight:600">← tutti i gusti</text>`;}
-  else h+=`<text text-anchor="middle" y="-2" style="pointer-events:none;font-family:var(--f-display);font-size:24px">${N}</text><text text-anchor="middle" y="16" style="pointer-events:none;font-size:11px;fill:var(--muted)">alimenti</text>`;
+  if(z){h+=`<text text-anchor="middle" y="${-f1*.4}" style="pointer-events:none;font-family:var(--f-display);font-size:${Math.max(22,mu).toFixed(1)}px">${TLABEL[z]}</text><text text-anchor="middle" y="${f1*1.3}" style="pointer-events:none;font-size:${f1.toFixed(1)}px;fill:var(--muted)">${N} alimenti</text>`;}
+  else h+=`<text text-anchor="middle" y="-2" style="pointer-events:none;font-family:var(--f-display);font-size:${Math.max(24,mu).toFixed(1)}px">${N}</text><text text-anchor="middle" y="${f1*1.4}" style="pointer-events:none;font-size:${f1.toFixed(1)}px;fill:var(--muted)">alimenti</text>`;
   $('#wheel').innerHTML=h;
   $('#egoAll').hidden=true;
-  $('#wheelCap').textContent=z?`Gusto ${TLABEL[z]} › categorie › alimenti`:'Gusti › categorie › alimenti';
-  $('#wheelHint').textContent=z?'Clicca un alimento per vederne gli abbinamenti.':'Clicca un gusto per ingrandirlo, o un alimento per aprirlo.';
-  $('#legend').innerHTML=TORDER.map(k=>{const n=FOODS.filter(f=>f.dom===k).length;return `<span><i style="width:10px;height:10px;border-radius:50%;background:${tcol(k)};display:inline-block"></i>${TLABEL[k]} · ${n}</span>`;}).join('')+`<span>Anello interno: gusto dominante · medio: categoria · esterno: alimento</span>`;
+  $('#wheelCap').textContent=z?`Gusto ${TLABEL[z]} · categorie e alimenti`:'Gusti e categorie';
+  const tap=TOUCH()?'Tocca':'Clicca';
+  $('#wheelHint').textContent=z?`${tap} una categoria per l'elenco, il centro per tornare a tutti i gusti.`:`${tap} un gusto per ingrandirlo o una categoria per vederne gli alimenti.`;
+  $('#legend').innerHTML=TORDER.map(k=>{const n=FOODS.filter(f=>f.dom===k).length;return `<span><i style="width:10px;height:10px;border-radius:50%;background:${tcol(k)};display:inline-block"></i>${TLABEL[k]} · ${n}</span>`;}).join('')+`<span>Anello interno: gusto dominante · esterno: categoria${z?' · bordo: alimento':''}</span>`;
 }
-function renderWheel(){hidePeek();if(!state.sel)state.mode='browse';state.mode==='ego'?renderEgo():renderBrowse();$('#mEgo').hidden=!state.sel;$('#mEgo').setAttribute('aria-pressed',String(state.mode==='ego'));$('#mBrowse').setAttribute('aria-pressed',String(state.mode==='browse'));}
+function renderCatList(){const el=$('#catList');
+  if(!state.cat||state.mode!=='browse'){el.hidden=true;el.innerHTML='';return;}
+  const [t,c]=state.cat.split('|');const fs=FOODS.filter(f=>f.cat===c&&f.dom===t).sort((a,b)=>a.name.localeCompare(b.name,'it'));
+  el.hidden=false;el.innerHTML=`<div class="cl-h"><h3>${esc(CATS[c][0])}</h3><span class="muted tiny">gusto ${TLABEL[t].toLowerCase()} · ${fs.length} ${fs.length===1?'alimento':'alimenti'}</span><button type="button" class="link" data-cl-close>Chiudi</button></div>
+    <ul>${fs.map(f=>`<li><button type="button" data-cl-open="${f.id}"><i style="background:${tcol(f.dom)}"></i>${esc(f.name)}</button></li>`).join('')}</ul>`;}
+function renderWheel(){hidePeek();if(!state.sel)state.mode='browse';state.mode==='ego'?renderEgo():renderBrowse();renderCatList();rove();$('#mEgo').hidden=!state.sel;$('#mEgo').setAttribute('aria-pressed',String(state.mode==='ego'));$('#mBrowse').setAttribute('aria-pressed',String(state.mode==='browse'));}
 // la dimensione dei testi dipende dalla larghezza della ruota: si ridisegna quando cambia
 let rzT=null;window.addEventListener('resize',()=>{clearTimeout(rzT);rzT=setTimeout(()=>{if(!$('#tab-ruota').hidden)renderWheel();},150);});
 
@@ -401,7 +412,7 @@ wheel.addEventListener('pointerover',e=>{if(e.pointerType==='touch')return;const
     if(state.mode==='ego'){const r=S(state.sel,B);highlight(B.id,g.dataset.kind);
       showTip(`<b>${esc(B.name)}</b> · ${vword(verdict(r.total)[0])} · ${TYPEUI[r.type].toLowerCase()} <span style="opacity:.7">${r.total}/30</span><br>${esc(r.summary.split(/(?<=\.)\s/)[0])}`,e);}
     else showTip(`<b>${esc(B.name)}</b><br>${esc(CATS[B.cat][0])} · ${TLABEL[B.dom]}<br>Note principali: ${esc(topFams(B).join(', ')||'—')}`,e);}
-  else if(g.dataset.cat)showTip(`<b>${esc(CATS[g.dataset.cat][0])}</b>`,e);
+  else if(g.dataset.cat){const [t,c]=g.dataset.cat.split("|");showTip(`<b>${esc(CATS[c][0])}</b> · ${TLABEL[t].toLowerCase()}`,e);}
 });
 wheel.addEventListener('pointermove',moveTip);
 wheel.addEventListener('pointerout',e=>{if(e.pointerType==='touch')return;const g=e.target.closest('[data-id],[data-t]');if(!g)return;if(g.contains(e.relatedTarget))return;hideTip();if(state.mode==='ego'){resetLinks();highlight(null);}});
@@ -409,7 +420,9 @@ function activate(g){if(!g)return;
   if(g.dataset.id){const B=BYID[g.dataset.id];hideTip();
     if(B.isSpirit){const c=document.querySelector(`.sp[data-sid="${B.id}"]`);if(c){const tr=$('#spTrack');tr.scrollTo({left:c.offsetLeft-tr.offsetLeft,behavior:'smooth'});$('#spirits').scrollIntoView({block:'nearest',behavior:'smooth'});c.classList.add('hl');}}
     else{state.mode='ego';select(B);}}
-  else if(g.dataset.t!==undefined){const t=g.dataset.t;state.zoom=(t==='__all'||!t||state.zoom===t)?null:t;hideTip();renderWheel();}}
+  else if(g.dataset.cat){state.cat=state.cat===g.dataset.cat?null:g.dataset.cat;hideTip();renderWheel();
+    if(state.cat)$('#catList').scrollIntoView({block:'nearest',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});}
+  else if(g.dataset.t!==undefined){const t=g.dataset.t;state.cat=null;state.zoom=(t==='__all'||!t||state.zoom===t)?null:t;hideTip();renderWheel();}}
 // ---------- anteprima al tocco (UX-04) ----------
 // col mouse il motivo è nel tooltip; al tocco il primo tocco seleziona e mostra l'anteprima, il secondo (o «Apri») apre
 let lastPT='mouse',peekId=null;
@@ -430,12 +443,28 @@ $('#wheelPeek').addEventListener('click',e=>{const b=e.target.closest('[data-pee
 wheel.addEventListener('click',e=>{const g=e.target.closest('[data-id],[data-t]');if(!g)return;
   if(lastPT==='touch'&&g.dataset.id&&peekId!==g.dataset.id){showPeek(g.dataset.id,g.dataset.kind);return;}
   hidePeek();activate(g);});
-wheel.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){const g=e.target.closest('[data-id]');if(g){e.preventDefault();activate(g);}}});
+// ---------- tastiera: roving tabindex (UX-05) ----------
+// un solo punto della ruota è raggiungibile con Tab; le frecce si muovono tra i punti, Invio apre
+function rove(){const ns=[...wheel.querySelectorAll('[data-nav]')];if(!ns.length)return;
+  const cur=(state.sel&&wheel.querySelector(`[data-nav][data-id="${state.sel.id}"]`))||(state.cat&&wheel.querySelector(`[data-nav][data-cat="${state.cat}"]`))||ns[0];
+  ns.forEach(n=>n.setAttribute('tabindex',n===cur?'0':'-1'));}
+wheel.addEventListener('keydown',e=>{const g=e.target.closest('[data-nav]');if(!g)return;
+  if(e.key==='Enter'||e.key===' '){e.preventDefault();const id=g.dataset.id,cat=g.dataset.cat,t=g.dataset.t;activate(g);
+    // dopo un nuovo disegno il focus resta sulla ruota: sullo stesso punto se c'è ancora, altrimenti sul primo
+    const back=(id&&wheel.querySelector(`[data-nav][data-id="${id}"]`))||(cat&&wheel.querySelector(`[data-nav][data-cat="${cat}"]`))||(t&&wheel.querySelector(`[data-nav][data-t="${t}"]:not([data-cat])`))||wheel.querySelector('[data-nav][tabindex="0"]');
+    if(back&&!$('#tab-ruota').hidden){wheel.querySelectorAll('[data-nav]').forEach(n=>n.setAttribute('tabindex',n===back?'0':'-1'));back.focus();}
+    return;}
+  const ns=[...wheel.querySelectorAll('[data-nav]')];const i=ns.indexOf(g);let j=-1;
+  if(e.key==='ArrowRight'||e.key==='ArrowDown')j=(i+1)%ns.length;else if(e.key==='ArrowLeft'||e.key==='ArrowUp')j=(i-1+ns.length)%ns.length;
+  else if(e.key==='Home')j=0;else if(e.key==='End')j=ns.length-1;else return;
+  e.preventDefault();g.setAttribute('tabindex','-1');ns[j].setAttribute('tabindex','0');ns[j].focus();});
 wheel.addEventListener('focusin',e=>{const g=e.target.closest('[data-id]');if(g&&state.mode==='ego')highlight(g.dataset.id,g.dataset.kind);});
 
 $('#egoAll').addEventListener('click',()=>{state.egoAll=!state.egoAll;renderWheel();});
 $('#mEgo').addEventListener('click',()=>{if(!state.sel)return;state.mode='ego';renderWheel();});
-$('#mBrowse').addEventListener('click',()=>{state.mode='browse';state.zoom=state.sel?state.sel.dom:null;renderWheel();});
+$('#mBrowse').addEventListener('click',()=>{state.mode='browse';state.zoom=state.sel?state.sel.dom:null;state.cat=state.sel?state.sel.dom+'|'+state.sel.cat:null;renderWheel();});
+$('#catList').addEventListener('click',e=>{const o=e.target.closest('[data-cl-open]');if(o){state.mode='ego';state.cat=null;select(BYID[o.dataset.clOpen]);$('#wheel').scrollIntoView({block:'nearest'});return;}
+  if(e.target.closest('[data-cl-close]')){state.cat=null;renderWheel();}});
 $('#rand').addEventListener('click',()=>{let f;do{f=FOODS[Math.floor(Math.random()*FOODS.length)];}while(f===state.sel);state.mode='ego';select(f);});
 document.querySelectorAll('#pairs .seg button').forEach(b=>b.addEventListener('click',()=>{state.filter=b.dataset.f;renderPairs();}));
 $('#spTrack').addEventListener('click',e=>{const b=e.target.closest('[data-mkck]');if(!b||!state.sel)return;CK.ings=[state.sel];CK.base=BYID[b.dataset.mkck];showTab('cocktail');window.scrollTo({top:0});});
