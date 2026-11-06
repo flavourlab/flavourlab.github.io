@@ -223,21 +223,29 @@ function renderProfile(){
   <div class="radars" id="radars">${renderRadars(A,null)}</div>
   <p class="cmp" id="cmp">Passa su un abbinamento per sovrapporre il suo profilo${best?` (per esempio ${esc(best.B.name)})`:''}.</p>
   ${notes.length?`<p class="safety">${esc(notes.join(' · '))}</p>`:''}
-  <div>
-    <span class="eyebrow">Abbinamenti alcolici</span>
-    <h3 style="margin:2px 0 6px">Da bere con ${esc(A.name)}</h3>
-    <div class="sp-list">${sps.map(r=>spiritCard(A,r)).join('')}</div>
-  </div>`;
+  <p class="tiny muted">Più in basso trovi gli alcolici e gli alimenti con cui si abbina.</p>`;
+  renderSpirits();
+}
+function firstSentence(t){return (t.match(/^.*?[.!?](\s|$)/)||[t])[0].trim();}
+function renderSpirits(){
+  const A=state.sel;$('#spirits').hidden=!A;if(!A)return;
+  $('#spTitle').textContent=`Da bere con ${A.name}`;
+  $('#spTrack').innerHTML=state.sps.map(r=>spiritCard(A,r)).join('');
+  $('#spTrack').scrollLeft=0;updateRail('spTrack');
 }
 function scoreBar(t,max=30){const [v]=verdict(t);const c=v==='forte'?'var(--ok)':v==='promettente'?'color-mix(in srgb,var(--ok) 55%,var(--warn))':v==='rischioso'?'var(--warn)':'var(--bad)';
   return `<span class="score"><span class="bar"><i style="width:${(t/max*100).toFixed(0)}%;background:${c}"></i></span>${t}/30</span>`;}
 function badge(r){return `<span class="badge ${r.type}">${r.type==='contrasto'?'⇄':'≈'} ${TYPELBL[r.type]}</span>${r.mixed?`<span class="badge plus">+ ${r.type==='contrasto'?'concordanza':'contrasto'}</span>`:''}`;}
 function spiritCard(A,r){const B=r.B;
   const trio=state.trio[B.id];
-  return `<div class="sp" data-sid="${B.id}">
-    <h4>${esc(B.name)} <small>· ${esc(B.ex?B.ex+' · ':'')}${esc(SGROUP[B.grp][0])}</small></h4>${scoreBar(r.total)}
-    <p>${badge(r)} ${esc(r.summary)}</p>
-    <p class="how"><b>Come:</b> ${esc(howTo(A,B))}${trio?` <b>Trio:</b> aggiungi ${esc(trio.name)}.`:''}</p></div>`;}
+  return `<article class="card sp" data-sid="${B.id}">
+    <div class="card-top"><div><h3>${esc(B.name)}</h3><span class="cat">${esc(B.ex?B.ex+' · ':'')}${esc(SGROUP[B.grp][0])}</span></div>${scoreBar(r.total)}</div>
+    <div class="chips">${badge(r)}</div>
+    <p class="sum">${esc(firstSentence(r.summary))}</p>
+    <p class="tiny"><b>Come:</b> ${esc(SGROUP[B.grp][1].charAt(0).toUpperCase()+SGROUP[B.grp][1].slice(1))}.${trio?` <b>Trio:</b> aggiungi ${esc(trio.name)}.`:''}</p>
+    <details><summary>Perché funziona</summary><p class="tiny">${esc(r.summary)}</p><p class="tiny"><b>Preparazione:</b> ${esc(howTo(A,B))}</p></details>
+    <div class="acts"><button class="link" data-mkck="${B.id}">Crea un cocktail →</button></div>
+  </article>`;}
 
 // ---------- abbinamenti alimentari ----------
 function lensTable(r){return `<table class="lens"><tbody>${r.lens.map(l=>`<tr><td>${l.k}${info(l.k)}</td><td>${esc(l.why)}</td><td class="v">${l.v}/5</td></tr>`).join('')}</tbody></table>`;}
@@ -251,11 +259,23 @@ function renderPairs(){
   $('#pairGrid').innerHTML=list.length?list.map(r=>`<article class="card" data-pid="${r.B.id}">
     <div class="card-top"><div><h3>${esc(r.B.name)}</h3><span class="cat"><i style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${tcol(r.B.dom)};margin-right:5px"></i>${esc(CATS[r.B.cat][0])}</span></div>${scoreBar(r.total)}</div>
     <div class="chips">${badge(r)}</div>
-    <p class="sum">${esc(r.summary)}</p>
-    <details><summary>Le sei lenti, dosi e test</summary>${lensTable(r)}<p class="tiny" style="margin-top:8px"><b>Rapporto:</b> ${esc(r.ratioTxt)}</p><p class="tiny"><b>Test rapido:</b> ${esc(testTxt(r))}</p></details>
+    <p class="sum">${esc(firstSentence(r.summary))}</p>
+    <details><summary>Le sei lenti, dosi e test</summary><p class="tiny" style="margin-bottom:6px">${esc(r.summary)}</p>${lensTable(r)}<p class="tiny" style="margin-top:8px"><b>Rapporto:</b> ${esc(r.ratioTxt)}</p><p class="tiny"><b>Test rapido:</b> ${esc(testTxt(r))}</p></details>
     <div class="acts"><button class="link" data-open="${r.B.id}">Apri ${esc(r.B.name)} →</button><button class="link" data-check="${r.B.id}">Verifica la coppia</button></div>
   </article>`).join(''):`<p class="muted">Nessun abbinamento di questo tipo sopra la soglia.</p>`;
+  $('#pairGrid').scrollLeft=0;$('#pairCount').dataset.total=list.length;updateRail('pairGrid');
 }
+// ---------- caroselli ----------
+function railStep(tr){const c=tr.querySelector('.card');if(!c)return tr.clientWidth;const gap=parseFloat(getComputedStyle(tr).columnGap)||0;return c.offsetWidth+gap;}
+function updateRail(id){const tr=document.getElementById(id);if(!tr)return;const cards=tr.querySelectorAll('.card');const n=cards.length;
+  const st=railStep(tr);const per=Math.max(1,Math.round(tr.clientWidth/st));const first=Math.min(n,Math.round(tr.scrollLeft/st)+1);const last=Math.min(n,first+per-1);
+  const cnt=document.getElementById(id==='spTrack'?'spCount':'pairCount');if(cnt)cnt.textContent=n?`${first}–${last} di ${n}`:'';
+  document.querySelectorAll(`.rnav[data-rail="${id}"]`).forEach(b=>{const d=+b.dataset.dir;b.disabled=!n||(d<0?tr.scrollLeft<=2:tr.scrollLeft+tr.clientWidth>=tr.scrollWidth-2);});}
+document.addEventListener('click',e=>{const b=e.target.closest('.rnav');if(!b)return;const tr=document.getElementById(b.dataset.rail);const st=railStep(tr);const per=Math.max(1,Math.round(tr.clientWidth/st));
+  tr.scrollBy({left:+b.dataset.dir*st*per,behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});});
+['spTrack','pairGrid'].forEach(id=>{const tr=document.getElementById(id);let t=null;tr.addEventListener('scroll',()=>{cancelAnimationFrame(t);t=requestAnimationFrame(()=>updateRail(id));},{passive:true});
+  tr.addEventListener('keydown',e=>{if(e.key==='ArrowRight'||e.key==='ArrowLeft'){e.preventDefault();document.querySelector(`.rnav[data-rail="${id}"][data-dir="${e.key==='ArrowRight'?1:-1}"]`)?.click();}});});
+window.addEventListener('resize',()=>{updateRail('spTrack');updateRail('pairGrid');});
 
 // ---------- verifica ----------
 function renderPairOut(){
@@ -351,7 +371,7 @@ wheel.addEventListener('pointermove',moveTip);
 wheel.addEventListener('pointerout',e=>{const g=e.target.closest('[data-id],[data-t]');if(!g)return;if(g.contains(e.relatedTarget))return;hideTip();if(state.mode==='ego'){resetLinks();highlight(null);}});
 function activate(g){if(!g)return;
   if(g.dataset.id){const B=BYID[g.dataset.id];hideTip();
-    if(B.isSpirit){const c=document.querySelector(`.sp[data-sid="${B.id}"]`);if(c){c.scrollIntoView({block:'nearest',behavior:'smooth'});c.classList.add('hl');}}
+    if(B.isSpirit){const c=document.querySelector(`.sp[data-sid="${B.id}"]`);if(c){const tr=$('#spTrack');tr.scrollTo({left:c.offsetLeft-tr.offsetLeft,behavior:'smooth'});$('#spirits').scrollIntoView({block:'nearest',behavior:'smooth'});c.classList.add('hl');}}
     else{state.mode='ego';select(B);}}
   else if(g.dataset.t!==undefined){const t=g.dataset.t;state.zoom=(t==='__all'||!t||state.zoom===t)?null:t;hideTip();renderWheel();}}
 wheel.addEventListener('click',e=>activate(e.target.closest('[data-id],[data-t]')));
@@ -362,6 +382,7 @@ $('#mEgo').addEventListener('click',()=>{if(!state.sel)return;state.mode='ego';r
 $('#mBrowse').addEventListener('click',()=>{state.mode='browse';state.zoom=state.sel?state.sel.dom:null;renderWheel();});
 $('#rand').addEventListener('click',()=>{let f;do{f=FOODS[Math.floor(Math.random()*FOODS.length)];}while(f===state.sel);state.mode='ego';select(f);});
 document.querySelectorAll('#pairs .seg button').forEach(b=>b.addEventListener('click',()=>{state.filter=b.dataset.f;renderPairs();}));
+$('#spTrack').addEventListener('click',e=>{const b=e.target.closest('[data-mkck]');if(!b||!state.sel)return;CK.ings=[state.sel];CK.base=BYID[b.dataset.mkck];showTab('cocktail');window.scrollTo({top:0});});
 $('#pairGrid').addEventListener('click',e=>{const o=e.target.closest('[data-open]'),c=e.target.closest('[data-check]');
   if(o){select(BYID[o.dataset.open]);window.scrollTo({top:0,behavior:'smooth'});}
   if(c){state.A=state.sel;state.B=BYID[c.dataset.check];state.C=null;if(typeof comboC!=='undefined'&&comboC)comboC.set(null);comboA.set(state.A);comboB.set(state.B);renderCheck();showTab('verifica');window.scrollTo({top:0});}});
@@ -607,6 +628,6 @@ $('#ckFromWheel').addEventListener('click',()=>{if(!state.sel){showTab('ruota');
 function renderCocktail(){renderIngs();renderBase();renderStyles();renderRecipes();}
 
 function route(){const h=location.hash.slice(1);if(h==='verifica'||h==='cocktail'){showTab(h,true);return;}
-  showTab('ruota',true);const f=BYID[h];if(f&&!f.isSpirit&&f!==state.sel)select(f,true);}
+  showTab('ruota',true);const f=BYID[h];if(f&&!f.isSpirit&&f!==state.sel){state.mode='ego';select(f,true);}}
 window.addEventListener('hashchange',route);
 route();

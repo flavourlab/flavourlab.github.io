@@ -20,9 +20,9 @@
   </header>
 
   <nav class="tabbar" id="tabbar" role="tablist" aria-label="Sezioni">
-    <button type="button" role="tab" id="tb-ruota" aria-controls="tab-ruota" aria-selected="true">Ruota e abbinamenti</button>
-    <button type="button" role="tab" id="tb-verifica" aria-controls="tab-verifica" aria-selected="false" tabindex="-1">Pairing Studio</button>
-    <button type="button" role="tab" id="tb-cocktail" aria-controls="tab-cocktail" aria-selected="false" tabindex="-1">Cocktail creator</button>
+    <button type="button" role="tab" id="tb-ruota" aria-controls="tab-ruota" aria-selected="true"><span class="tb-t">Ruota e abbinamenti</span><span class="tb-d">Esplora un alimento, i suoi abbinamenti e gli alcolici</span></button>
+    <button type="button" role="tab" id="tb-verifica" aria-controls="tab-verifica" aria-selected="false" tabindex="-1"><span class="tb-t">Pairing Studio</span><span class="tb-d">Verifica una coppia o un trio di ingredienti</span></button>
+    <button type="button" role="tab" id="tb-cocktail" aria-controls="tab-cocktail" aria-selected="false" tabindex="-1"><span class="tb-t">Cocktail creator</span><span class="tb-d">Dagli ingredienti a una ricetta completa</span></button>
   </nav>
 
   <div id="tab-ruota" role="tabpanel" aria-labelledby="tb-ruota" class="tabpanel">
@@ -57,16 +57,24 @@
     <aside class="panel profile" id="profile" aria-label="Profilo aromatico"></aside>
   </div>
 
-  <section id="pairs" aria-label="Abbinamenti alimentari">
-    <div class="sec-head">
+  <section id="spirits" class="rail" aria-label="Abbinamenti alcolici" hidden>
+    <div class="rail-head">
+      <div><span class="eyebrow">Abbinamenti alcolici</span><h2 id="spTitle">Da bere con</h2></div>
+      <div class="rail-nav"><span class="rail-count" id="spCount"></span><button type="button" class="rnav" data-rail="spTrack" data-dir="-1" aria-label="Alcolici precedenti">←</button><button type="button" class="rnav" data-rail="spTrack" data-dir="1" aria-label="Alcolici successivi">→</button></div>
+    </div>
+    <div class="rail-track" id="spTrack" tabindex="0" aria-label="Elenco degli alcolici abbinati"></div>
+  </section>
+
+  <section id="pairs" class="rail" aria-label="Abbinamenti alimentari">
+    <div class="rail-head">
       <div><span class="eyebrow">Abbinamenti alimentari</span><h2 id="pairsTitle">Con cosa si sposa</h2></div>
-      <div class="seg" role="group" aria-label="Filtra per tipo">
+      <div class="rail-nav"><div class="seg" role="group" aria-label="Filtra per tipo">
         <button type="button" data-f="all" aria-pressed="true">Tutti</button>
         <button type="button" data-f="concordanza" aria-pressed="false">Concordanza</button>
         <button type="button" data-f="contrasto" aria-pressed="false">Contrasto</button>
-      </div>
+      </div><span class="rail-count" id="pairCount"></span><button type="button" class="rnav" data-rail="pairGrid" data-dir="-1" aria-label="Abbinamenti precedenti">←</button><button type="button" class="rnav" data-rail="pairGrid" data-dir="1" aria-label="Abbinamenti successivi">→</button></div>
     </div>
-    <div class="grid" id="pairGrid"></div>
+    <div class="rail-track" id="pairGrid" tabindex="0" aria-label="Elenco degli alimenti abbinati"></div>
   </section>
 
   </div>
