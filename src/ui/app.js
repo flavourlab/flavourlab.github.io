@@ -184,7 +184,7 @@ function renderBrowse(){
   $('#wheelHint').textContent=z?'Clicca un alimento per vederne gli abbinamenti.':'Clicca un gusto per ingrandirlo, o un alimento per aprirlo.';
   $('#legend').innerHTML=TORDER.map(k=>{const n=FOODS.filter(f=>f.dom===k).length;return `<span><i style="width:10px;height:10px;border-radius:50%;background:${tcol(k)};display:inline-block"></i>${TLABEL[k]} · ${n}</span>`;}).join('')+`<span>Anello interno: gusto dominante · medio: categoria · esterno: alimento</span>`;
 }
-function renderWheel(){if(!state.sel)state.mode='browse';state.mode==='ego'?renderEgo():renderBrowse();$('#mEgo').disabled=!state.sel;$('#mEgo').setAttribute('aria-pressed',String(state.mode==='ego'));$('#mBrowse').setAttribute('aria-pressed',String(state.mode==='browse'));}
+function renderWheel(){if(!state.sel)state.mode='browse';state.mode==='ego'?renderEgo():renderBrowse();$('#mEgo').hidden=!state.sel;$('#mEgo').setAttribute('aria-pressed',String(state.mode==='ego'));$('#mBrowse').setAttribute('aria-pressed',String(state.mode==='browse'));}
 // la dimensione dei testi dipende dalla larghezza della ruota: si ridisegna quando cambia
 let rzT=null;window.addEventListener('resize',()=>{clearTimeout(rzT);rzT=setTimeout(()=>{if(!$('#tab-ruota').hidden)renderWheel();},150);});
 
