@@ -79,27 +79,44 @@ function catOf(I){return I.isSpirit?SGROUP[I.grp][0]:CATS[I.cat][0];}
 const state={sel:null,mode:'browse',zoom:null,cat:null,filter:'all',A:null,B:null,parts:[],sps:[],trio:{}};
 
 // ---------- combobox ----------
-function makeCombo(host,{id,placeholder,source,onPick,keep,onClear}){
+// i candidati che stanno meglio con tutti gli ingredienti già scelti (vale il punteggio più basso tra le coppie)
+const aD=n=>(/^a/i.test(n)?'ad ':'a ')+n;
+function pairT(a,b){if(a.isSpirit&&b.isSpirit)return null;return a.isSpirit?S(b,a).total:S(a,b).total;}
+function ckSuggest(){const ings=CK.ings;if(!ings.length)return null;
+  const items=FOODS.concat(SPIRITS).filter(x=>!ings.includes(x)).map(x=>{const ts=ings.map(i=>pairT(i,x)).filter(t=>t!=null);return{x,m:ts.length?Math.min(...ts):-1};})
+    .filter(o=>o.m>=0).sort((a,b)=>b.m-a.m).slice(0,8).map(o=>o.x);
+  return {label:ings.length===1?`Si abbinano ${aD(ings[0].name)}`:'Si abbinano ai tuoi ingredienti',items};}
+// suggest(): a campo vuoto, gli elementi da proporre per primi (es. i migliori abbinamenti); poi tutti dalla A alla Z
+function makeCombo(host,{id,placeholder,source,onPick,keep,onClear,suggest}){
   host.innerHTML=`<input type="search" id="${id}" role="combobox" aria-expanded="false" aria-autocomplete="list" autocomplete="off" placeholder="${esc(placeholder)}"><div class="list" role="listbox" hidden></div>`;
   const inp=host.querySelector('input'),list=host.querySelector('.list');let opts=[],act=0,cur=null;
-  function show(){const q=norm(inp.value.trim());
-    opts=source().filter(it=>!q||norm(it.name).includes(q)).sort((a,b)=>{const sa=norm(a.name).startsWith(q)?0:1,sb=norm(b.name).startsWith(q)?0:1;return sa-sb||a.name.localeCompare(b.name,'it');}).slice(0,60);
-    list.innerHTML=opts.map((it,i)=>`<div class="opt" role="option" data-i="${i}" aria-selected="${i===act}"><span>${esc(it.name)}</span><small>${esc(it.isSpirit?SGROUP[it.grp][0]:CATS[it.cat][1]+' · '+TLABEL[it.dom])}</small></div>`).join('');
-    list.hidden=!opts.length;inp.setAttribute('aria-expanded',String(!list.hidden));}
-  function pick(it){if(!it)return;cur=keep?it:null;list.hidden=true;inp.setAttribute('aria-expanded','false');inp.value=keep?it.name:'';if(!keep)inp.blur();onPick(it);}
+  const optH=(it,i)=>`<div class="opt" role="option" data-i="${i}" aria-selected="${i===act}"><span>${esc(it.name)}</span><small>${esc(it.isSpirit?SGROUP[it.grp][0]:CATS[it.cat][1]+' · '+TLABEL[it.dom])}</small></div>`;
+  function show(){const q=norm(inp.value.trim());const src=source();
+    const sug=!q&&suggest?(suggest()||{items:[]}):{items:[]};const top=sug.items.filter(it=>src.includes(it)).slice(0,8);
+    const rest=src.filter(it=>!top.includes(it)&&(!q||norm(it.name).includes(q))).sort((a,b)=>{const sa=norm(a.name).startsWith(q)?0:1,sb=norm(b.name).startsWith(q)?0:1;return sa-sb||a.name.localeCompare(b.name,'it');}).slice(0,top.length?200:60);
+    opts=top.concat(rest);
+    list.innerHTML=top.length?`<div class="lgrp" role="presentation">${esc(sug.label)}</div>${top.map(optH).join('')}<div class="lgrp" role="presentation">Tutti, dalla A alla Z</div>${rest.map((it,i)=>optH(it,i+top.length)).join('')}`:opts.map(optH).join('');
+    list.scrollTop=0;list.hidden=!opts.length;inp.setAttribute('aria-expanded',String(!list.hidden));}
+  const close=()=>{list.hidden=true;inp.setAttribute('aria-expanded','false');};
+  function pick(it){if(!it)return;cur=keep?it:null;close();inp.value=keep?it.name:'';if(!keep)inp.blur();onPick(it);}
   // svuotare il campo toglie davvero la scelta
   inp.addEventListener('input',()=>{act=0;if(keep&&onClear&&cur&&!inp.value.trim()){cur=null;onClear();}show();});
-  inp.addEventListener('focus',()=>{if(keep)inp.select();act=0;show();});
-  // testo scritto ma non scelto: il campo torna a mostrare la scelta attiva
-  inp.addEventListener('blur',()=>setTimeout(()=>{list.hidden=true;inp.setAttribute('aria-expanded','false');if(keep&&document.activeElement!==inp)inp.value=cur?cur.name:'';},160));
+  let quiet=false;
+  inp.addEventListener('focus',()=>{if(keep)inp.select();act=0;if(quiet){quiet=false;return;}show();});
+  // il campo già attivo (es. dopo aver aggiunto un ingrediente) riapre il menù al clic
+  inp.addEventListener('click',()=>{if(list.hidden){act=0;show();}});
+  // testo scritto ma non scelto: il campo torna a mostrare la scelta attiva; se il fuoco è tornato al campo il menù resta
+  inp.addEventListener('blur',()=>setTimeout(()=>{if(document.activeElement===inp)return;close();if(keep)inp.value=cur?cur.name:'';},160));
   inp.addEventListener('keydown',e=>{
     if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();if(list.hidden)show();act=Math.max(0,Math.min(opts.length-1,act+(e.key==='ArrowDown'?1:-1)));
-      list.querySelectorAll('.opt').forEach((o,i)=>o.setAttribute('aria-selected',String(i===act)));list.children[act]?.scrollIntoView({block:'nearest'});}
+      const os=list.querySelectorAll('.opt');os.forEach((o,i)=>o.setAttribute('aria-selected',String(i===act)));os[act]?.scrollIntoView({block:'nearest'});}
     else if(e.key==='Enter'){e.preventDefault();pick(opts[act]);}
     else if(e.key==='Escape'){list.hidden=true;}
   });
   list.addEventListener('pointerdown',e=>{const o=e.target.closest('.opt');if(o){e.preventDefault();pick(opts[+o.dataset.i]);}});
-  return {set(it){cur=keep?(it||null):null;inp.value=it?it.name:'';}};
+  return {set(it){cur=keep?(it||null):null;inp.value=it?it.name:'';},
+    // rimette il cursore nel campo senza aprire il menù (si apre al clic o con le frecce)
+    focusQuiet(){quiet=true;inp.focus();quiet=false;}};
 }
 
 // ---------- ruota: abbinamenti ----------
@@ -330,16 +347,18 @@ function renderPairOut(){
   const A=state.A,B=state.B;if(!A||!B||A===B)return;
   const r=S(A,B);const [v,vt]=verdict(r.total);const vc=v==='forte'?'var(--ok)':v==='promettente'?'var(--ok)':v==='rischioso'?'var(--warn)':'var(--bad)';
   const trio=B.isSpirit?[]:trioSpirits(A,B,3);
-  $('#checkOut').innerHTML=`
+  $('#checkOut').innerHTML=`<div class="out2"><div class="out-head">
     ${verdictHead(r.total,v,vt,`<div class="chips">${badge(r)}${info('type','affinità e contrasto')}</div>`)}
     <div style="margin:10px 0 4px"><div class="scale"><i></i><i></i><i></i><i></i><b style="left:calc(${(r.total/30*100).toFixed(1)}% - 1.5px)"></b></div><div class="scale-l"><span>0</span><span>10</span><span>17</span><span>24</span><span>30</span></div></div>
     <p style="margin:8px 0"><b>${esc(A.name)} + ${esc(B.name)}.</b> ${esc(r.summary)}</p>
+    </div><div class="out-rest">
     <details class="lensd"><summary>I sei criteri, uno per uno</summary>${lensTable(r)}</details>
     <p class="tiny" style="margin-top:10px"><b>Rapporto di partenza:</b> ${esc(r.ratioTxt)}</p>
     <p class="tiny"><b>Test rapido:</b> ${esc(testTxt(r))}</p>
     ${B.isSpirit?`<p class="tiny"><b>Come usarlo:</b> ${esc(howTo(A,B))}</p>`:''}
     ${r.total<24?`<p class="tiny" style="margin-top:12px">Coppia sotto 24: il terzo ingrediente consigliato la completa.</p>`:''}
-    ${trio.length?`<div style="margin-top:14px"><span class="eyebrow">Alcolici adatti a entrambi</span><div class="list-inline" style="margin-top:6px">${trio.map(x=>`<span class="chip">${esc(x.s.name)} <span class="muted" style="font-family:var(--f-mono)">${x.a} · ${x.b}</span></span>`).join('')}</div></div>`:''}`;
+    ${trio.length?`<div style="margin-top:14px"><span class="eyebrow">Alcolici adatti a entrambi</span><div class="list-inline" style="margin-top:6px">${trio.map(x=>`<span class="chip">${esc(x.s.name)} <span class="muted" style="font-family:var(--f-mono)">${x.a} · ${x.b}</span></span>`).join('')}</div></div>`:''}
+    </div><figure class="out-fig">${sideHTML()}</figure></div>`;
 }
 
 // ---------- metodo ----------
@@ -486,7 +505,8 @@ mainCombo.set(state.sel);
 $('#q-main').addEventListener('blur',()=>setTimeout(()=>{if(document.activeElement!==$('#q-main'))mainCombo.set(state.sel);},200));
 document.addEventListener('keydown',e=>{if(e.key!=='/'||e.ctrlKey||e.metaKey)return;const t=e.target;if(t.closest&&t.closest('input,textarea,select'))return;if($('#tab-ruota').hidden)return;e.preventDefault();$('#q-main').focus();});
 const comboA=makeCombo($('#cA'),{id:'q-a',placeholder:'Alimento A',source:()=>FOODS,keep:true,onPick:f=>{state.A=f;renderCheck();},onClear:()=>{state.A=null;renderCheck();}});
-const comboB=makeCombo($('#cB'),{id:'q-b',placeholder:'Alimento o alcolico B',source:()=>FOODS.concat(SPIRITS),keep:true,onPick:f=>{state.B=f;renderCheck();},onClear:()=>{state.B=null;renderCheck();}});
+const comboB=makeCombo($('#cB'),{id:'q-b',placeholder:'Alimento o alcolico B',source:()=>FOODS.concat(SPIRITS),keep:true,
+  suggest:()=>state.A&&{label:`Si abbinano ${aD(state.A.name)}`,items:partnersOf(state.A,6).map(r=>r.B).concat(spiritsOf(state.A,2).map(r=>r.B))},onPick:f=>{state.B=f;renderCheck();},onClear:()=>{state.B=null;renderCheck();}});
 comboA.set(state.A);comboB.set(state.B);
 $('#stats').textContent=`${FOODS.length} alimenti · ${Object.keys(CATS).length} categorie · ${SPIRITS.length} alcolici`;
 renderMethod();renderExamples();
@@ -516,17 +536,22 @@ function triCap(){return `<p class="tiny muted tricap"><span><svg width="22" hei
 function renderLensPick(){
   $('#lensPick').innerHTML=`<span class="eyebrow">Criterio per il terzo ingrediente</span><div class="lensbar" role="group" aria-label="Criterio per il terzo ingrediente">${TLENS.map(l=>`<button type="button" data-lens="${l[0]}" aria-pressed="${state.lens===l[0]}">${LENSUI[l[0]]}</button>`).join('')}</div><p class="tiny muted">${TLENS.find(l=>l[0]===state.lens)[2]}</p>`;
 }
+// le proposte per il terzo ingrediente: 12 in tutto, 4 per pagina (la lista intera allungava troppo il pannello)
+const SUG_N=12,SUG_PER=4,SUGP={key:'',list:[],page:0};
 function renderSuggest(){
   const A=state.A,B=state.B;const host=$('#thirdSug');
   if(!A||!B||A===B){host.innerHTML='';return;}
-  const L=TLENS.find(l=>l[0]===state.lens);const list=suggestThird(A,B,state.lens);
-  host.innerHTML=`<span class="eyebrow">Terzo ingrediente consigliato · ${LENSUI[state.lens]} ${info('third','terzo ingrediente')}</span><ul class="sug">${list.map(x=>`<li><button type="button" data-setc="${x.C.id}" class="${state.C===x.C?'on':''}"><i style="background:${tcol(x.C.dom)}"></i><span class="sg-n"><b>${esc(x.C.name)}</b><small>${esc(lensReason(state.lens,A,B,x.C,x.t))}</small></span><span class="sg-s"><b>${fmtN(x.lv)}</b><em>/5</em><small>trio ${fmtN(x.t.total)}</small></span></button></li>`).join('')}</ul>`;
+  const key=A.id+'|'+B.id+'|'+state.lens;if(SUGP.key!==key){SUGP.key=key;SUGP.list=suggestThird(A,B,state.lens,SUG_N);SUGP.page=0;}
+  const list=SUGP.list,pages=Math.max(1,Math.ceil(list.length/SUG_PER));SUGP.page=Math.min(SUGP.page,pages-1);
+  const from=SUGP.page*SUG_PER,shown=list.slice(from,from+SUG_PER);
+  const pager=pages>1?`<div class="pager" role="group" aria-label="Altre proposte"><button type="button" data-sugp="-1" aria-label="Proposte precedenti" ${SUGP.page?'':'disabled'}>‹</button><span class="tiny muted" aria-live="polite">${from+1}–${from+shown.length} di ${list.length}</span><button type="button" data-sugp="1" aria-label="Altre proposte" ${SUGP.page<pages-1?'':'disabled'}>›</button></div>`:'';
+  host.innerHTML=`<div class="sug-h"><span class="eyebrow">Terzo ingrediente consigliato · ${LENSUI[state.lens]} ${info('third','terzo ingrediente')}</span>${pager}</div><ul class="sug">${shown.map(x=>`<li><button type="button" data-setc="${x.C.id}" class="${state.C===x.C?'on':''}"><i style="background:${tcol(x.C.dom)}"></i><span class="sg-n"><b>${esc(x.C.name)}</b><small>${esc(lensReason(state.lens,A,B,x.C,x.t))}</small></span><span class="sg-s"><b>${fmtN(x.lv)}</b><em>/5</em><small>trio ${fmtN(x.t.total)}</small></span></button></li>`).join('')}</ul>`;
 }
-function renderSide(){
-  const A=state.A,B=state.B,C=state.C;if(!A||!B){$('#checkSide').innerHTML='';return;}
+function sideHTML(){
+  const A=state.A,B=state.B,C=state.C;if(!A||!B)return '';
   const T=[A,B,C].filter(Boolean);
   const ser=T.map((I,i)=>({v:I.ar,c:TCOL[i],fo:i===0?0.12:0.06,dash:TDASH[i]}));
-  $('#checkSide').innerHTML=`<div class="radar"><span class="eyebrow">Famiglie aromatiche</span>${radar(FAM.map(f=>({t:f[2]})),ser,96,72)}</div>
+  return `<div class="radar"><span class="eyebrow">Famiglie aromatiche</span>${radar(FAM.map(f=>({t:f[2]})),ser,96,72)}</div>
     <p class="tiny legend3">${T.map((I,i)=>`<span><svg width="22" height="8"><line x1="0" y1="4" x2="22" y2="4" style="stroke:${TCOL[i]};stroke-width:2.5;${TDASH[i]?`stroke-dasharray:${TDASH[i]===1?'4 3':TDASH[i]}`:''}"/></svg>${esc(I.name)}</span>`).join('')}</p>`;
 }
 function renderTrioOut(){
@@ -534,22 +559,19 @@ function renderTrioOut(){
   const r=t.roles;const sp=spiritsForTrio(t.T);
   const best=t.P.map((p,i)=>({p,i})).sort((a,b)=>b.p.total-a.p.total)[0];
   const sel=t.rows.find(x=>x.k===state.lens);
-  $('#checkOut').innerHTML=`
-    <div class="trio-top">
-      <div>
+  $('#checkOut').innerHTML=`<div class="out2"><div class="out-head">
         ${verdictHead(t.total,v,vt,`<div class="chips"><span class="chip">${t.structure}</span>${info('structure','struttura')}</div>`)}
         <div style="margin:10px 0 4px"><div class="scale"><i></i><i></i><i></i><i></i><b style="left:calc(${(t.total/30*100).toFixed(1)}% - 1.5px)"></b></div><div class="scale-l"><span>0</span><span>10</span><span>17</span><span>24</span><span>30</span></div></div>
         <p style="margin:10px 0 0"><b>${esc(t.T.map(I=>I.name).join(' + '))}.</b> La coppia più forte è ${esc(best.p.A.name)} + ${esc(best.p.B.name)} (${fmtN(best.p.total)}, ${TYPEUI[best.p.type].toLowerCase()}).</p>
         <p class="lensfocus"><b>${LENSUI[state.lens]} · ${fmtN(sel.v)}/5.</b> ${esc(sel.why)}</p>
-      </div>
-      <div>${triangleSVG(t)}${triCap()}</div>
-    </div>
+    </div><div class="out-rest">
     <details class="lensd"><summary>I criteri del trio, uno per uno</summary><table class="lens tlens"><tbody>${t.rows.map(x=>`<tr class="${x.k===state.lens?'sel':''}"><td>${x.n}${info(x.n)}</td><td>${esc(x.why)}</td><td class="v">${fmtN(x.v)}/5</td></tr>`).join('')}</tbody></table></details>
     <div class="trio-roles">
       <div><span class="eyebrow">Ruoli e dosi ${info('roles','ruoli e dosi')}</span><p class="tiny" style="margin-top:4px"><b>Base:</b> ${esc(r.base.name)} · <b>Complemento:</b> ${esc(r.comp.name)} · <b>Accento:</b> ${esc(r.accent.name)}</p><p class="tiny">Rapporto di partenza ${r.ratio}, in peso o in volume, poi correggi all'assaggio.</p></div>
       <div><span class="eyebrow">Da bere con il trio ${info('spirits','alcolici del trio')}</span><div class="list-inline" style="margin-top:6px">${sp.map(x=>`<span class="chip">${esc(x.s.name)} <span class="muted" style="font-family:var(--f-mono)">${fmtN(x.m)}</span></span>`).join('')}</div></div>
     </div>
-    <details class="pairs3"><summary>Le tre coppie</summary>${t.P.map(p=>`<div class="p3"><b>${esc(p.A.name)} + ${esc(p.B.name)}</b> ${scoreBar(p.total)} ${badge(p)}<p class="tiny">${esc(p.summary)}</p></div>`).join('')}</details>`;
+    <details class="pairs3"><summary>Le tre coppie</summary>${t.P.map(p=>`<div class="p3"><b>${esc(p.A.name)} + ${esc(p.B.name)}</b> ${scoreBar(p.total)} ${badge(p)}<p class="tiny">${esc(p.summary)}</p></div>`).join('')}</details>
+    </div><figure class="out-fig"><div class="tri-fig">${triangleSVG(t)}${triCap()}</div>${sideHTML()}</figure></div>`;
 }
 function renderCheck(){
   const A=state.A,B=state.B,C=state.C;
@@ -557,22 +579,30 @@ function renderCheck(){
   const ready=A&&B&&A!==B;
   // il criterio e il terzo ingrediente compaiono solo quando c'è una coppia (UX-06)
   $('#cCwrap').hidden=!ready;
-  if(!ready){$('#lensPick').innerHTML='';$('#checkSide').innerHTML='';$('#thirdSug').innerHTML='';
+  if(!ready){$('#lensPick').innerHTML='';$('#thirdSug').innerHTML='';
     $('#checkOut').innerHTML=`<div class="empty"><p>${A&&A===B?'Scegli due ingredienti diversi.':'Scegli due ingredienti, oppure parti da un esempio:'}</p>
       <div class="pairex">${PAIR_EX.map(([a,b])=>`<button type="button" class="ex" data-pair="${a.id}|${b.id}"><i style="background:${tcol(a.dom)}"></i>${esc(a.name)} + ${esc(b.name)}</button>`).join('')}</div></div>`;return;}
   renderLensPick();
   if(C&&(C===A||C===B))state.C=null;
-  renderSuggest();renderSide();
+  renderSuggest();
   if(state.C)renderTrioOut();else renderPairOut();
   $('#cClear').hidden=!state.C;
 }
 var PAIR_EX=[['Gorgonzola','Pera'],['Fragola','Basilico'],['Cioccolato fondente','Arancia']].map(p=>p.map(n=>BYNAME[n])).filter(p=>p[0]&&p[1]);
 $('#checkOut').addEventListener('click',e=>{const b=e.target.closest('[data-pair]');if(!b)return;const [a,c]=b.dataset.pair.split('|').map(id=>BYID[id]);
   state.A=a;state.B=c;state.C=null;comboA.set(a);comboB.set(c);comboC.set(null);renderCheck();});
-var comboC=makeCombo($('#cC'),{id:'q-c',placeholder:'Terzo ingrediente (facoltativo)',source:()=>FOODS.concat(SPIRITS),keep:true,onPick:f=>{state.C=f;renderCheck();},onClear:()=>{state.C=null;renderCheck();}});
+var comboC=makeCombo($('#cC'),{id:'q-c',placeholder:'Terzo ingrediente (facoltativo)',source:()=>FOODS.concat(SPIRITS),keep:true,
+  suggest:()=>state.A&&state.B&&state.A!==state.B&&{label:`Completano la coppia · ${LENSUI[state.lens]}`,items:suggestThird(state.A,state.B,state.lens,8).map(x=>x.C)},onPick:f=>{state.C=f;renderCheck();},onClear:()=>{state.C=null;renderCheck();}});
 $('#cClear').addEventListener('click',()=>{state.C=null;comboC.set(null);renderCheck();});
 $('#lensPick').addEventListener('click',e=>{const b=e.target.closest('[data-lens]');if(!b)return;state.lens=b.dataset.lens;renderCheck();});
-$('#thirdSug').addEventListener('click',e=>{const b=e.target.closest('[data-setc]');if(!b)return;state.C=BYID[b.dataset.setc];comboC.set(state.C);renderCheck();});
+// sul telefono le proposte si scorrono anche con uno swipe orizzontale
+let sugX=null;
+$('#thirdSug').addEventListener('pointerdown',e=>{sugX=e.pointerType==='touch'&&e.target.closest('.sug')?[e.clientX,e.clientY]:null;});
+$('#thirdSug').addEventListener('pointerup',e=>{if(!sugX)return;const dx=e.clientX-sugX[0],dy=e.clientY-sugX[1];sugX=null;
+  if(Math.abs(dx)<50||Math.abs(dx)<Math.abs(dy)*1.5)return;const pages=Math.ceil(SUGP.list.length/SUG_PER),np=SUGP.page+(dx<0?1:-1);
+  if(np<0||np>=pages)return;SUGP.page=np;renderSuggest();});
+$('#thirdSug').addEventListener('click',e=>{const pg=e.target.closest('[data-sugp]');if(pg){SUGP.page+=+pg.dataset.sugp;renderSuggest();$('#thirdSug [data-sugp="'+pg.dataset.sugp+'"]:not([disabled])')?.focus()||$('#thirdSug [data-sugp]:not([disabled])')?.focus();return;}
+  const b=e.target.closest('[data-setc]');if(!b)return;state.C=BYID[b.dataset.setc];comboC.set(state.C);renderCheck();});
 renderCheck();
 
 // ===== TAB E INTERFACCIA DEL COCKTAIL CREATOR =====
@@ -634,8 +664,9 @@ function renderIngs(){
 }
 $('#ckMix').addEventListener('click',e=>{const b=e.target.closest('[data-mv]');if(!b)return;CK.mixView=b.dataset.mv;$('#ckMix').innerHTML=mixProfile();});
 $('#ckIngs').addEventListener('click',e=>{const b=e.target.closest('[data-rm]');if(!b)return;CK.ings.splice(+b.dataset.rm,1);renderCocktail();});
-makeCombo($('#ckAdd'),{id:'q-ck-add',placeholder:'Aggiungi un alimento o un alcolico…',source:()=>FOODS.concat(SPIRITS).filter(x=>!CK.ings.includes(x)),
-  onPick:f=>{if(CK.ings.length>=5||CK.ings.includes(f))return;CK.ings.push(f);renderCocktail();if(CK.ings.length<5)setTimeout(()=>$('#q-ck-add')?.focus(),0);}});
+const ckCombo=makeCombo($('#ckAdd'),{id:'q-ck-add',placeholder:'Aggiungi un alimento o un alcolico…',source:()=>FOODS.concat(SPIRITS).filter(x=>!CK.ings.includes(x)),
+  suggest:ckSuggest,
+  onPick:f=>{if(CK.ings.length>=5||CK.ings.includes(f))return;CK.ings.push(f);renderCocktail();if(CK.ings.length<5)setTimeout(()=>ckCombo.focusQuiet(),0);}});
 
 // ---- 2. base ----
 function renderBase(){
@@ -676,9 +707,9 @@ $('#ckReset').addEventListener('click',()=>{CK.base=null;renderCocktail();});
 // ---- 3. stile ----
 function renderStyles(){
   stPeek=null;$('#ckStylePeek').hidden=true;
-  $('#ckStyles').innerHTML=SHELVES.map(([lbl,ids])=>`<div class="shelf"><span class="shelf-l">${lbl}</span><div class="shelf-row">${ids.map(id=>{const s=STY[id];
+  $('#ckStyles').innerHTML=SHELVES.map(([lbl,ids],si)=>`${si===2?'<i class="shelf-br" aria-hidden="true"></i>':''}<div class="shelf" style="--n:${ids.length}"><span class="shelf-l">${lbl}</span><div class="shelf-row">${ids.map(id=>{const s=STY[id];
     const fit=styleFit(effBaseFor(id),id);
-    return `<button type="button" class="glass${fit.ok?'':' nofit'}" data-sty="${id}" aria-pressed="${id===CK.style}" aria-description="${esc(s.fam+'. '+s.desc+(fit.ok?'':' Non adatto: '+fit.why))}">${fit.ok?'':'<i class="nf" aria-hidden="true">×</i>'}${glassSVG(id,56,s.name)}<span>${esc(s.name)}</span>${CK.styleAuto&&id===CK.style?'<small class="sugtag">suggerito</small>':''}</button>`;}).join('')}</div></div>`).join('');
+    return `<button type="button" class="glass${fit.ok?'':' nofit'}" data-sty="${id}" style="--gc:${GLASSES[id]?.lq[0][1]||'transparent'}" aria-pressed="${id===CK.style}" aria-description="${esc(s.fam+'. '+s.desc+(fit.ok?'':' Non adatto: '+fit.why))}">${fit.ok?'':'<i class="nf" aria-hidden="true">×</i>'}${glassSVG(id,56,s.name)}<span>${esc(s.name)}</span>${CK.styleAuto&&id===CK.style?'<small class="sugtag">suggerito</small>':''}</button>`;}).join('')}</div></div>`).join('');
   $('#ckStyHint').textContent=CK.styleAuto&&CK.style?`Suggerito: ${STY[CK.style].name}. Scegli un altro bicchiere per cambiare la ricetta.`:'';
 }
 // stile suggerito appena c'è un ingrediente (UX-12). Criterio: si tiene la base consigliata senza stile;
