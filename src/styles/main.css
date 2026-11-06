@@ -621,3 +621,73 @@ h2{font-weight:300}
 .card-top{flex-direction:column;align-items:flex-start;gap:6px}
 .card-top .score{width:100%}
 .card-top .score .bar{flex:1;max-width:140px}
+
+/* ===== Ritocchi 6 novembre ===== */
+/* menù dei campi: titoletti dei gruppi (abbinamenti consigliati, poi tutti) */
+.combo .lgrp{font-size:11px;font-weight:500;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);padding:10px 10px 4px}
+.combo .lgrp:first-child{padding-top:4px}
+
+/* bicchieri: gli scaffali crescono in proporzione al numero di bicchieri e riempiono ogni riga */
+.shelves{gap:22px 28px;container-type:inline-size}
+/* largo: una riga sola, ogni scaffale largo quanto i suoi bicchieri. Medio: due righe (7 e 6 bicchieri). Stretto: uno scaffale per riga */
+.shelf{flex:var(--n,1) 1 0}
+.shelf-br{display:none}
+@container (max-width:1099px){.shelves .shelf-br{display:block;flex:0 0 100%;height:0;margin-top:-22px}}
+@container (max-width:559px){.shelves .shelf{flex:1 1 100%}.shelves .shelf-br{display:none}}
+.shelf-row{display:grid;grid-template-columns:repeat(var(--n,1),minmax(0,1fr));gap:4px;flex-wrap:nowrap}
+.glass{width:auto;min-width:0}
+/* al passaggio del mouse i colori del drink sono più pieni e il bicchiere prende un alone del suo colore */
+.glass{transition:background-color .2s}
+.glass:hover,.glass:focus-visible{background:color-mix(in srgb,var(--gc) 14%,transparent)}
+.glass:hover span,.glass:focus-visible span{color:var(--ink)}
+.glass:hover .gl .lq,.glass:focus-visible .gl .lq{fill-opacity:1}
+.glass:hover .gl,.glass:focus-visible .gl{filter:saturate(1.35) drop-shadow(0 2px 8px color-mix(in srgb,var(--gc) 55%,transparent))}
+.glass:hover .gl .acl,.glass:focus-visible .gl .acl{stroke-width:2px}
+.glass.nofit:hover .gl{filter:none}
+.glass.nofit:hover{background:transparent}
+
+/* Prova un abbinamento: testo a sinistra, figure (triangolo e famiglie aromatiche) a destra */
+.out2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,320px);grid-template-rows:auto 1fr;grid-template-areas:"head fig" "rest fig";gap:0 28px;align-items:start}
+.out-head{grid-area:head;min-width:0}.out-rest{grid-area:rest;min-width:0}
+.out-fig{grid-area:fig;margin:0;display:flex;flex-direction:column;gap:22px;min-width:0}
+.out-fig .radar svg{max-width:320px;margin-inline:auto}
+#checkOut .out-rest .trio-roles{grid-template-columns:minmax(0,1fr);gap:18px}
+@media (max-width:1100px) and (min-width:901px){.out2{grid-template-columns:minmax(0,1fr) minmax(0,260px)}}
+/* telefono: verdetto, poi le figure, poi i dettagli */
+@media (max-width:700px){.out2{grid-template-columns:minmax(0,1fr);grid-template-rows:none;grid-template-areas:"head" "fig" "rest";gap:20px}.out-fig{max-width:360px;margin-inline:auto;width:100%}}
+
+/* terzo ingrediente: 4 proposte alla volta, si scorre con le frecce o con uno swipe */
+.sug-h{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.pager{display:inline-flex;align-items:center;gap:6px}
+.pager span{font-family:var(--f-mono);font-variant-numeric:tabular-nums;min-width:58px;text-align:center}
+.pager button{width:32px;height:32px;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:50%;font-size:18px;line-height:1;cursor:pointer;display:grid;place-items:center;padding:0 0 2px}
+.pager button:hover:not([disabled]){border-color:var(--ink)}
+.pager button[disabled]{opacity:.35;cursor:default}
+#thirdSug .sug{touch-action:pan-y}
+
+/* ===== Ordine della pagina «Esplora» ===== */
+/* «A caso» chiude la riga degli esempi, separato da un filetto */
+.ex-sep{width:1px;height:22px;background:var(--line);margin-inline:4px}
+.ex-rand{border-style:dashed;color:var(--ink)}
+.ex-rand svg{width:15px;height:15px;flex:none}
+.ex-rand:hover svg{transform:rotate(-12deg)}
+@media (prefers-reduced-motion:no-preference){.ex-rand svg{transition:transform .2s}}
+/* il cambio di vista sta nel pannello che controlla: la ruota */
+.wheel-head{align-items:center}
+.wheel-sub{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:6px 16px;margin-top:14px}
+/* ruota e scheda sono alte uguali; la ruota resta centrata nello spazio */
+.main{align-items:stretch}
+.main>.stage{display:flex;flex-direction:column}
+.main>.stage #wheel{margin-block:auto}
+.main>.stage .legend{margin-top:16px}
+.finder{max-width:840px}
+/* in fondo alla scheda: scorciatoie alle due liste, ancorate al bordo basso */
+.profile .pjump{margin-top:auto;padding-top:16px;border-top:1px solid var(--line);display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 18px}
+.profile .pjump .link{font-size:14px}
+#spirits h2:focus,#pairs h2:focus{outline:none}
+/* «i» degli alcolici: allineata al testo del nome, anche dentro i chip */
+h3 .info[data-spinfo]{vertical-align:.18em}
+.chip .info[data-spinfo]{width:14px;height:14px;font-size:9.5px;margin-left:5px;vertical-align:.08em}
+.bline .info[data-spinfo]{vertical-align:.12em}
+.infotip{max-width:min(340px,calc(100vw - 32px))}
+@media (max-width:620px){.ex-sep{display:none}}
