@@ -187,34 +187,64 @@ function renderEgo(){
 
 // ---------- ruota: esplora ----------
 function runs(list,key){const out=[];list.forEach((it,i)=>{const k=key(it);const last=out[out.length-1];if(last&&last.k===k)last.e=i+1;else out.push({k,s:i,e:i+1,it});});return out;}
+// «Esplora per gusto»: stessa ruota con o senza zoom. Stesso centro, stesso anello dei gusti, stesso raggio esterno,
+// stessi caratteri; le etichette stanno sempre dentro gli spicchi, in senso radiale, e compaiono solo se ci stanno intere.
+// Senza zoom: gusto → categoria. Con lo zoom su un gusto: gusto → categoria → alimento (la categoria cede metà spazio).
+const BW={vb:500,hub:64,t0:72,t1:128,c0:134,cOut:470,cMid:282,f0:288,f1:470};
+// telefono: le etichette degli alimenti non ci stanno comunque (c'è l'elenco sotto), quindi il centro si allarga per restare leggibile
+const BWN={vb:500,hub:116,t0:124,t1:186,c0:192,cOut:470,cMid:340,f0:346,f1:470};
+let lastZoom;
+function radLabel(r0,r1,a,span,name,fs,extra=''){
+  // etichetta centrata nella fascia [r0,r1]; serve spazio sia in lunghezza sia in larghezza (arco al bordo interno)
+  const room=r1-r0-14,cw=0.56*fs,arc=r=>r*span*Math.PI/180;
+  const one=name.length*cw;
+  if(one<=room){const rin=(r0+r1)/2-one/2;if(arc(rin)>=fs*1.05)return labelMid((r0+r1)/2,a,esc(name),extra,fs);}
+  const two=wrapName(name,Math.floor(room/cw),true);
+  if(two.length===2&&!two[1].endsWith('…')){const w=Math.max(two[0].length,two[1].length)*cw,rin=(r0+r1)/2-w/2;
+    if(arc(rin)>=fs*2.2)return labelMid((r0+r1)/2,a,two,extra,fs);}
+  return '';
+}
+function labelMid(r,a,text,extra,fs){
+  const left=Math.cos(a*Math.PI/180)<-0.0001,rot=(left?a+180:a).toFixed(2),x=left?-r:r;
+  if(Array.isArray(text))return `<text transform="rotate(${rot})" text-anchor="middle"${extra}><tspan x="${x}" y="${(-fs*0.18).toFixed(1)}">${esc(text[0])}</tspan><tspan x="${x}" y="${(fs*0.92).toFixed(1)}">${esc(text[1])}</tspan></text>`;
+  return `<text transform="rotate(${rot})" x="${x}" y="${(fs*0.35).toFixed(1)}" text-anchor="middle"${extra}>${text}</text>`;
+}
 function renderBrowse(){
-  // senza zoom solo gusto e categoria; un clic su una categoria mostra l'elenco dei suoi alimenti (UX-09)
-  const z=state.zoom;
+  const z=state.zoom,B=minU(1000)>28?BWN:BW,narrow=B===BWN;
   const list=FOODS.filter(f=>!z||f.dom===z).slice().sort((a,b)=>TORDER.indexOf(a.dom)-TORDER.indexOf(b.dom)||CATORD[a.cat]-CATORD[b.cat]||a.name.localeCompare(b.name,'it'));
-  const N=list.length,step=360/N,ang=i=>-90+i*step;let h='';
-  $('#wheel').classList.toggle('two',!z);
-  const fsF=Math.min(16.5,step*4.2),VB=z?460:250,mu=minU(2*VB),showL=z&&fsF>=mu;
-  $('#wheel').setAttribute('viewBox',`${-VB} ${-VB} ${2*VB} ${2*VB}`);
-  const fT=Math.max(17,mu),fC=Math.max(14,mu);
-  runs(list,f=>f.dom).forEach(rn=>{const a0=ang(rn.s),a1=ang(rn.e);
-    h+=`<path class="node" data-t="${rn.k}" data-nav tabindex="-1" role="button" aria-label="Gusto ${TLABEL[rn.k]}, ${rn.e-rn.s} alimenti${z?', torna a tutti i gusti':''}" d="${arcPath(72,140,a0+0.4,a1-0.4)}" style="fill:${tcol(rn.k)};opacity:.85"><title>${TLABEL[rn.k]}</title></path>`;
-    const span=a1-a0;if(span>14){const [x,y]=pol(106,(a0+a1)/2);h+=`<text x="${x}" y="${y+fT*.3}" text-anchor="middle" style="pointer-events:none;font-size:${fT.toFixed(1)}px;font-weight:700;${halo}">${TLABEL[rn.k]}</text>`;}});
-  let par=0;runs(list,f=>f.dom+'|'+f.cat).forEach(rn=>{const a0=ang(rn.s),a1=ang(rn.e);par++;const it=rn.it;const ck=it.dom+'|'+it.cat,on=state.cat===ck,n=rn.e-rn.s;
-    h+=`<path class="node" data-t="${it.dom}" data-cat="${ck}" data-nav tabindex="-1" role="button" aria-label="${esc(CATS[it.cat][0])}, gusto ${TLABEL[it.dom]}, ${n} ${n===1?'alimento':'alimenti'}" d="${arcPath(144,236,a0+0.25,a1-0.25)}" style="fill:${tcol(it.dom)};opacity:${on?.9:par%2?.32:.5}${on?';stroke:var(--ink);stroke-width:2':''}"><title>${esc(CATS[it.cat][0])}</title></path>`;
-    const span=a1-a0;if(span>=Math.max(6.5,fC*.42))h+=`<g style="pointer-events:none">${labelAt(150,(a0+a1)/2,esc(trunc(CATS[it.cat][1],Math.floor(80/(0.55*fC)))),'',` style="font-size:${fC.toFixed(1)}px;${halo}"`)}</g>`;});
+  const N=list.length,step=360/N,ang=i=>-90+i*step;let h='',tl='';
+  $('#wheel').classList.remove('two');
+  $('#wheel').setAttribute('viewBox',`${-B.vb} ${-B.vb} ${2*B.vb} ${2*B.vb}`);
+  const mu=minU(2*B.vb),fT=Math.max(17,mu),fL=Math.max(14,mu),f1=Math.max(12,mu);
+  const sep='stroke:var(--surface);stroke-width:1.5;stroke-linejoin:round';
+  const lbl=` style="pointer-events:none;font-size:${fL.toFixed(1)}px;${halo}"`;
+  // anello dei gusti
+  runs(list,f=>f.dom).forEach(rn=>{const a0=ang(rn.s),a1=ang(rn.e),span=a1-a0;
+    h+=`<path class="node" data-t="${rn.k}" data-nav tabindex="-1" role="button" aria-label="Gusto ${TLABEL[rn.k]}, ${rn.e-rn.s} alimenti${z?', torna a tutti i gusti':''}" d="${arcPath(B.t0,B.t1,a0,a1)}" style="fill:${tcol(rn.k)};${sep}"><title>${TLABEL[rn.k]}</title></path>`;
+    const am=(a0+a1)/2;if(!z&&span>14){const [x,y]=pol((B.t0+B.t1)/2,am);tl+=`<text x="${x}" y="${(y+fT*.35).toFixed(1)}" text-anchor="middle" style="pointer-events:none;font-size:${fT.toFixed(1)}px;font-weight:700;${halo}">${TLABEL[rn.k]}</text>`;}});
+  // anello delle categorie
+  const c1=z?B.cMid:B.cOut;let par=0;
+  runs(list,f=>f.dom+'|'+f.cat).forEach(rn=>{const a0=ang(rn.s),a1=ang(rn.e);par++;const it=rn.it;const ck=it.dom+'|'+it.cat,on=state.cat===ck,n=rn.e-rn.s;
+    h+=`<path class="node" data-t="${it.dom}" data-cat="${ck}" data-nav tabindex="-1" role="button" aria-label="${esc(CATS[it.cat][0])}, gusto ${TLABEL[it.dom]}, ${n} ${n===1?'alimento':'alimenti'}" d="${arcPath(B.c0,c1,a0,a1)}" style="fill:${tcol(it.dom)};fill-opacity:${on?.95:par%2?.42:.6};${sep}${on?';stroke:var(--ink);stroke-width:2.5':''}"><title>${esc(CATS[it.cat][0])}</title></path>`;
+    h+=radLabel(B.c0,c1,(a0+a1)/2,a1-a0,CATS[it.cat][1],fL,lbl);});
+  // anello degli alimenti, solo con lo zoom
   if(z)list.forEach((f,i)=>{const a0=ang(i),a1=ang(i+1),am=(a0+a1)/2;const on=f===state.sel;
-    h+=`<g class="node" data-id="${f.id}" data-kind="b" data-nav tabindex="-1" role="button" aria-label="${esc(f.name)}"><title>${esc(f.name)}</title><path d="${arcPath(240,280,a0+0.12,a1-0.12)}" style="fill:${tcol(f.dom)};opacity:${CATORD[f.cat]%2?.62:.9};${on?'stroke:var(--ink);stroke-width:2':''}"/>`+
-      (showL?labelAt(288,am,esc(trunc(f.name,24)),'',` style="font-size:${fsF.toFixed(1)}px;${on?'font-weight:700':''}"`):'')+`</g>`;});
-  const f1=Math.max(11,mu);
-  h+=`<circle r="64" class="node" data-t="${z?'__all':''}" style="fill:var(--surface);stroke:var(--line);stroke-width:1.5"/>`;
-  if(z){h+=`<text text-anchor="middle" y="${-f1*.4}" style="pointer-events:none;font-family:var(--f-display);font-size:${Math.max(22,mu).toFixed(1)}px">${TLABEL[z]}</text><text text-anchor="middle" y="${f1*1.3}" style="pointer-events:none;font-size:${f1.toFixed(1)}px;fill:var(--muted)">${N} alimenti</text>`;}
-  else h+=`<text text-anchor="middle" y="-2" style="pointer-events:none;font-family:var(--f-display);font-size:${Math.max(24,mu).toFixed(1)}px">${N}</text><text text-anchor="middle" y="${f1*1.4}" style="pointer-events:none;font-size:${f1.toFixed(1)}px;fill:var(--muted)">alimenti</text>`;
-  $('#wheel').innerHTML=h;
+    h+=`<g class="node" data-id="${f.id}" data-kind="b" data-nav tabindex="-1" role="button" aria-label="${esc(f.name)}"><title>${esc(f.name)}</title><path d="${arcPath(B.f0,B.f1,a0,a1)}" style="fill:${tcol(f.dom)};fill-opacity:${CATORD[f.cat]%2?.5:.7};${sep}${on?';stroke:var(--ink);stroke-width:2.5':''}"/>`+
+      radLabel(B.f0,B.f1,am,a1-a0,f.name,fL,` style="pointer-events:none;font-size:${fL.toFixed(1)}px;${on?'font-weight:700;':''}${halo}"`)+`</g>`;});
+  // centro: sempre il numero di alimenti; con lo zoom diventa anche il ritorno a tutti i gusti
+  h+=`<circle r="${B.hub}" class="node hub" data-t="${z?'__all':''}" style="fill:var(--surface);stroke:var(--line);stroke-width:1.5${z?';cursor:pointer':''}"><title>${z?'Torna a tutti i gusti':''}</title></circle>`;
+  // centro: titolo e conteggio in entrambi gli stati; con lo zoom anche il ritorno
+  const fH=narrow?f1*1.25:Math.max(24,mu*1.5);
+  if(z)h+=`<text text-anchor="middle" y="${(-f1*0.9).toFixed(1)}" style="pointer-events:none;font-family:var(--f-display);font-size:${fH.toFixed(1)}px">${TLABEL[z]}</text>${narrow?'':`<text text-anchor="middle" y="${(f1*0.9).toFixed(1)}" style="pointer-events:none;font-size:${f1.toFixed(1)}px;fill:var(--muted)">${N} alimenti</text>`}<text text-anchor="middle" y="${(narrow?f1*0.9:f1*2.6).toFixed(1)}" style="pointer-events:none;font-size:${f1.toFixed(1)}px;fill:var(--ink);text-decoration:underline">↩ tutti</text>`;
+  else h+=`<text text-anchor="middle" y="${(fH*0.15).toFixed(1)}" style="pointer-events:none;font-family:var(--f-display);font-size:${fH.toFixed(1)}px">${N}</text><text text-anchor="middle" y="${(fH*0.15+f1*1.6).toFixed(1)}" style="pointer-events:none;font-size:${f1.toFixed(1)}px;fill:var(--muted)">alimenti</text>`;
+  h+=tl; // i nomi dei gusti sopra il centro, così non vengono coperti sugli schermi stretti
+  const anim=lastZoom!==undefined&&lastZoom!==z;lastZoom=z;
+  $('#wheel').innerHTML=`<g class="wz${anim?' anim':''}">${h}</g>`;
   $('#egoAll').hidden=true;
   $('#wheelCap').textContent=z?`Gusto ${TLABEL[z]} · categorie e alimenti`:'Gusti e categorie';
   const tap=TOUCH()?'Tocca':'Clicca';
-  $('#wheelHint').textContent=z?`${tap} una categoria per l'elenco, il centro per tornare a tutti i gusti.`:`${tap} un gusto per ingrandirlo o una categoria per vederne gli alimenti.`;
-  $('#legend').innerHTML=TORDER.map(k=>{const n=FOODS.filter(f=>f.dom===k).length;return `<span><i style="width:10px;height:10px;border-radius:50%;background:${tcol(k)};display:inline-block"></i>${TLABEL[k]} · ${n}</span>`;}).join('')+`<span>Anello interno: gusto dominante · esterno: categoria${z?' · bordo: alimento':''}</span>`;
+  $('#wheelHint').textContent=z?`${tap} una categoria per l'elenco o il centro per tornare a tutti i gusti.`:`${tap} un gusto per ingrandirlo o una categoria per vederne gli alimenti.`;
+  $('#legend').innerHTML=TORDER.map(k=>{const n=FOODS.filter(f=>f.dom===k).length;return `<span><i style="width:10px;height:10px;border-radius:50%;background:${tcol(k)};display:inline-block"></i>${TLABEL[k]} · ${n}</span>`;}).join('')+`<span>Dal centro: gusto dominante · categoria${z?' · alimento':''}</span>`;
 }
 function renderCatList(){const el=$('#catList');
   if(!state.cat||state.mode!=='browse'){el.hidden=true;el.innerHTML='';return;}
@@ -660,9 +690,12 @@ function mixProfile(){const fs=ckFoods();if(!fs.length)return'';
   const PAL=['var(--accent)','var(--spirit)','var(--t-amaro)','var(--t-salato)','var(--t-dolce)'];
   const ser=[{v:mix,c:'var(--ink)',fo:.14}].concat(fs.length>1?fs.map((f,i)=>({v:val(f),c:PAL[i],fo:0,dash:'3 3'})):[]);
   return `<div class="mix"><div class="mix-h"><span class="eyebrow">Profilo del mix</span><div class="seg mini" role="group" aria-label="Profilo da mostrare"><button type="button" data-mv="gusti" aria-pressed="${g}">Gusti</button><button type="button" data-mv="aromi" aria-pressed="${!g}">Aromi</button></div></div>
-    <div class="mixradar">${g?radar(labels,ser,70,44):radar(labels,ser,82,66)}</div>
+    <div class="mixradar" style="--rfs:${mixFs(g)}px">${g?radar(labels,ser,118,52):radar(labels,ser,112,76)}</div>
     <p class="tiny muted legend3">${fs.length>1?`<span><svg width="18" height="10"><rect x="1" y="1" width="16" height="8" style="fill:var(--ink);fill-opacity:.18;stroke:var(--ink)"/></svg>Mix</span>`+fs.map((f,i)=>`<span><svg width="18" height="8"><line x1="0" y1="4" x2="18" y2="4" style="stroke:${PAL[i]};stroke-width:2;stroke-dasharray:3 3"/></svg>${esc(f.name)}</span>`).join(''):'Profilo di '+esc(fs[0].name)+'.'}</p>
     <p class="tiny">${top.length?'Sa di '+esc(listIt(top)):'Profilo aromatico delicato'}.</p></div>`;}
+// il radar del mix si allarga a tutta la colonna; le etichette restano a 13 px reali qualunque sia la larghezza
+function mixFs(g){const w=$('#ckMix')?.clientWidth||320,vbw=g?2*(118+52):2*(112+76);return (13*vbw/Math.max(240,w)).toFixed(2);}
+let mixRT;addEventListener('resize',()=>{clearTimeout(mixRT);mixRT=setTimeout(()=>{if(CK.ings.length&&!$('#tab-cocktail').hidden)$('#ckMix').innerHTML=mixProfile();},150);});
 function renderIngs(){
   const host=$('#ckIngs');
   host.innerHTML=CK.ings.map((it,i)=>`<li class="ing"><i style="background:${it.isSpirit?'var(--spirit)':tcol(it.dom)}"></i><span><b>${esc(it.name)}</b><small>${esc(it.isSpirit?SGROUP[it.grp][0]:CATS[it.cat][1])}</small></span><button type="button" class="x" data-rm="${i}" aria-label="Rimuovi ${esc(it.name)}">×</button></li>`).join('')

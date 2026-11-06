@@ -691,3 +691,16 @@ h3 .info[data-spinfo]{vertical-align:.18em}
 .bline .info[data-spinfo]{vertical-align:.12em}
 .infotip{max-width:min(340px,calc(100vw - 32px))}
 @media (max-width:620px){.ex-sep{display:none}}
+
+/* ===== Ruota «Esplora per gusto» e profilo del mix ===== */
+#wheel:focus{outline:none}
+#wheel .hub{transition:fill .15s}
+#wheel .hub[data-t="__all"]:hover{fill:var(--sunk)}
+#wheel path.node:hover{filter:brightness(1.12)}
+@media (prefers-reduced-motion:no-preference){
+  #wheel .wz.anim{animation:wz .38s cubic-bezier(.2,.7,.2,1);transform-box:fill-box;transform-origin:center}
+  @keyframes wz{from{opacity:0;transform:scale(.94) rotate(-4deg)}to{opacity:1;transform:none}}
+}
+/* il profilo del mix occupa tutta la larghezza della colonna; il testo resta a misura reale */
+.mixradar{max-width:none}
+.mixradar text{font-size:var(--rfs,13px)}
