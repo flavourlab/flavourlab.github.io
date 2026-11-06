@@ -260,7 +260,7 @@ function renderProfile(){
   ${fams.length?`<ul class="fbars" aria-label="Famiglie aromatiche dominanti">${fams.map(([v,i])=>`<li><span>${esc(FAM[i][1])}</span><span class="bar"><i style="width:${v/5*100}%"></i></span><b>${v}<small>/5</small></b></li>`).join('')}</ul>`:''}
   <p class="tiny"><b>In miscelazione:</b> ${esc(CATS[A.cat][2])}</p>
   ${notes.length?`<p class="safety">${esc(notes.join(' · '))}</p>`:''}
-  <details class="pdet"><summary>Dettagli: profilo completo e piramide</summary>
+  <details class="pdet"><summary>Dettagli: tutti gli aromi e la struttura</summary>
     <dl class="kv">
       <dt>Testa</dt><dd>${lv.testa.join(', ')||'—'}</dd>
       <dt>Cuore</dt><dd>${lv.cuore.join(', ')||'—'}</dd>
