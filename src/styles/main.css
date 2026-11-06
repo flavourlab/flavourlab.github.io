@@ -547,3 +547,20 @@ h2{font-weight:300}
 .ex:hover{border-color:var(--ink)}
 .ex i{width:8px;height:8px;border-radius:50%;flex:none}
 @media (max-width:620px){.ex{padding:6px 11px;font-size:13.5px}}
+/* UX-07 · verdetto prima del numero */
+.score .vw{font-family:var(--f-body);font-weight:600;font-size:13px;color:var(--ink)}
+.score small{font-size:12px;color:var(--muted)}
+.verdict.v2{display:flex;flex-direction:column;align-items:flex-start;gap:6px}
+.vmain{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+.vbig{display:inline-flex;align-items:center;gap:10px;font-family:var(--f-display);font-weight:300;font-size:clamp(34px,4vw,44px);letter-spacing:-.03em;line-height:1.05}
+.vbig i{width:12px;height:12px;border-radius:50%;flex:none}
+.vnum{font-family:var(--f-mono);font-size:15px;color:var(--muted);display:inline-flex;align-items:center}
+.vnum small{font-size:12px}
+.vsub{font-size:15px}
+/* UX-06 · Prova un abbinamento, passo dopo passo */
+#checkOut .empty{display:flex;flex-direction:column;gap:12px}
+#checkOut .empty p{font-size:15px}
+.pairex{display:flex;flex-direction:column;align-items:flex-start;gap:8px}
+.lensd{margin-top:12px}
+.lensd summary{cursor:pointer;font-size:14px;color:var(--muted);padding:6px 0}
+.lensd[open] summary{color:var(--ink)}

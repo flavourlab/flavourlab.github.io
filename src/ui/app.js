@@ -137,13 +137,13 @@ function renderEgo(){
     h+=`<line class="ray anim" data-p="${r.B.id}" x1="${x0}" y1="${y0}" x2="${x1}" y2="${y1}" style="stroke:${typeCol(r.type)};stroke-width:${(1.2+(r.total-14)/4).toFixed(1)};${r.type==='contrasto'?'stroke-dasharray:5 4;':''}opacity:.7"/>`;});
   // nodi partner
   nodes.forEach(n=>{const r=n.r;const [x,y]=pol(RP,n.a);const rad=(4+(r.total-14)/3).toFixed(1);
-    h+=`<g class="node anim" data-id="${r.B.id}" data-kind="p" tabindex="0" role="button" aria-label="${esc(r.B.name)}, ${TYPEUI[r.type]}, ${r.total} su 30">
+    h+=`<g class="node anim" data-id="${r.B.id}" data-kind="p" tabindex="0" role="button" aria-label="${esc(r.B.name)}, ${verdict(r.total)[0]}, ${TYPEUI[r.type].toLowerCase()}, ${r.total} su 30">
       <circle cx="${x}" cy="${y}" r="${+rad+3.5}" style="fill:var(--surface);stroke:${typeCol(r.type)};stroke-width:2;${r.type==='contrasto'?'stroke-dasharray:3 2':''}"/>
       <circle cx="${x}" cy="${y}" r="${rad}" style="fill:${tcol(r.B.dom)}"/>
       <title>${esc(r.B.name)}</title>${showL?labelLines(RP+14,n.a,wrapName(r.B.name,Math.floor((RS-RP-34)/(0.55*fP)),nodes.length<=12),'lbl',fP,` style="font-size:${fP.toFixed(1)}px"`):''}</g>`;});
   // nodi alcolici
   snodes.forEach(s=>{const [x,y]=pol(RS,s.a);const B=s.rs.B;
-    h+=`<g class="node anim" data-id="${B.id}" data-kind="s" tabindex="0" role="button" aria-label="${esc(B.name)}, ${s.rs.total} su 30">
+    h+=`<g class="node anim" data-id="${B.id}" data-kind="s" tabindex="0" role="button" aria-label="${esc(B.name)}, alcolico, ${verdict(s.rs.total)[0]}, ${s.rs.total} su 30">
       <rect x="${x-6}" y="${y-6}" width="12" height="12" transform="rotate(45 ${x} ${y})" style="fill:var(--spirit);stroke:var(--surface);stroke-width:2"/>
       <title>${esc(B.name)}</title>${showL?labelLines(RS+14,s.a,wrapName(B.name,Math.floor((540-RS-18)/(0.55*fS)),snodes.length<=6),'slbl',fS,` style="font-size:${fS.toFixed(1)}px"`):''}</g>`;});
   // centro
@@ -260,8 +260,12 @@ function renderSpirits(){
   $('#spTrack').innerHTML=state.sps.map(r=>spiritCard(A,r)).join('');
   $('#spTrack').scrollLeft=0;updateRail('spTrack');
 }
-function scoreBar(t,max=30){const [v]=verdict(t);const c=v==='forte'?'var(--ok)':v==='promettente'?'color-mix(in srgb,var(--ok) 55%,var(--warn))':v==='rischioso'?'var(--warn)':'var(--bad)';
-  return `<span class="score"><span class="bar"><i style="width:${(t/max*100).toFixed(0)}%;background:${c}"></i></span>${t}/30</span>`;}
+// verdetto in parola per primo, il numero /30 è secondario (UX-07)
+const vcol=v=>v==='forte'?'var(--ok)':v==='promettente'?'color-mix(in srgb,var(--ok) 55%,var(--warn))':v==='rischioso'?'var(--warn)':'var(--bad)';
+const vword=v=>v.charAt(0).toUpperCase()+v.slice(1);
+function scoreBar(t,max=30){const [v]=verdict(t);const c=vcol(v);
+  return `<span class="score"><b class="vw">${vword(v)}</b><span class="bar"><i style="width:${(t/max*100).toFixed(0)}%;background:${c}"></i></span><small>${t}/30</small></span>`;}
+function verdictHead(t,v,vt,extra){return `<div class="verdict v2"><div class="vmain"><span class="vbig"><i style="background:${vcol(v)}"></i>${vword(v)}</span><span class="vnum">${fmtN(t)}<small>/30</small>${info('score','punteggio')}</span></div><p class="vsub">${esc(vt)}</p>${extra}</div>`;}
 function badge(r){return `<span class="badge ${r.type}">${r.type==='contrasto'?'⇄':'≈'} ${TYPEUI[r.type]}</span>${r.mixed?`<span class="badge plus">+ ${r.type==='contrasto'?'affinità':'contrasto'}</span>`:''}`;}
 function spiritCard(A,r){const B=r.B;
   const trio=state.trio[B.id];
@@ -310,14 +314,14 @@ function renderPairOut(){
   const r=S(A,B);const [v,vt]=verdict(r.total);const vc=v==='forte'?'var(--ok)':v==='promettente'?'var(--ok)':v==='rischioso'?'var(--warn)':'var(--bad)';
   const trio=B.isSpirit?[]:trioSpirits(A,B,3);
   $('#checkOut').innerHTML=`
-    <div class="verdict"><span class="big">${r.total}<small>/30</small></span><div><div class="vtag" style="color:${vc}">${v}${info('score','punteggio')}</div><div class="chips" style="margin-top:4px">${badge(r)}${info('type','affinità e contrasto')}</div></div></div>
+    ${verdictHead(r.total,v,vt,`<div class="chips">${badge(r)}${info('type','affinità e contrasto')}</div>`)}
     <div style="margin:10px 0 4px"><div class="scale"><i></i><i></i><i></i><i></i><b style="left:calc(${(r.total/30*100).toFixed(1)}% - 1.5px)"></b></div><div class="scale-l"><span>0</span><span>10</span><span>17</span><span>24</span><span>30</span></div></div>
-    <p style="margin:8px 0"><b>${esc(A.name)} + ${esc(B.name)}.</b> ${esc(vt)} ${esc(r.summary)}</p>
-    ${lensTable(r)}
+    <p style="margin:8px 0"><b>${esc(A.name)} + ${esc(B.name)}.</b> ${esc(r.summary)}</p>
+    <details class="lensd"><summary>I sei criteri, uno per uno</summary>${lensTable(r)}</details>
     <p class="tiny" style="margin-top:10px"><b>Rapporto di partenza:</b> ${esc(r.ratioTxt)}</p>
     <p class="tiny"><b>Test rapido:</b> ${esc(testTxt(r))}</p>
     ${B.isSpirit?`<p class="tiny"><b>Come usarlo:</b> ${esc(howTo(A,B))}</p>`:''}
-    ${r.total<24?`<p class="tiny" style="margin-top:12px">Coppia sotto 24: a sinistra trovi il terzo ingrediente che la completa.</p>`:''}
+    ${r.total<24?`<p class="tiny" style="margin-top:12px">Coppia sotto 24: il terzo ingrediente consigliato la completa.</p>`:''}
     ${trio.length?`<div style="margin-top:14px"><span class="eyebrow">Alcolici adatti a entrambi</span><div class="list-inline" style="margin-top:6px">${trio.map(x=>`<span class="chip">${esc(x.s.name)} <span class="muted" style="font-family:var(--f-mono)">${x.a} · ${x.b}</span></span>`).join('')}</div></div>`:''}`;
 }
 
@@ -382,7 +386,7 @@ function highlight(id,kind){
     const on=isLk?(n.dataset.p===id||n.dataset.s===id):keep.has(k);if(!on)n.classList.add('dim');else if(isLk)n.style.opacity=.9;});
   svg.querySelector(`[data-id="${id}"]`)?.classList.add('hl');
   const B=BYID[id];if(B&&state.mode==='ego'){$('#radars').innerHTML=renderRadars(state.sel,B);const r=S(state.sel,B);
-    $('#cmp').innerHTML=`Confronto con <b>${esc(B.name)}</b> (tratteggio) · ${TYPEUI[r.type].toLowerCase()} · ${r.total}/30`;
+    $('#cmp').innerHTML=`Confronto con <b>${esc(B.name)}</b> (tratteggio) · ${vword(verdict(r.total)[0]).toLowerCase()} · ${TYPEUI[r.type].toLowerCase()} · ${r.total}/30`;
     if(kind==='s')document.querySelector(`.sp[data-sid="${id}"]`)?.classList.add('hl');else document.querySelector(`.card[data-pid="${id}"]`)?.classList.add('hl');}
 }
 function resetLinks(){$('#wheel').querySelectorAll('.lk').forEach(l=>l.style.opacity=.28);}
@@ -390,7 +394,7 @@ const wheel=$('#wheel');
 wheel.addEventListener('pointerover',e=>{const g=e.target.closest('[data-id],[data-t]');if(!g)return;
   if(g.dataset.id){const B=BYID[g.dataset.id];
     if(state.mode==='ego'){const r=S(state.sel,B);highlight(B.id,g.dataset.kind);
-      showTip(`<b>${esc(B.name)}</b> · ${TYPEUI[r.type]} · ${r.total}/30<br>${esc(r.summary.split(/(?<=\.)\s/)[0])}`,e);}
+      showTip(`<b>${esc(B.name)}</b> · ${vword(verdict(r.total)[0])} · ${TYPEUI[r.type].toLowerCase()} <span style="opacity:.7">${r.total}/30</span><br>${esc(r.summary.split(/(?<=\.)\s/)[0])}`,e);}
     else showTip(`<b>${esc(B.name)}</b><br>${esc(CATS[B.cat][0])} · ${TLABEL[B.dom]}<br>Note principali: ${esc(topFams(B).join(', ')||'—')}`,e);}
   else if(g.dataset.cat)showTip(`<b>${esc(CATS[g.dataset.cat][0])}</b>`,e);
 });
@@ -477,14 +481,14 @@ function renderTrioOut(){
   $('#checkOut').innerHTML=`
     <div class="trio-top">
       <div>
-        <div class="verdict"><span class="big">${fmtN(t.total)}<small>/30</small></span><div><div class="vtag" style="color:${vc}">${v}${info('score','punteggio')}</div><div class="chips" style="margin-top:4px"><span class="chip">${t.structure}</span>${info('structure','struttura')}</div></div></div>
+        ${verdictHead(t.total,v,vt,`<div class="chips"><span class="chip">${t.structure}</span>${info('structure','struttura')}</div>`)}
         <div style="margin:10px 0 4px"><div class="scale"><i></i><i></i><i></i><i></i><b style="left:calc(${(t.total/30*100).toFixed(1)}% - 1.5px)"></b></div><div class="scale-l"><span>0</span><span>10</span><span>17</span><span>24</span><span>30</span></div></div>
-        <p style="margin:10px 0 0"><b>${esc(t.T.map(I=>I.name).join(' + '))}.</b> ${esc(vt)} La coppia più forte è ${esc(best.p.A.name)} + ${esc(best.p.B.name)} (${fmtN(best.p.total)}, ${TYPEUI[best.p.type].toLowerCase()}).</p>
-        <p class="lensfocus"><b>${esc(sel.n)} · ${fmtN(sel.v)}/5.</b> ${esc(sel.why)}</p>
+        <p style="margin:10px 0 0"><b>${esc(t.T.map(I=>I.name).join(' + '))}.</b> La coppia più forte è ${esc(best.p.A.name)} + ${esc(best.p.B.name)} (${fmtN(best.p.total)}, ${TYPEUI[best.p.type].toLowerCase()}).</p>
+        <p class="lensfocus"><b>${LENSUI[state.lens]} · ${fmtN(sel.v)}/5.</b> ${esc(sel.why)}</p>
       </div>
       <div>${triangleSVG(t)}${triCap()}</div>
     </div>
-    <table class="lens tlens"><tbody>${t.rows.map(x=>`<tr class="${x.k===state.lens?'sel':''}"><td>${x.n}${info(x.n)}</td><td>${esc(x.why)}</td><td class="v">${fmtN(x.v)}/5</td></tr>`).join('')}</tbody></table>
+    <details class="lensd"><summary>I criteri del trio, uno per uno</summary><table class="lens tlens"><tbody>${t.rows.map(x=>`<tr class="${x.k===state.lens?'sel':''}"><td>${x.n}${info(x.n)}</td><td>${esc(x.why)}</td><td class="v">${fmtN(x.v)}/5</td></tr>`).join('')}</tbody></table></details>
     <div class="trio-roles">
       <div><span class="eyebrow">Ruoli e dosi ${info('roles','ruoli e dosi')}</span><p class="tiny" style="margin-top:4px"><b>Base:</b> ${esc(r.base.name)} · <b>Complemento:</b> ${esc(r.comp.name)} · <b>Accento:</b> ${esc(r.accent.name)}</p><p class="tiny">Rapporto di partenza ${r.ratio}, in peso o in volume, poi correggi all'assaggio.</p></div>
       <div><span class="eyebrow">Da bere con il trio ${info('spirits','alcolici del trio')}</span><div class="list-inline" style="margin-top:6px">${sp.map(x=>`<span class="chip">${esc(x.s.name)} <span class="muted" style="font-family:var(--f-mono)">${fmtN(x.m)}</span></span>`).join('')}</div></div>
@@ -494,13 +498,21 @@ function renderTrioOut(){
 function renderCheck(){
   const A=state.A,B=state.B,C=state.C;
   if(!$('#lensPick'))return;
+  const ready=A&&B&&A!==B;
+  // il criterio e il terzo ingrediente compaiono solo quando c'è una coppia (UX-06)
+  $('#cCwrap').hidden=!ready;
+  if(!ready){$('#lensPick').innerHTML='';$('#checkSide').innerHTML='';$('#thirdSug').innerHTML='';
+    $('#checkOut').innerHTML=`<div class="empty"><p>${A&&A===B?'Scegli due ingredienti diversi.':'Scegli due ingredienti, oppure parti da un esempio:'}</p>
+      <div class="pairex">${PAIR_EX.map(([a,b])=>`<button type="button" class="ex" data-pair="${a.id}|${b.id}"><i style="background:${tcol(a.dom)}"></i>${esc(a.name)} + ${esc(b.name)}</button>`).join('')}</div></div>`;return;}
   renderLensPick();
-  if(!A||!B||A===B){$('#checkOut').innerHTML='<p class="muted">Scegli almeno due ingredienti diversi.</p>';$('#checkSide').innerHTML='';$('#thirdSug').innerHTML='';return;}
   if(C&&(C===A||C===B))state.C=null;
   renderSuggest();renderSide();
   if(state.C)renderTrioOut();else renderPairOut();
   $('#cClear').hidden=!state.C;
 }
+var PAIR_EX=[['Gorgonzola','Pera'],['Fragola','Basilico'],['Cioccolato fondente','Arancia']].map(p=>p.map(n=>BYNAME[n])).filter(p=>p[0]&&p[1]);
+$('#checkOut').addEventListener('click',e=>{const b=e.target.closest('[data-pair]');if(!b)return;const [a,c]=b.dataset.pair.split('|').map(id=>BYID[id]);
+  state.A=a;state.B=c;state.C=null;comboA.set(a);comboB.set(c);comboC.set(null);renderCheck();});
 var comboC=makeCombo($('#cC'),{id:'q-c',placeholder:'Terzo ingrediente (facoltativo)',source:()=>FOODS.concat(SPIRITS),keep:true,onPick:f=>{state.C=f;renderCheck();},onClear:()=>{state.C=null;renderCheck();}});
 $('#cClear').addEventListener('click',()=>{state.C=null;comboC.set(null);renderCheck();});
 $('#lensPick').addEventListener('click',e=>{const b=e.target.closest('[data-lens]');if(!b)return;state.lens=b.dataset.lens;renderCheck();});
