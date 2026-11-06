@@ -243,29 +243,34 @@ function renderProfile(){
   const allerg=ALLERG[A.cat];
   const notes=[A.note,allerg&&!A.note.includes(allerg)?'allergene: '+allerg:''].filter(Boolean);
   const best=state.parts[0];
+  // primo livello: nome, gusto, intensità, note principali e le famiglie dominanti; il resto in «Dettagli» (UX-10)
+  const fams=A.ar.map((v,i)=>[v,i]).filter(x=>x[0]>0).sort((a,b)=>b[0]-a[0]).slice(0,5).filter((x,k)=>k<3||x[0]>=2);
   $('#profile').innerHTML=`
   <div class="p-head">
     <span class="eyebrow">${esc(CATS[A.cat][0])}</span>
     <h2>${esc(A.name)}</h2>
     <div class="chips">
       <span class="chip"><i style="background:${tcol(A.dom)}"></i>${TLABEL[A.dom]}</span>
-      <span class="chip">Intensità <span class="dots">${dotsInt(A.int)}</span></span>
+      <span class="chip">Intensità <span class="dots" aria-hidden="true">${dotsInt(A.int)}</span><span class="sr">${A.int} su 5</span></span>
       <span class="chip">${A.season?'Stagione '+monthsTxt(A.season):'Tutto l\'anno'}</span>
       ${A.o?`<span class="chip">${ORIG[A.o]}</span>`:''}
     </div>
     <p><b>Note principali:</b> ${esc(topFams(A).join(' · ')||'neutro, solo gusto')}</p>
   </div>
-  <dl class="kv">
-    <dt>Testa</dt><dd>${lv.testa.join(', ')||'—'}</dd>
-    <dt>Cuore</dt><dd>${lv.cuore.join(', ')||'—'}</dd>
-    <dt>Fondo</dt><dd>${lv.fondo.join(', ')||'—'}</dd>
-    <dt>Struttura</dt><dd>${st}</dd>
-    ${top.length?`<dt>Composti</dt><dd class="muted">${esc(top.join('; '))}</dd>`:''}
-    <dt>In miscelazione</dt><dd>${esc(CATS[A.cat][2])}</dd>
-  </dl>
-  <div class="radars" id="radars">${renderRadars(A,null)}</div>
-  <p class="cmp" id="cmp">Passa su un abbinamento per sovrapporre il suo profilo${best?` (per esempio ${esc(best.B.name)})`:''}.</p>
+  ${fams.length?`<ul class="fbars" aria-label="Famiglie aromatiche dominanti">${fams.map(([v,i])=>`<li><span>${esc(FAM[i][1])}</span><span class="bar"><i style="width:${v/5*100}%"></i></span><b>${v}<small>/5</small></b></li>`).join('')}</ul>`:''}
+  <p class="tiny"><b>In miscelazione:</b> ${esc(CATS[A.cat][2])}</p>
   ${notes.length?`<p class="safety">${esc(notes.join(' · '))}</p>`:''}
+  <details class="pdet"><summary>Dettagli: profilo completo e piramide</summary>
+    <dl class="kv">
+      <dt>Testa</dt><dd>${lv.testa.join(', ')||'—'}</dd>
+      <dt>Cuore</dt><dd>${lv.cuore.join(', ')||'—'}</dd>
+      <dt>Fondo</dt><dd>${lv.fondo.join(', ')||'—'}</dd>
+      <dt>Struttura</dt><dd>${st}</dd>
+      ${top.length?`<dt>Composti</dt><dd class="muted">${esc(top.join('; '))}</dd>`:''}
+    </dl>
+    <div class="radars" id="radars">${renderRadars(A,null)}</div>
+    <p class="cmp" id="cmp">Passa su un abbinamento per sovrapporre il suo profilo${best?` (per esempio ${esc(best.B.name)})`:''}.</p>
+  </details>
   <p class="tiny muted">Più in basso trovi gli alcolici e gli alimenti con cui si abbina.</p>`;
   renderSpirits();
 }
