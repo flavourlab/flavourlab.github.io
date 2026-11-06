@@ -206,12 +206,18 @@ function renderRadars(A,B){
   return `<div class="radar"><span class="eyebrow">Gusti</span>${radar(tl,ser1,78,46)}</div><div class="radar"><span class="eyebrow">Famiglie aromatiche</span>${radar(FAM.map(f=>({t:f[2]})),ser2,96,72)}</div>`;
 }
 
+// ---------- esempi cliccabili ----------
+const EXAMPLES=['Limone','Cioccolato fondente','Fragola','Basilico','Caffè','Pomodoro'].map(n=>BYNAME[n]).filter(Boolean);
+function exampleChips(){return EXAMPLES.map(f=>`<button type="button" class="ex" data-ex="${f.id}"><i style="background:${tcol(f.dom)}"></i>${esc(f.name)}</button>`).join('');}
+function renderExamples(){$('#examples').innerHTML=`<span class="tiny muted">Prova:</span>${exampleChips()}`;}
+document.addEventListener('click',e=>{const b=e.target.closest('[data-ex]');if(!b)return;state.mode='ego';select(BYID[b.dataset.ex]);});
+
 // ---------- scheda ----------
 function renderProfile(){
   const A=state.sel;const sps=state.sps;
-  if(!A){$('#profile').innerHTML=`<div class="p-head"><span class="eyebrow">Scheda alimento</span><h2>Nessun alimento selezionato</h2></div>
-    <p class="muted">Cerca un alimento nella barra «Al centro della ruota», cliccane uno sulla ruota oppure premi «A caso».</p>
-    <p class="muted">Qui compariranno i suoi gusti e aromi in un diagramma spider, la piramide testa–cuore–fondo, la struttura e gli alcolici con cui si abbina.</p>`;return;}
+  if(!A){$('#profile').innerHTML=`<div class="p-head"><span class="eyebrow">Scheda alimento</span><h2>Da dove partire</h2></div>
+    <p class="muted">Scegli un alimento: qui vedrai i suoi gusti, le note principali e cosa berci.</p>
+    <div class="examples">${exampleChips()}</div>`;return;}
   const lv={testa:[],cuore:[],fondo:[]};A.ar.forEach((v,i)=>{if(v>=2)lv[FAM[i][3]].push(FAM[i][1].toLowerCase());});
   const st=[['grassezza',A.st.g],['piccantezza',A.st.p],['astringenza',A.st.t],['freschezza',A.st.f]].filter(x=>x[1]>0).map(x=>`${x[0]} ${x[1]}`).join(', ')||'nessuna sensazione rilevante';
   const top=A.ar.map((v,i)=>[v,i]).filter(x=>x[0]>=3).sort((a,b)=>b[0]-a[0]).slice(0,2).map(x=>FAM[x[1]][4]);
@@ -420,7 +426,7 @@ const comboA=makeCombo($('#cA'),{id:'q-a',placeholder:'Alimento A',source:()=>FO
 const comboB=makeCombo($('#cB'),{id:'q-b',placeholder:'Alimento o alcolico B',source:()=>FOODS.concat(SPIRITS),keep:true,onPick:f=>{state.B=f;renderCheck();},onClear:()=>{state.B=null;renderCheck();}});
 comboA.set(state.A);comboB.set(state.B);
 $('#stats').textContent=`${FOODS.length} alimenti · ${Object.keys(CATS).length} categorie · ${SPIRITS.length} alcolici`;
-renderMethod();
+renderMethod();renderExamples();
 if(state.sel)select(state.sel,true);else{renderWheel();renderProfile();renderPairs();}
 
 
