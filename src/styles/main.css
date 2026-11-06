@@ -466,3 +466,4 @@ h2{font-weight:300}
 .hero-ic{padding:6px;background:transparent;border:1px solid var(--line)}
 .nogo-ic{filter:none;opacity:.6}
 @media (prefers-reduced-motion:reduce){.gl path,.glass .gl{transition:none}}
+.seg button:disabled{opacity:.35;cursor:default}

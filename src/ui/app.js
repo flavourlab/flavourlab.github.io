@@ -63,7 +63,7 @@ function topFams(I,n=3){return I.ar.map((v,i)=>[v,i]).filter(x=>x[0]>0).sort((a,
 function dotsInt(n){return '●'.repeat(n)+'○'.repeat(5-n);}
 function catOf(I){return I.isSpirit?SGROUP[I.grp][0]:CATS[I.cat][0];}
 
-const state={sel:BYNAME['Fragola'],mode:'ego',zoom:null,filter:'all',A:BYNAME['Parmigiano Reggiano'],B:BYNAME['Ananas'],parts:[],sps:[],trio:{}};
+const state={sel:null,mode:'browse',zoom:null,filter:'all',A:null,B:null,parts:[],sps:[],trio:{}};
 
 // ---------- combobox ----------
 function makeCombo(host,{id,placeholder,source,onPick,keep}){
@@ -90,6 +90,7 @@ function makeCombo(host,{id,placeholder,source,onPick,keep}){
 // ---------- ruota: abbinamenti ----------
 const R1a=72,R1b=128,RP=188,RS=388;
 function renderEgo(){
+  $('#wheel').setAttribute('viewBox','-540 -540 1080 1080');
   const A=state.sel,parts=state.parts,sps=state.sps;
   let h='';
   TORDER.forEach((k,i)=>{const a0=-90+i*72-36;h+=`<path d="${arcPath(R1b+4,RS-16,a0+0.6,a0+71.4)}" style="fill:${tcol(k)};opacity:.09"/>`;});
@@ -155,6 +156,7 @@ function renderBrowse(){
     h+=`<path class="node" data-t="${it.dom}" data-cat="${it.cat}" d="${arcPath(144,236,a0+0.25,a1-0.25)}" style="fill:${tcol(it.dom)};opacity:${par%2?.32:.5}"><title>${esc(CATS[it.cat][0])}</title></path>`;
     const span=a1-a0;if(span>=6.5)h+=`<g style="pointer-events:none">${labelAt(150,(a0+a1)/2,esc(trunc(CATS[it.cat][1],14)),'',` style="font-size:14px;${halo}"`)}</g>`;});
   const showL=step>=2.3,fs=Math.min(16.5,step*4.2).toFixed(1);
+  $('#wheel').setAttribute('viewBox',showL?'-460 -460 920 920':'-300 -300 600 600');
   list.forEach((f,i)=>{const a0=ang(i),a1=ang(i+1),am=(a0+a1)/2;const on=f===state.sel;
     h+=`<g class="node" data-id="${f.id}" data-kind="b" tabindex="0" role="button" aria-label="${esc(f.name)}"><path d="${arcPath(240,280,a0+0.12,a1-0.12)}" style="fill:${tcol(f.dom)};opacity:${CATORD[f.cat]%2?.62:.9};${on?'stroke:var(--ink);stroke-width:2':''}"/>`+
       (showL?labelAt(288,am,esc(trunc(f.name,24)),'',` style="font-size:${fs}px;${on?'font-weight:700':''}"`):'')+`</g>`;});
@@ -166,7 +168,7 @@ function renderBrowse(){
   $('#wheelHint').textContent=z?'Clicca un alimento per vederne gli abbinamenti.':'Clicca un gusto per ingrandirlo, o un alimento per aprirlo.';
   $('#legend').innerHTML=TORDER.map(k=>{const n=FOODS.filter(f=>f.dom===k).length;return `<span><i style="width:10px;height:10px;border-radius:50%;background:${tcol(k)};display:inline-block"></i>${TLABEL[k]} · ${n}</span>`;}).join('')+`<span>Anello interno: gusto dominante · medio: categoria · esterno: alimento</span>`;
 }
-function renderWheel(){state.mode==='ego'?renderEgo():renderBrowse();$('#mEgo').setAttribute('aria-pressed',String(state.mode==='ego'));$('#mBrowse').setAttribute('aria-pressed',String(state.mode==='browse'));}
+function renderWheel(){if(!state.sel)state.mode='browse';state.mode==='ego'?renderEgo():renderBrowse();$('#mEgo').disabled=!state.sel;$('#mEgo').setAttribute('aria-pressed',String(state.mode==='ego'));$('#mBrowse').setAttribute('aria-pressed',String(state.mode==='browse'));}
 
 // ---------- radar ----------
 function radar(labels,series,R,pad){
@@ -189,6 +191,9 @@ function renderRadars(A,B){
 // ---------- scheda ----------
 function renderProfile(){
   const A=state.sel;const sps=state.sps;
+  if(!A){$('#profile').innerHTML=`<div class="p-head"><span class="eyebrow">Scheda alimento</span><h2>Nessun alimento selezionato</h2></div>
+    <p class="muted">Cerca un alimento nella barra «Al centro della ruota», cliccane uno sulla ruota oppure premi «A caso».</p>
+    <p class="muted">Qui compariranno i suoi gusti e aromi in un diagramma spider, la piramide testa–cuore–fondo, la struttura e gli alcolici con cui si abbina.</p>`;return;}
   const lv={testa:[],cuore:[],fondo:[]};A.ar.forEach((v,i)=>{if(v>=2)lv[FAM[i][3]].push(FAM[i][1].toLowerCase());});
   const st=[['grassezza',A.st.g],['piccantezza',A.st.p],['astringenza',A.st.t],['freschezza',A.st.f]].filter(x=>x[1]>0).map(x=>`${x[0]} ${x[1]}`).join(', ')||'nessuna sensazione rilevante';
   const top=A.ar.map((v,i)=>[v,i]).filter(x=>x[0]>=3).sort((a,b)=>b[0]-a[0]).slice(0,2).map(x=>FAM[x[1]][4]);
@@ -239,6 +244,7 @@ function lensTable(r){return `<table class="lens"><tbody>${r.lens.map(l=>`<tr><t
 function testTxt(r){return r.type==='concordanza'?`Assaggia ${r.A.name} da solo, poi insieme a ${r.B.name}: se le note comuni si allungano senza confondersi, l'accordo regge.`
   :`Assaggia un boccone con entrambi: nessuno dei due deve prevalere. Se uno domina, riducilo e riprova.`;}
 function renderPairs(){
+  $('#pairs').hidden=!state.sel;if(!state.sel)return;
   const A=state.sel;$('#pairsTitle').textContent=`Con cosa si sposa ${A.name}`;
   const list=state.parts.filter(r=>state.filter==='all'||r.type===state.filter);
   document.querySelectorAll('#pairs .seg button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.f===state.filter)));
@@ -322,6 +328,7 @@ function hideTip(){tip.hidden=true;}
 function highlight(id,kind){
   const svg=$('#wheel');svg.querySelectorAll('.hl').forEach(n=>n.classList.remove('hl'));svg.querySelectorAll('.anim').forEach(n=>n.classList.remove('dim'));
   document.querySelectorAll('.sp.hl,.card.hl').forEach(n=>n.classList.remove('hl'));
+  if(!state.sel)return;
   if(!id){$('#radars')&&($('#radars').innerHTML=renderRadars(state.sel,null));const c=$('#cmp');if(c)c.innerHTML='Passa su un abbinamento per sovrapporre il suo profilo.';return;}
   const keep=new Set([id]);svg.querySelectorAll('.lk').forEach(l=>{if(l.dataset.p===id||l.dataset.s===id){keep.add(l.dataset.p);keep.add(l.dataset.s);}});
   svg.querySelectorAll('.anim').forEach(n=>{const k=n.dataset.id||n.dataset.p;const isLk=n.classList.contains('lk');
@@ -351,8 +358,8 @@ wheel.addEventListener('click',e=>activate(e.target.closest('[data-id],[data-t]'
 wheel.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){const g=e.target.closest('[data-id]');if(g){e.preventDefault();activate(g);}}});
 wheel.addEventListener('focusin',e=>{const g=e.target.closest('[data-id]');if(g&&state.mode==='ego')highlight(g.dataset.id,g.dataset.kind);});
 
-$('#mEgo').addEventListener('click',()=>{state.mode='ego';renderWheel();});
-$('#mBrowse').addEventListener('click',()=>{state.mode='browse';state.zoom=state.sel.dom;renderWheel();});
+$('#mEgo').addEventListener('click',()=>{if(!state.sel)return;state.mode='ego';renderWheel();});
+$('#mBrowse').addEventListener('click',()=>{state.mode='browse';state.zoom=state.sel?state.sel.dom:null;renderWheel();});
 $('#rand').addEventListener('click',()=>{let f;do{f=FOODS[Math.floor(Math.random()*FOODS.length)];}while(f===state.sel);state.mode='ego';select(f);});
 document.querySelectorAll('#pairs .seg button').forEach(b=>b.addEventListener('click',()=>{state.filter=b.dataset.f;renderPairs();}));
 $('#pairGrid').addEventListener('click',e=>{const o=e.target.closest('[data-open]'),c=e.target.closest('[data-check]');
@@ -375,7 +382,7 @@ const comboB=makeCombo($('#cB'),{id:'q-b',placeholder:'Alimento o alcolico B',so
 comboA.set(state.A);comboB.set(state.B);
 $('#stats').textContent=`${FOODS.length} alimenti · ${Object.keys(CATS).length} categorie · ${SPIRITS.length} alcolici`;
 renderMethod();
-select(state.sel,true);
+if(state.sel)select(state.sel,true);else{renderWheel();renderProfile();renderPairs();}
 
 
 // ===== PAIRING STUDIO: TRIO =====
@@ -457,14 +464,14 @@ const TABS=['ruota','verifica','cocktail'];
 function showTab(t,silent){
   TABS.forEach(k=>{$('#tab-'+k).hidden=k!==t;const b=$('#tb-'+k);b.setAttribute('aria-selected',String(k===t));b.tabIndex=k===t?0:-1;});
   $('#ruotaTools').hidden=t!=='ruota';
-  if(!silent){const h=t==='ruota'?'#'+state.sel.id:'#'+t;if(location.hash!==h){try{history.replaceState(null,'','#'+h.slice(1));}catch(e){location.hash=h;}}}
+  if(!silent){const h=t==='ruota'?(state.sel?'#'+state.sel.id:''):'#'+t;if(location.hash!==h){try{history.replaceState(null,'',h||location.pathname+location.search);}catch(e){location.hash=h;}}}
   if(t==='cocktail')renderCocktail();
 }
 TABS.forEach(k=>$('#tb-'+k).addEventListener('click',()=>{showTab(k);window.scrollTo({top:0});}));
 $('#tabbar').addEventListener('keydown',e=>{if(e.key!=='ArrowRight'&&e.key!=='ArrowLeft')return;const cur=TABS.findIndex(k=>$('#tb-'+k).getAttribute('aria-selected')==='true');
   const nx=TABS[(cur+(e.key==='ArrowRight'?1:TABS.length-1))%TABS.length];showTab(nx);$('#tb-'+nx).focus();});
 
-const CK={ings:[BYNAME['Fragola'],BYNAME['Basilico'],BYNAME['Pepe']],style:'sour_albume',base:null,view:'classic',bgroup:'all'};
+const CK={ings:[],style:null,base:null,view:'classic',bgroup:'all'};
 function styleShort(R){const st=R.st,b=R.base?R.base.name:'';
   switch(st.id){case 'oldfashioned':return'Old Fashioned';case 'martini':return R.base&&R.base.grp==='ver'?'Reverse Martini':/Gin|Vodka|Genever/.test(b)?'Martini':'Manhattan';
     case 'negroni':return /Bourbon|Rye|Scotch|whisky/i.test(b)?'Boulevardier':'Negroni';case 'sour':return R.spec.some(l=>l.sp&&l.sp.grp==='liq')?'Daisy':'Sour';
@@ -483,7 +490,7 @@ const ingBase=()=>CK.ings.find(i=>i.isSpirit&&(i.grp==='bia'||i.grp==='inv'))||n
 function effBaseFor(id){return CK.base||ingBase()||null;}
 function effBase(){return CK.base||ingBase()||suggestBases(ckFoods(),CK.style)[0]?.s||null;}
 
-function genRecipes(){const ins=CK.ings;if(!ins.length)return[];
+function genRecipes(){const ins=CK.ings;if(!ins.length||!CK.style)return[];
   const st=STY[CK.style];const b=effBase();const out=[buildRecipe(ins,CK.style,'classic',b),buildRecipe(ins,CK.style,'lab',b)];
   if(st.base&&st.id!=='milkpunch'&&(!b||abvOf(b)>0.25))out.push(buildRecipe(ins,CK.style,'low',null));return out;}
 
@@ -576,7 +583,7 @@ function sheet(R,ins){
 }
 function renderRecipes(){
   const ins=CK.ings;const rs=genRecipes();
-  if(!rs.length){$('#ckOut').innerHTML='<p class="note">Aggiungi almeno un ingrediente per vedere le ricette.</p>';return;}
+  if(!rs.length){$('#ckVerTitle').textContent='Le tue ricette';$('#ckOut').innerHTML=`<p class="note">${!ins.length&&!CK.style?'Aggiungi almeno un ingrediente e scegli uno stile: qui compariranno le ricette.':!ins.length?'Aggiungi almeno un ingrediente per vedere le ricette.':'Scegli uno stile del drink per vedere le ricette.'}</p>`;return;}
   const coh=coherence(ins,CK.style,effBase());
   if(coh.block.length){$('#ckVerTitle').textContent='Questa combinazione non regge';
     $('#ckOut').innerHTML=`<div class="nogo"><div class="nogo-ic">${glassSVG(CK.style,72,'')}</div><div class="nogo-b">
@@ -595,7 +602,7 @@ $('#ckOut').addEventListener('click',e=>{const b=e.target.closest('[data-view]')
   const s=e.target.closest('[data-gosty]');if(s){CK.style=s.dataset.gosty;renderCocktail();return;}
   const g=e.target.closest('[data-gobase]');if(g){CK.base=BYID[g.dataset.gobase];renderCocktail();return;}
   const a=e.target.closest('[data-goadd]');if(a&&CK.ings.length<5){CK.ings.push(BYID[a.dataset.goadd]);renderCocktail();}});
-$('#ckFromWheel').addEventListener('click',()=>{const p=state.parts.slice(0,2).map(r=>r.B);CK.ings=[state.sel,...p];CK.base=null;renderCocktail();});
+$('#ckFromWheel').addEventListener('click',()=>{if(!state.sel){showTab('ruota');$('#q-main').focus();return;}const p=state.parts.slice(0,2).map(r=>r.B);CK.ings=[state.sel,...p];CK.base=null;renderCocktail();});
 
 function renderCocktail(){renderIngs();renderBase();renderStyles();renderRecipes();}
 

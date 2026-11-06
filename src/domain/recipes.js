@@ -520,7 +520,7 @@ export function pickGarnish(foods,R,st,lab,base){
 export const ANISE=['Assenzio','Pastis','Ouzo e raki','Sambuca'];
 export const FORT=['Sherry fino','Sherry oloroso','Pedro Ximénez','Porto tawny','Porto ruby','Madeira','Marsala','Sauternes'];
 export const NEUTRAL=['Vodka','Soju','Shochu'];
-export function styleFit(b,id){if(!b)return{ok:true};
+export function styleFit(b,id){if(!b||!id||!STY[id])return{ok:true};
   const g=b.grp,n=b.name,abv=abvOf(b),pct=Math.round(abv*100),dist=g==='bia'||g==='inv';const OK={ok:true};const no=why=>({ok:false,why});const st=STY[id].name;
   if(ANISE.includes(n)){const okS=n==='Sambuca'?['highball','flip']:['highball','julep','sour','sour_albume','collins','royale'];return okS.includes(id)?OK:no(`${n} è un anice intenso: come base regge solo allungato, in un sour o sul ghiaccio tritato, non in un ${st}`);}
   switch(id){
