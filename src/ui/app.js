@@ -1,7 +1,7 @@
-// Interfaccia: ruota, Pairing Studio e Cocktail creator.
+// Interfaccia: «Esplora un ingrediente», «Prova un abbinamento» e «Crea un drink».
 // ===== ICONE DEI BICCHIERI (tratto sottile) =====
 // s = tratto del bicchiere, lq = liquido, ac = garnish/dettagli. --c è il colore mostrato al passaggio del mouse.
-import { ALLERG, BYID, BYNAME, CATS, FAM, FOODS, ORIG, SGROUP, SPIRITS, TLABEL, TORDER, TYPELBL, norm } from '../domain/core.js';
+import { ALLERG, BYID, BYNAME, CATS, FAM, FOODS, ORIG, SGROUP, SPIRITS, TLABEL, TORDER, norm } from '../domain/core.js';
 import { S, howTo, listIt, monthsTxt, partnersOf, score, spiritsOf, trioSpirits, verdict } from '../domain/scoring.js';
 import { TLENS, fmtN, lensReason, roles, spiritsForTrio, suggestThird, trio } from '../domain/trio.js';
 import { ABV, BASES, BGROUPS, STY, abvOf, buildRecipe, coherence, fmt, styleFit, suggestBases } from '../domain/recipes.js';
@@ -40,6 +40,9 @@ let mainCombo=null;
 const $=s=>document.querySelector(s);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const CATORD={};Object.keys(CATS).forEach((k,i)=>CATORD[k]=i);
+// Nomi mostrati all'utente (glossario): i valori dei dati restano 'concordanza' e 'contrasto'
+const TYPEUI={concordanza:'Affinità',contrasto:'Contrasto'};
+const LENSUI={piramide:'Note complete',equilibrio:'Equilibrio di gusto',intensita:'Intensità',debole:'Coppia più debole'};
 const tcol=k=>`var(--t-${k})`;
 const typeCol=t=>t==='contrasto'?'var(--contrast)':'var(--concord)';
 function pol(r,a){const t=a*Math.PI/180;return [+(r*Math.cos(t)).toFixed(2),+(r*Math.sin(t)).toFixed(2)];}
@@ -58,12 +61,22 @@ function labelAt(r,a,text,cls,extra=''){
   return left?`<text class="${cls}" transform="rotate(${(a+180).toFixed(2)})" x="${-r}" y="4" text-anchor="end"${extra}>${text}</text>`
              :`<text class="${cls}" transform="rotate(${a.toFixed(2)})" x="${r}" y="4"${extra}>${text}</text>`;
 }
+// unità SVG che corrispondono a 12 px reali: sotto questa soglia un testo della ruota non si legge
+function minU(vb){const w=$('#wheel').getBoundingClientRect().width||Math.min(820,innerWidth-64);return 12*vb/w;}
+// etichetta radiale su una o due righe: il nome va a capo invece di essere tagliato, se c'è spazio
+function wrapName(name,max,two){if(name.length<=max)return[name];if(!two)return[trunc(name,max)];
+  const w=name.split(' ');let a='';while(w.length&&(a?a+' '+w[0]:w[0]).length<=max)a=a?a+' '+w.shift():w.shift();
+  if(!a)return[trunc(name,max)];const b=w.join(' ');return [a,trunc(b,max)];}
+function labelLines(r,a,lines,cls,fs,extra=''){if(lines.length<2)return labelAt(r,a,esc(lines[0]),cls,extra);
+  const left=Math.cos(a*Math.PI/180)<-0.0001;const x=left?-r:r;const y0=(-fs*0.15).toFixed(1),y1=(fs*0.95).toFixed(1);
+  return `<text class="${cls}" transform="rotate(${(left?a+180:a).toFixed(2)})"${left?' text-anchor="end"':''}${extra}><tspan x="${x}" y="${y0}">${esc(lines[0])}</tspan><tspan x="${x}" y="${y1}">${esc(lines[1])}</tspan></text>`;}
+const TOUCH=()=>matchMedia('(hover: none)').matches;
 const halo='paint-order:stroke;stroke:var(--surface);stroke-width:3.5px;stroke-linejoin:round';
 function topFams(I,n=3){return I.ar.map((v,i)=>[v,i]).filter(x=>x[0]>0).sort((a,b)=>b[0]-a[0]).slice(0,n).map(x=>FAM[x[1]][1].toLowerCase());}
 function dotsInt(n){return '●'.repeat(n)+'○'.repeat(5-n);}
 function catOf(I){return I.isSpirit?SGROUP[I.grp][0]:CATS[I.cat][0];}
 
-const state={sel:null,mode:'browse',zoom:null,filter:'all',A:null,B:null,parts:[],sps:[],trio:{}};
+const state={sel:null,mode:'browse',zoom:null,cat:null,filter:'all',A:null,B:null,parts:[],sps:[],trio:{}};
 
 // ---------- combobox ----------
 function makeCombo(host,{id,placeholder,source,onPick,keep,onClear}){
@@ -92,16 +105,22 @@ function makeCombo(host,{id,placeholder,source,onPick,keep,onClear}){
 // ---------- ruota: abbinamenti ----------
 const R1a=72,R1b=128,RP=188,RS=388;
 function renderEgo(){
-  $('#wheel').setAttribute('viewBox','-540 -540 1080 1080');
-  const A=state.sel,parts=state.parts,sps=state.sps;
+  $('#wheel').classList.remove('two');
+  // su schermi stretti le etichette non entrano leggibili: si tolgono e la ruota si stringe sugli anelli
+  const showL=minU(1080)<=26,VB=showL?540:410;
+  $('#wheel').setAttribute('viewBox',`${-VB} ${-VB} ${2*VB} ${2*VB}`);
+  // di default i migliori 10 alimenti e 5 alcolici; «Mostra tutti» ripristina l'elenco completo (UX-08)
+  const A=state.sel,parts=state.egoAll?state.parts:state.parts.slice(0,10),sps=state.egoAll?state.sps:state.sps.slice(0,5);
   let h='';
   TORDER.forEach((k,i)=>{const a0=-90+i*72-36;h+=`<path d="${arcPath(R1b+4,RS-16,a0+0.6,a0+71.4)}" style="fill:${tcol(k)};opacity:.09"/>`;});
   h+=`<circle r="${RP}" style="fill:none;stroke:var(--line);stroke-dasharray:2 5"/><circle r="${RS}" style="fill:none;stroke:var(--line);stroke-dasharray:2 5"/>`;
   // anello 1: gusti
+  const mu=minU(2*VB),fT=Math.max(17,mu),fP=Math.max(16,mu),fS=Math.max(14.5,mu);
   TORDER.forEach((k,i)=>{const a0=-90+i*72-36;const v=A.t[k];
     h+=`<path d="${arcPath(R1a,R1b,a0+0.8,a0+71.2)}" style="fill:${tcol(k)};opacity:${(0.16+v*0.165).toFixed(2)}"/>`;
     const [x,y]=pol((R1a+R1b)/2,-90+i*72);
-    h+=`<text x="${x}" y="${y-2}" text-anchor="middle" style="font-size:17px;font-weight:600;${halo}">${TLABEL[k]}</text><text x="${x}" y="${y+16}" text-anchor="middle" style="font-size:13.5px;font-family:var(--f-mono);${halo}">${v}/5</text>`;});
+    h+=showL?`<text x="${x}" y="${y-2}" text-anchor="middle" style="font-size:${fT}px;font-weight:600;${halo}">${TLABEL[k]}</text><text x="${x}" y="${y+fT-1}" text-anchor="middle" style="font-size:${Math.max(13.5,mu)}px;font-family:var(--f-mono);${halo}">${v}/5</text>`
+      :`<text x="${x}" y="${y+fT*.35}" text-anchor="middle" style="font-size:${fT}px;font-weight:600;${halo}">${TLABEL[k]}</text>`;});
   // nodi abbinamento
   const groups={};parts.forEach(r=>(groups[r.B.dom]=groups[r.B.dom]||[]).push(r));
   const nodes=[];TORDER.forEach((k,i)=>{const g=groups[k]||[];g.forEach((r,j)=>nodes.push({r,a:-90+i*72-36+(j+0.5)*72/g.length}));});
@@ -121,26 +140,29 @@ function renderEgo(){
     h+=`<line class="ray anim" data-p="${r.B.id}" x1="${x0}" y1="${y0}" x2="${x1}" y2="${y1}" style="stroke:${typeCol(r.type)};stroke-width:${(1.2+(r.total-14)/4).toFixed(1)};${r.type==='contrasto'?'stroke-dasharray:5 4;':''}opacity:.7"/>`;});
   // nodi partner
   nodes.forEach(n=>{const r=n.r;const [x,y]=pol(RP,n.a);const rad=(4+(r.total-14)/3).toFixed(1);
-    h+=`<g class="node anim" data-id="${r.B.id}" data-kind="p" tabindex="0" role="button" aria-label="${esc(r.B.name)}, ${TYPELBL[r.type]}, ${r.total} su 30">
+    h+=`<g class="node anim" data-id="${r.B.id}" data-kind="p" data-nav tabindex="-1" role="button" aria-label="${esc(r.B.name)}, ${verdict(r.total)[0]}, ${TYPEUI[r.type].toLowerCase()}, ${r.total} su 30">
       <circle cx="${x}" cy="${y}" r="${+rad+3.5}" style="fill:var(--surface);stroke:${typeCol(r.type)};stroke-width:2;${r.type==='contrasto'?'stroke-dasharray:3 2':''}"/>
       <circle cx="${x}" cy="${y}" r="${rad}" style="fill:${tcol(r.B.dom)}"/>
-      ${labelAt(RP+14,n.a,`${esc(trunc(r.B.name,16))}<tspan style="font-family:var(--f-mono);font-size:12.5px;fill:var(--muted)"> ${r.total}</tspan>`,'lbl')}</g>`;});
+      <title>${esc(r.B.name)}</title>${showL?labelLines(RP+14,n.a,wrapName(r.B.name,Math.floor((RS-RP-34)/(0.55*fP)),nodes.length<=12),'lbl',fP,` style="font-size:${fP.toFixed(1)}px"`):''}</g>`;});
   // nodi alcolici
   snodes.forEach(s=>{const [x,y]=pol(RS,s.a);const B=s.rs.B;
-    h+=`<g class="node anim" data-id="${B.id}" data-kind="s" tabindex="0" role="button" aria-label="${esc(B.name)}, ${s.rs.total} su 30">
+    h+=`<g class="node anim" data-id="${B.id}" data-kind="s" data-nav tabindex="-1" role="button" aria-label="${esc(B.name)}, alcolico, ${verdict(s.rs.total)[0]}, ${s.rs.total} su 30">
       <rect x="${x-6}" y="${y-6}" width="12" height="12" transform="rotate(45 ${x} ${y})" style="fill:var(--spirit);stroke:var(--surface);stroke-width:2"/>
-      ${labelAt(RS+14,s.a,esc(trunc(B.name,16)),'slbl')}</g>`;});
+      <title>${esc(B.name)}</title>${showL?labelLines(RS+14,s.a,wrapName(B.name,Math.floor((540-RS-18)/(0.55*fS)),snodes.length<=6),'slbl',fS,` style="font-size:${fS.toFixed(1)}px"`):''}</g>`;});
   // centro
   h+=`<circle r="64" style="fill:var(--surface);stroke:${tcol(A.dom)};stroke-width:2.5"/>`;
   const words=A.name.split(' ');const lines=[];words.forEach(w=>{if(lines.length&&(lines[lines.length-1]+' '+w).length<=12)lines[lines.length-1]+=' '+w;else lines.push(w);});
-  const fs=lines.some(l=>l.length>10)?20:24;
-  lines.slice(0,3).forEach((l,i)=>{h+=`<text text-anchor="middle" y="${(i-(Math.min(lines.length,3)-1)/2)*fs+4}" style="font-family:var(--f-display);font-size:${fs}px">${esc(l)}</text>`;});
-  h+=`<text text-anchor="middle" y="${(Math.min(lines.length,3)/2)*fs+12}" style="font-size:10px;fill:var(--muted);font-family:var(--f-mono);letter-spacing:.06em">${TLABEL[A.dom].toUpperCase()}</text>`;
+  const fs=Math.max(lines.some(l=>l.length>10)?20:24,mu);
+  // al centro il nome solo se ci sta leggibile; altrimenti è già nella ricerca e nella scheda
+  if(showL){lines.slice(0,3).forEach((l,i)=>{h+=`<text text-anchor="middle" y="${(i-(Math.min(lines.length,3)-1)/2)*fs+4}" style="font-family:var(--f-display);font-size:${fs}px">${esc(l)}</text>`;});
+    h+=`<text text-anchor="middle" y="${(Math.min(lines.length,3)/2)*fs+12}" style="font-size:${Math.max(10,mu).toFixed(1)}px;fill:var(--muted);font-family:var(--f-mono);letter-spacing:.06em">${TLABEL[A.dom].toUpperCase()}</text>`;}
   $('#wheel').innerHTML=h;
-  $('#wheelCap').textContent=`${TLABEL[A.dom]} › ${A.name} › ${parts.length} abbinamenti › ${sps.length} alcolici`;
-  $('#wheelHint').textContent='Passa sopra un nodo per il motivo, clicca per aprirlo.';
+  const more=state.parts.length>parts.length||state.sps.length>sps.length;
+  $('#wheelCap').textContent=state.egoAll||!more?`${A.name} · ${parts.length} abbinamenti · ${sps.length} alcolici`:`${A.name} · i migliori ${parts.length} abbinamenti e ${sps.length} alcolici`;
+  const ea=$('#egoAll');ea.hidden=!(more||state.egoAll);ea.textContent=state.egoAll?'Mostra solo i migliori':`Mostra tutti (${state.parts.length} + ${state.sps.length})`;
+  $('#wheelHint').textContent=TOUCH()?'Tocca un punto per leggerne il motivo, toccalo di nuovo per aprirlo.':'Passa sopra un punto per il motivo, clicca per aprirlo.';
   $('#legend').innerHTML=TORDER.map(k=>`<span><i style="width:10px;height:10px;border-radius:50%;background:${tcol(k)};display:inline-block"></i>${TLABEL[k]}</span>`).join('')+
-    `<span><svg width="26" height="8"><line x1="0" y1="4" x2="26" y2="4" style="stroke:var(--concord);stroke-width:2.5"/></svg>Concordanza</span>`+
+    `<span><svg width="26" height="8"><line x1="0" y1="4" x2="26" y2="4" style="stroke:var(--concord);stroke-width:2.5"/></svg>Affinità</span>`+
     `<span><svg width="26" height="8"><line x1="0" y1="4" x2="26" y2="4" style="stroke:var(--contrast);stroke-width:2.5;stroke-dasharray:5 4"/></svg>Contrasto</span>`+
     `<span><svg width="12" height="12"><rect x="2" y="2" width="8" height="8" transform="rotate(45 6 6)" style="fill:var(--spirit)"/></svg>Alcolico</span>`;
 }
@@ -148,29 +170,42 @@ function renderEgo(){
 // ---------- ruota: esplora ----------
 function runs(list,key){const out=[];list.forEach((it,i)=>{const k=key(it);const last=out[out.length-1];if(last&&last.k===k)last.e=i+1;else out.push({k,s:i,e:i+1,it});});return out;}
 function renderBrowse(){
+  // senza zoom solo gusto e categoria; un clic su una categoria mostra l'elenco dei suoi alimenti (UX-09)
   const z=state.zoom;
   const list=FOODS.filter(f=>!z||f.dom===z).slice().sort((a,b)=>TORDER.indexOf(a.dom)-TORDER.indexOf(b.dom)||CATORD[a.cat]-CATORD[b.cat]||a.name.localeCompare(b.name,'it'));
   const N=list.length,step=360/N,ang=i=>-90+i*step;let h='';
+  $('#wheel').classList.toggle('two',!z);
+  const fsF=Math.min(16.5,step*4.2),VB=z?460:250,mu=minU(2*VB),showL=z&&fsF>=mu;
+  $('#wheel').setAttribute('viewBox',`${-VB} ${-VB} ${2*VB} ${2*VB}`);
+  const fT=Math.max(17,mu),fC=Math.max(14,mu);
   runs(list,f=>f.dom).forEach(rn=>{const a0=ang(rn.s),a1=ang(rn.e);
-    h+=`<path class="node" data-t="${rn.k}" d="${arcPath(72,140,a0+0.4,a1-0.4)}" style="fill:${tcol(rn.k)};opacity:.85"><title>${TLABEL[rn.k]}</title></path>`;
-    const span=a1-a0;if(span>14){const [x,y]=pol(106,(a0+a1)/2);h+=`<text x="${x}" y="${y+5}" text-anchor="middle" style="pointer-events:none;font-size:17px;font-weight:700;${halo}">${TLABEL[rn.k]}</text>`;}});
-  let par=0;runs(list,f=>f.dom+'|'+f.cat).forEach(rn=>{const a0=ang(rn.s),a1=ang(rn.e);par++;const it=rn.it;
-    h+=`<path class="node" data-t="${it.dom}" data-cat="${it.cat}" d="${arcPath(144,236,a0+0.25,a1-0.25)}" style="fill:${tcol(it.dom)};opacity:${par%2?.32:.5}"><title>${esc(CATS[it.cat][0])}</title></path>`;
-    const span=a1-a0;if(span>=6.5)h+=`<g style="pointer-events:none">${labelAt(150,(a0+a1)/2,esc(trunc(CATS[it.cat][1],14)),'',` style="font-size:14px;${halo}"`)}</g>`;});
-  const showL=step>=2.3,fs=Math.min(16.5,step*4.2).toFixed(1);
-  $('#wheel').setAttribute('viewBox',showL?'-460 -460 920 920':'-300 -300 600 600');
-  list.forEach((f,i)=>{const a0=ang(i),a1=ang(i+1),am=(a0+a1)/2;const on=f===state.sel;
-    h+=`<g class="node" data-id="${f.id}" data-kind="b" tabindex="0" role="button" aria-label="${esc(f.name)}"><path d="${arcPath(240,280,a0+0.12,a1-0.12)}" style="fill:${tcol(f.dom)};opacity:${CATORD[f.cat]%2?.62:.9};${on?'stroke:var(--ink);stroke-width:2':''}"/>`+
-      (showL?labelAt(288,am,esc(trunc(f.name,24)),'',` style="font-size:${fs}px;${on?'font-weight:700':''}"`):'')+`</g>`;});
+    h+=`<path class="node" data-t="${rn.k}" data-nav tabindex="-1" role="button" aria-label="Gusto ${TLABEL[rn.k]}, ${rn.e-rn.s} alimenti${z?', torna a tutti i gusti':''}" d="${arcPath(72,140,a0+0.4,a1-0.4)}" style="fill:${tcol(rn.k)};opacity:.85"><title>${TLABEL[rn.k]}</title></path>`;
+    const span=a1-a0;if(span>14){const [x,y]=pol(106,(a0+a1)/2);h+=`<text x="${x}" y="${y+fT*.3}" text-anchor="middle" style="pointer-events:none;font-size:${fT.toFixed(1)}px;font-weight:700;${halo}">${TLABEL[rn.k]}</text>`;}});
+  let par=0;runs(list,f=>f.dom+'|'+f.cat).forEach(rn=>{const a0=ang(rn.s),a1=ang(rn.e);par++;const it=rn.it;const ck=it.dom+'|'+it.cat,on=state.cat===ck,n=rn.e-rn.s;
+    h+=`<path class="node" data-t="${it.dom}" data-cat="${ck}" data-nav tabindex="-1" role="button" aria-label="${esc(CATS[it.cat][0])}, gusto ${TLABEL[it.dom]}, ${n} ${n===1?'alimento':'alimenti'}" d="${arcPath(144,236,a0+0.25,a1-0.25)}" style="fill:${tcol(it.dom)};opacity:${on?.9:par%2?.32:.5}${on?';stroke:var(--ink);stroke-width:2':''}"><title>${esc(CATS[it.cat][0])}</title></path>`;
+    const span=a1-a0;if(span>=Math.max(6.5,fC*.42))h+=`<g style="pointer-events:none">${labelAt(150,(a0+a1)/2,esc(trunc(CATS[it.cat][1],Math.floor(80/(0.55*fC)))),'',` style="font-size:${fC.toFixed(1)}px;${halo}"`)}</g>`;});
+  if(z)list.forEach((f,i)=>{const a0=ang(i),a1=ang(i+1),am=(a0+a1)/2;const on=f===state.sel;
+    h+=`<g class="node" data-id="${f.id}" data-kind="b" data-nav tabindex="-1" role="button" aria-label="${esc(f.name)}"><title>${esc(f.name)}</title><path d="${arcPath(240,280,a0+0.12,a1-0.12)}" style="fill:${tcol(f.dom)};opacity:${CATORD[f.cat]%2?.62:.9};${on?'stroke:var(--ink);stroke-width:2':''}"/>`+
+      (showL?labelAt(288,am,esc(trunc(f.name,24)),'',` style="font-size:${fsF.toFixed(1)}px;${on?'font-weight:700':''}"`):'')+`</g>`;});
+  const f1=Math.max(11,mu);
   h+=`<circle r="64" class="node" data-t="${z?'__all':''}" style="fill:var(--surface);stroke:var(--line);stroke-width:1.5"/>`;
-  if(z){h+=`<text text-anchor="middle" y="-4" style="pointer-events:none;font-family:var(--f-display);font-size:22px">${TLABEL[z]}</text><text text-anchor="middle" y="16" style="pointer-events:none;font-size:11px;fill:var(--muted)">${N} alimenti</text><text text-anchor="middle" y="34" style="pointer-events:none;font-size:11px;fill:var(--concord);font-weight:600">← tutti i gusti</text>`;}
-  else h+=`<text text-anchor="middle" y="-2" style="pointer-events:none;font-family:var(--f-display);font-size:24px">${N}</text><text text-anchor="middle" y="16" style="pointer-events:none;font-size:11px;fill:var(--muted)">alimenti</text>`;
+  if(z){h+=`<text text-anchor="middle" y="${-f1*.4}" style="pointer-events:none;font-family:var(--f-display);font-size:${Math.max(22,mu).toFixed(1)}px">${TLABEL[z]}</text><text text-anchor="middle" y="${f1*1.3}" style="pointer-events:none;font-size:${f1.toFixed(1)}px;fill:var(--muted)">${N} alimenti</text>`;}
+  else h+=`<text text-anchor="middle" y="-2" style="pointer-events:none;font-family:var(--f-display);font-size:${Math.max(24,mu).toFixed(1)}px">${N}</text><text text-anchor="middle" y="${f1*1.4}" style="pointer-events:none;font-size:${f1.toFixed(1)}px;fill:var(--muted)">alimenti</text>`;
   $('#wheel').innerHTML=h;
-  $('#wheelCap').textContent=z?`Gusto ${TLABEL[z]} › categorie › alimenti`:'Gusti › categorie › alimenti';
-  $('#wheelHint').textContent=z?'Clicca un alimento per vederne gli abbinamenti.':'Clicca un gusto per ingrandirlo, o un alimento per aprirlo.';
-  $('#legend').innerHTML=TORDER.map(k=>{const n=FOODS.filter(f=>f.dom===k).length;return `<span><i style="width:10px;height:10px;border-radius:50%;background:${tcol(k)};display:inline-block"></i>${TLABEL[k]} · ${n}</span>`;}).join('')+`<span>Anello interno: gusto dominante · medio: categoria · esterno: alimento</span>`;
+  $('#egoAll').hidden=true;
+  $('#wheelCap').textContent=z?`Gusto ${TLABEL[z]} · categorie e alimenti`:'Gusti e categorie';
+  const tap=TOUCH()?'Tocca':'Clicca';
+  $('#wheelHint').textContent=z?`${tap} una categoria per l'elenco, il centro per tornare a tutti i gusti.`:`${tap} un gusto per ingrandirlo o una categoria per vederne gli alimenti.`;
+  $('#legend').innerHTML=TORDER.map(k=>{const n=FOODS.filter(f=>f.dom===k).length;return `<span><i style="width:10px;height:10px;border-radius:50%;background:${tcol(k)};display:inline-block"></i>${TLABEL[k]} · ${n}</span>`;}).join('')+`<span>Anello interno: gusto dominante · esterno: categoria${z?' · bordo: alimento':''}</span>`;
 }
-function renderWheel(){if(!state.sel)state.mode='browse';state.mode==='ego'?renderEgo():renderBrowse();$('#mEgo').disabled=!state.sel;$('#mEgo').setAttribute('aria-pressed',String(state.mode==='ego'));$('#mBrowse').setAttribute('aria-pressed',String(state.mode==='browse'));}
+function renderCatList(){const el=$('#catList');
+  if(!state.cat||state.mode!=='browse'){el.hidden=true;el.innerHTML='';return;}
+  const [t,c]=state.cat.split('|');const fs=FOODS.filter(f=>f.cat===c&&f.dom===t).sort((a,b)=>a.name.localeCompare(b.name,'it'));
+  el.hidden=false;el.innerHTML=`<div class="cl-h"><h3>${esc(CATS[c][0])}</h3><span class="muted tiny">gusto ${TLABEL[t].toLowerCase()} · ${fs.length} ${fs.length===1?'alimento':'alimenti'}</span><button type="button" class="link" data-cl-close>Chiudi</button></div>
+    <ul>${fs.map(f=>`<li><button type="button" data-cl-open="${f.id}"><i style="background:${tcol(f.dom)}"></i>${esc(f.name)}</button></li>`).join('')}</ul>`;}
+function renderWheel(){hidePeek();if(!state.sel)state.mode='browse';state.mode==='ego'?renderEgo():renderBrowse();renderCatList();rove();$('#mEgo').hidden=!state.sel;$('#mEgo').setAttribute('aria-pressed',String(state.mode==='ego'));$('#mBrowse').setAttribute('aria-pressed',String(state.mode==='browse'));}
+// la dimensione dei testi dipende dalla larghezza della ruota: si ridisegna quando cambia
+let rzT=null;window.addEventListener('resize',()=>{clearTimeout(rzT);rzT=setTimeout(()=>{if(!$('#tab-ruota').hidden)renderWheel();},150);});
 
 // ---------- radar ----------
 function radar(labels,series,R,pad){
@@ -190,41 +225,52 @@ function renderRadars(A,B){
   return `<div class="radar"><span class="eyebrow">Gusti</span>${radar(tl,ser1,78,46)}</div><div class="radar"><span class="eyebrow">Famiglie aromatiche</span>${radar(FAM.map(f=>({t:f[2]})),ser2,96,72)}</div>`;
 }
 
+// ---------- esempi cliccabili ----------
+const EXAMPLES=['Limone','Cioccolato fondente','Fragola','Basilico','Caffè','Pomodoro'].map(n=>BYNAME[n]).filter(Boolean);
+function exampleChips(){return EXAMPLES.map(f=>`<button type="button" class="ex" data-ex="${f.id}"><i style="background:${tcol(f.dom)}"></i>${esc(f.name)}</button>`).join('');}
+function renderExamples(){$('#examples').innerHTML=`<span class="tiny muted">Prova:</span>${exampleChips()}`;}
+document.addEventListener('click',e=>{const b=e.target.closest('[data-ex]');if(!b)return;state.mode='ego';select(BYID[b.dataset.ex]);});
+
 // ---------- scheda ----------
 function renderProfile(){
   const A=state.sel;const sps=state.sps;
-  if(!A){$('#profile').innerHTML=`<div class="p-head"><span class="eyebrow">Scheda alimento</span><h2>Nessun alimento selezionato</h2></div>
-    <p class="muted">Cerca un alimento nella barra «Al centro della ruota», cliccane uno sulla ruota oppure premi «A caso».</p>
-    <p class="muted">Qui compariranno i suoi gusti e aromi in un diagramma spider, la piramide testa–cuore–fondo, la struttura e gli alcolici con cui si abbina.</p>`;return;}
+  if(!A){$('#profile').innerHTML=`<div class="p-head"><span class="eyebrow">Scheda alimento</span><h2>Da dove partire</h2></div>
+    <p class="muted">Scegli un alimento: qui vedrai i suoi gusti, le note principali e cosa berci.</p>
+    <div class="examples">${exampleChips()}</div>`;return;}
   const lv={testa:[],cuore:[],fondo:[]};A.ar.forEach((v,i)=>{if(v>=2)lv[FAM[i][3]].push(FAM[i][1].toLowerCase());});
   const st=[['grassezza',A.st.g],['piccantezza',A.st.p],['astringenza',A.st.t],['freschezza',A.st.f]].filter(x=>x[1]>0).map(x=>`${x[0]} ${x[1]}`).join(', ')||'nessuna sensazione rilevante';
   const top=A.ar.map((v,i)=>[v,i]).filter(x=>x[0]>=3).sort((a,b)=>b[0]-a[0]).slice(0,2).map(x=>FAM[x[1]][4]);
   const allerg=ALLERG[A.cat];
   const notes=[A.note,allerg&&!A.note.includes(allerg)?'allergene: '+allerg:''].filter(Boolean);
   const best=state.parts[0];
+  // primo livello: nome, gusto, intensità, note principali e le famiglie dominanti; il resto in «Dettagli» (UX-10)
+  const fams=A.ar.map((v,i)=>[v,i]).filter(x=>x[0]>0).sort((a,b)=>b[0]-a[0]).slice(0,5).filter((x,k)=>k<3||x[0]>=2);
   $('#profile').innerHTML=`
   <div class="p-head">
     <span class="eyebrow">${esc(CATS[A.cat][0])}</span>
     <h2>${esc(A.name)}</h2>
     <div class="chips">
       <span class="chip"><i style="background:${tcol(A.dom)}"></i>${TLABEL[A.dom]}</span>
-      <span class="chip">Intensità <span class="dots">${dotsInt(A.int)}</span></span>
+      <span class="chip">Intensità <span class="dots" aria-hidden="true">${dotsInt(A.int)}</span><span class="sr">${A.int} su 5</span></span>
       <span class="chip">${A.season?'Stagione '+monthsTxt(A.season):'Tutto l\'anno'}</span>
       ${A.o?`<span class="chip">${ORIG[A.o]}</span>`:''}
     </div>
-    <p><b>Firma:</b> ${esc(topFams(A).join(' · ')||'neutro, solo gusto')}</p>
+    <p><b>Note principali:</b> ${esc(topFams(A).join(' · ')||'neutro, solo gusto')}</p>
   </div>
-  <dl class="kv">
-    <dt>Testa</dt><dd>${lv.testa.join(', ')||'—'}</dd>
-    <dt>Cuore</dt><dd>${lv.cuore.join(', ')||'—'}</dd>
-    <dt>Fondo</dt><dd>${lv.fondo.join(', ')||'—'}</dd>
-    <dt>Struttura</dt><dd>${st}</dd>
-    ${top.length?`<dt>Composti</dt><dd class="muted">${esc(top.join('; '))}</dd>`:''}
-    <dt>In miscelazione</dt><dd>${esc(CATS[A.cat][2])}</dd>
-  </dl>
-  <div class="radars" id="radars">${renderRadars(A,null)}</div>
-  <p class="cmp" id="cmp">Passa su un abbinamento per sovrapporre il suo profilo${best?` (per esempio ${esc(best.B.name)})`:''}.</p>
+  ${fams.length?`<ul class="fbars" aria-label="Famiglie aromatiche dominanti">${fams.map(([v,i])=>`<li><span>${esc(FAM[i][1])}</span><span class="bar"><i style="width:${v/5*100}%"></i></span><b>${v}<small>/5</small></b></li>`).join('')}</ul>`:''}
+  <p class="tiny"><b>In miscelazione:</b> ${esc(CATS[A.cat][2])}</p>
   ${notes.length?`<p class="safety">${esc(notes.join(' · '))}</p>`:''}
+  <details class="pdet"><summary>Dettagli: tutti gli aromi e la struttura</summary>
+    <dl class="kv">
+      <dt>Testa</dt><dd>${lv.testa.join(', ')||'—'}</dd>
+      <dt>Cuore</dt><dd>${lv.cuore.join(', ')||'—'}</dd>
+      <dt>Fondo</dt><dd>${lv.fondo.join(', ')||'—'}</dd>
+      <dt>Struttura</dt><dd>${st}</dd>
+      ${top.length?`<dt>Composti</dt><dd class="muted">${esc(top.join('; '))}</dd>`:''}
+    </dl>
+    <div class="radars" id="radars">${renderRadars(A,null)}</div>
+    <p class="cmp" id="cmp">Passa su un abbinamento per sovrapporre il suo profilo${best?` (per esempio ${esc(best.B.name)})`:''}.</p>
+  </details>
   <p class="tiny muted">Più in basso trovi gli alcolici e gli alimenti con cui si abbina.</p>`;
   renderSpirits();
 }
@@ -232,12 +278,18 @@ function firstSentence(t){return (t.match(/^.*?[.!?](\s|$)/)||[t])[0].trim();}
 function renderSpirits(){
   const A=state.sel;$('#spirits').hidden=!A;if(!A)return;
   $('#spTitle').textContent=`Da bere con ${A.name}`;
-  $('#spTrack').innerHTML=state.sps.map(r=>spiritCard(A,r)).join('');
-  $('#spTrack').scrollLeft=0;updateRail('spTrack');
+  // griglia con i primi 6 e «Mostra altri» al posto del carosello (UX-13)
+  const all=state.sps,shown=state.spAll?all:all.slice(0,6);
+  $('#spTrack').innerHTML=shown.map(r=>spiritCard(A,r)).join('');
+  moreBtn('#spMore',all.length,shown.length,state.spAll);
 }
-function scoreBar(t,max=30){const [v]=verdict(t);const c=v==='forte'?'var(--ok)':v==='promettente'?'color-mix(in srgb,var(--ok) 55%,var(--warn))':v==='rischioso'?'var(--warn)':'var(--bad)';
-  return `<span class="score"><span class="bar"><i style="width:${(t/max*100).toFixed(0)}%;background:${c}"></i></span>${t}/30</span>`;}
-function badge(r){return `<span class="badge ${r.type}">${r.type==='contrasto'?'⇄':'≈'} ${TYPELBL[r.type]}</span>${r.mixed?`<span class="badge plus">+ ${r.type==='contrasto'?'concordanza':'contrasto'}</span>`:''}`;}
+// verdetto in parola per primo, il numero /30 è secondario (UX-07)
+const vcol=v=>v==='forte'?'var(--ok)':v==='promettente'?'color-mix(in srgb,var(--ok) 55%,var(--warn))':v==='rischioso'?'var(--warn)':'var(--bad)';
+const vword=v=>v.charAt(0).toUpperCase()+v.slice(1);
+function scoreBar(t,max=30){const [v]=verdict(t);const c=vcol(v);
+  return `<span class="score"><b class="vw">${vword(v)}</b><span class="bar"><i style="width:${(t/max*100).toFixed(0)}%;background:${c}"></i></span><small>${t}/30</small></span>`;}
+function verdictHead(t,v,vt,extra){return `<div class="verdict v2"><div class="vmain"><span class="vbig"><i style="background:${vcol(v)}"></i>${vword(v)}</span><span class="vnum">${fmtN(t)}<small>/30</small>${info('score','punteggio')}</span></div><p class="vsub">${esc(vt)}</p>${extra}</div>`;}
+function badge(r){return `<span class="badge ${r.type}">${r.type==='contrasto'?'⇄':'≈'} ${TYPEUI[r.type]}</span>${r.mixed?`<span class="badge plus">+ ${r.type==='contrasto'?'affinità':'contrasto'}</span>`:''}`;}
 function spiritCard(A,r){const B=r.B;
   const trio=state.trio[B.id];
   return `<article class="card sp" data-sid="${B.id}">
@@ -246,7 +298,7 @@ function spiritCard(A,r){const B=r.B;
     <p class="sum">${esc(firstSentence(r.summary))}</p>
     <p class="tiny"><b>Come:</b> ${esc(SGROUP[B.grp][1].charAt(0).toUpperCase()+SGROUP[B.grp][1].slice(1))}.${trio?` <b>Trio:</b> aggiungi ${esc(trio.name)}.`:''}</p>
     <details><summary>Perché funziona</summary><p class="tiny">${esc(r.summary)}</p><p class="tiny"><b>Preparazione:</b> ${esc(howTo(A,B))}</p></details>
-    <div class="acts"><button class="link" data-mkck="${B.id}">Crea un cocktail →</button></div>
+    <div class="acts"><button class="link" data-mkck="${B.id}">Crea un drink →</button></div>
   </article>`;}
 
 // ---------- abbinamenti alimentari ----------
@@ -258,26 +310,20 @@ function renderPairs(){
   const A=state.sel;$('#pairsTitle').textContent=`Con cosa si sposa ${A.name}`;
   const list=state.parts.filter(r=>state.filter==='all'||r.type===state.filter);
   document.querySelectorAll('#pairs .seg button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.f===state.filter)));
-  $('#pairGrid').innerHTML=list.length?list.map(r=>`<article class="card" data-pid="${r.B.id}">
+  const total=list.length;const shown=state.pAll?list:list.slice(0,6);
+  $('#pairGrid').innerHTML=list.length?shown.map(r=>`<article class="card" data-pid="${r.B.id}">
     <div class="card-top"><div><h3>${esc(r.B.name)}</h3><span class="cat"><i style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${tcol(r.B.dom)};margin-right:5px"></i>${esc(CATS[r.B.cat][0])}</span></div>${scoreBar(r.total)}</div>
     <div class="chips">${badge(r)}</div>
     <p class="sum">${esc(firstSentence(r.summary))}</p>
-    <details><summary>Le sei lenti, dosi e test</summary><p class="tiny" style="margin-bottom:6px">${esc(r.summary)}</p>${lensTable(r)}<p class="tiny" style="margin-top:8px"><b>Rapporto:</b> ${esc(r.ratioTxt)}</p><p class="tiny"><b>Test rapido:</b> ${esc(testTxt(r))}</p></details>
+    <details><summary>I sei criteri, dosi e test</summary><p class="tiny" style="margin-bottom:6px">${esc(r.summary)}</p>${lensTable(r)}<p class="tiny" style="margin-top:8px"><b>Rapporto:</b> ${esc(r.ratioTxt)}</p><p class="tiny"><b>Test rapido:</b> ${esc(testTxt(r))}</p></details>
     <div class="acts"><button class="link" data-open="${r.B.id}">Apri ${esc(r.B.name)} →</button><button class="link" data-check="${r.B.id}">Verifica la coppia</button></div>
   </article>`).join(''):`<p class="muted">Nessun abbinamento di questo tipo sopra la soglia.</p>`;
-  $('#pairGrid').scrollLeft=0;$('#pairCount').dataset.total=list.length;updateRail('pairGrid');
+  moreBtn('#pairMore',total,shown.length,state.pAll);
 }
-// ---------- caroselli ----------
-function railStep(tr){const c=tr.querySelector('.card');if(!c)return tr.clientWidth;const gap=parseFloat(getComputedStyle(tr).columnGap)||0;return c.offsetWidth+gap;}
-function updateRail(id){const tr=document.getElementById(id);if(!tr)return;const cards=tr.querySelectorAll('.card');const n=cards.length;
-  const st=railStep(tr);const per=Math.max(1,Math.round(tr.clientWidth/st));const first=Math.min(n,Math.round(tr.scrollLeft/st)+1);const last=Math.min(n,first+per-1);
-  const cnt=document.getElementById(id==='spTrack'?'spCount':'pairCount');if(cnt)cnt.textContent=n?`${first}–${last} di ${n}`:'';
-  document.querySelectorAll(`.rnav[data-rail="${id}"]`).forEach(b=>{const d=+b.dataset.dir;b.disabled=!n||(d<0?tr.scrollLeft<=2:tr.scrollLeft+tr.clientWidth>=tr.scrollWidth-2);});}
-document.addEventListener('click',e=>{const b=e.target.closest('.rnav');if(!b)return;const tr=document.getElementById(b.dataset.rail);const st=railStep(tr);const per=Math.max(1,Math.round(tr.clientWidth/st));
-  tr.scrollBy({left:+b.dataset.dir*st*per,behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});});
-['spTrack','pairGrid'].forEach(id=>{const tr=document.getElementById(id);let t=null;tr.addEventListener('scroll',()=>{cancelAnimationFrame(t);t=requestAnimationFrame(()=>updateRail(id));},{passive:true});
-  tr.addEventListener('keydown',e=>{if(e.key==='ArrowRight'||e.key==='ArrowLeft'){e.preventDefault();document.querySelector(`.rnav[data-rail="${id}"][data-dir="${e.key==='ArrowRight'?1:-1}"]`)?.click();}});});
-window.addEventListener('resize',()=>{updateRail('spTrack');updateRail('pairGrid');});
+// ---------- elenchi con «Mostra altri» ----------
+function moreBtn(sel,total,shown,all){const b=$(sel);b.hidden=total<=6;b.textContent=all?'Mostra meno':`Mostra altri ${total-shown}`;b.setAttribute('aria-expanded',String(!!all));}
+$('#spMore').addEventListener('click',()=>{state.spAll=!state.spAll;renderSpirits();if(!state.spAll)$('#spirits').scrollIntoView({block:'nearest'});});
+$('#pairMore').addEventListener('click',()=>{state.pAll=!state.pAll;renderPairs();if(!state.pAll)$('#pairs').scrollIntoView({block:'nearest'});});
 
 // ---------- verifica ----------
 function renderPairOut(){
@@ -285,20 +331,20 @@ function renderPairOut(){
   const r=S(A,B);const [v,vt]=verdict(r.total);const vc=v==='forte'?'var(--ok)':v==='promettente'?'var(--ok)':v==='rischioso'?'var(--warn)':'var(--bad)';
   const trio=B.isSpirit?[]:trioSpirits(A,B,3);
   $('#checkOut').innerHTML=`
-    <div class="verdict"><span class="big">${r.total}<small>/30</small></span><div><div class="vtag" style="color:${vc}">${v}${info('score','punteggio')}</div><div class="chips" style="margin-top:4px">${badge(r)}${info('type','concordanza e contrasto')}</div></div></div>
+    ${verdictHead(r.total,v,vt,`<div class="chips">${badge(r)}${info('type','affinità e contrasto')}</div>`)}
     <div style="margin:10px 0 4px"><div class="scale"><i></i><i></i><i></i><i></i><b style="left:calc(${(r.total/30*100).toFixed(1)}% - 1.5px)"></b></div><div class="scale-l"><span>0</span><span>10</span><span>17</span><span>24</span><span>30</span></div></div>
-    <p style="margin:8px 0"><b>${esc(A.name)} + ${esc(B.name)}.</b> ${esc(vt)} ${esc(r.summary)}</p>
-    ${lensTable(r)}
+    <p style="margin:8px 0"><b>${esc(A.name)} + ${esc(B.name)}.</b> ${esc(r.summary)}</p>
+    <details class="lensd"><summary>I sei criteri, uno per uno</summary>${lensTable(r)}</details>
     <p class="tiny" style="margin-top:10px"><b>Rapporto di partenza:</b> ${esc(r.ratioTxt)}</p>
     <p class="tiny"><b>Test rapido:</b> ${esc(testTxt(r))}</p>
     ${B.isSpirit?`<p class="tiny"><b>Come usarlo:</b> ${esc(howTo(A,B))}</p>`:''}
-    ${r.total<24?`<p class="tiny" style="margin-top:12px">Coppia sotto 24: a sinistra trovi il terzo ingrediente che la completa.</p>`:''}
+    ${r.total<24?`<p class="tiny" style="margin-top:12px">Coppia sotto 24: il terzo ingrediente consigliato la completa.</p>`:''}
     ${trio.length?`<div style="margin-top:14px"><span class="eyebrow">Alcolici adatti a entrambi</span><div class="list-inline" style="margin-top:6px">${trio.map(x=>`<span class="chip">${esc(x.s.name)} <span class="muted" style="font-family:var(--f-mono)">${x.a} · ${x.b}</span></span>`).join('')}</div></div>`:''}`;
 }
 
 // ---------- metodo ----------
 const INFO={
-  'Ponte aromatico':'Quanto i due profili si sovrappongono sulle 18 famiglie aromatiche. Conta anche il ponte indiretto tra famiglie affini (agrumato ed erbe, tostato e ossidativo, lattico e tostato). È la lente della concordanza.',
+  'Ponte aromatico':'Quanto i due profili si sovrappongono sulle 18 famiglie aromatiche. Conta anche il ponte indiretto tra famiglie affini (agrumato ed erbe, tostato e ossidativo, lattico e tostato). È il criterio dell\'affinità.',
   'Bilanciamento di gusto':'Le regole classiche: l\'acido taglia il grasso, il sale esalta il dolce e attenua l\'amaro, l\'amaro dà profondità al dolce, il grasso ammorbidisce piccante e tannino. Include la sinergia umami. Toglie punti quando due amari, due acidi o due piccanti forti si sommano.',
   'Intensità e peso':'Due ingredienti di forza simile dialogano alla pari. Se la distanza è grande, il più delicato va in dose maggiore o rischia di sparire.',
   'Copertura piramide':'Testa (agrumi, erbe, verde, frutta fresca), cuore (frutta matura, fiori, spezie pungenti, resine) e fondo (tostato, legno, vaniglia, lattico, carnoso). Una coppia che copre tutti e tre i livelli è più completa.',
@@ -311,10 +357,10 @@ const INFO={
   'Intensità':'Distanza tra l\'ingrediente più forte e il più delicato del trio: più è piccola, più i tre dialogano alla pari.',
   'Anello debole':'Un trio vale quanto la sua coppia peggiore. Se il terzo ingrediente lega bene con i due della coppia debole fa da ponte e alza il voto.',
   'Tradizione e territorio':'Media di stagione, area d\'origine e tradizione delle tre coppie.',
-  score:'Somma di sei lenti da 0 a 5. 24–30 forte, da provare subito · 17–23 promettente, va calibrato in dose o con un terzo ingrediente · 10–16 rischioso, serve un ingrediente ponte · sotto 10 sconsigliato.',
-  type:'Concordanza: i due condividono famiglie aromatiche o si rinforzano (sinergia umami). Contrasto: un gusto bilancia l\'altro (acido contro grasso, sale contro dolce). Vince il più forte; se anche l\'altro supera 3 il badge lo segnala con «+».',
-  structure:'Armonia: tre coppie in concordanza. Contrasto: tre coppie in contrasto. Triangolo: base, complemento e accento, con coppie dei due tipi. Ponte aromatico: il terzo ingrediente unisce una coppia che da sola dialoga poco.',
-  third:'Per la lente scelta provo ogni alimento come terzo ingrediente e ordino i risultati: a parità di voto della lente vince il punteggio del trio. Al massimo due proposte per categoria.',
+  score:'Somma di sei criteri da 0 a 5. 24–30 forte, da provare subito · 17–23 promettente, va calibrato in dose o con un terzo ingrediente · 10–16 rischioso, serve un ingrediente ponte · sotto 10 sconsigliato.',
+  type:'Affinità: i due condividono famiglie aromatiche o si rinforzano (sinergia umami). Contrasto: un gusto bilancia l\'altro (acido contro grasso, sale contro dolce). Vince il più forte; se anche l\'altro supera 3 il badge lo segnala con «+».',
+  structure:'Armonia: tre coppie per affinità. Contrasto: tre coppie in contrasto. Triangolo: base, complemento e accento, con coppie dei due tipi. Ponte aromatico: il terzo ingrediente unisce una coppia che da sola dialoga poco.',
+  third:'Per il criterio scelto provo ogni alimento come terzo ingrediente e ordino i risultati: a parità di voto del criterio vince il punteggio del trio. Al massimo due proposte per categoria.',
   roles:'Base: il corpo del trio (il più strutturato, o l\'alcolico). Accento: il più intenso o pungente, in piccola dose. Complemento: quello che resta. Il rapporto è un punto di partenza da correggere all\'assaggio.',
   spirits:'Alcolici ordinati per il loro abbinamento peggiore con i tre ingredienti: così nessuno dei tre resta scoperto.',
 };
@@ -322,8 +368,8 @@ function info(k,label){const t=INFO[k];if(!t)return'';return `<button type="butt
 function renderMethod(){
   $('#lensCards').innerHTML=`
   <div class="mcol"><h4>Il profilo</h4><p>Ogni alimento ha i cinque gusti, la struttura (grassezza, piccantezza, astringenza, freschezza) e diciotto famiglie aromatiche, tutto da 0 a 5. Il gusto più alto decide il settore della ruota. Sono alimenti gli ingredienti singoli, anche trasformati (pop-corn, miso); i piatti restano fuori.</p></div>
-  <div class="mcol"><h4>Concordanza e contrasto</h4><p><span class="mline"><svg width="26" height="8"><line x1="0" y1="4" x2="26" y2="4" style="stroke:var(--concord);stroke-width:2.5"/></svg><b>Concordanza</b></span> i due condividono note aromatiche o si rinforzano.</p><p><span class="mline"><svg width="26" height="8"><line x1="0" y1="4" x2="26" y2="4" style="stroke:var(--contrast);stroke-width:2.5;stroke-dasharray:5 4"/></svg><b>Contrasto</b></span> un gusto bilancia l'altro: acido contro grasso, sale contro dolce.</p></div>
-  <div class="mcol"><h4>Il punteggio</h4><div class="scale"><i></i><i></i><i></i><i></i></div><div class="scale-l"><span>0</span><span>10</span><span>17</span><span>24</span><span>30</span></div><p>Sei lenti da 0 a 5. <b>24–30</b> forte, <b>17–23</b> promettente, <b>10–16</b> rischioso, sotto 10 sconsigliato. Passa sulle <span class="info static">i</span> per la spiegazione di ogni lente.</p></div>`;
+  <div class="mcol"><h4>Affinità e contrasto</h4><p><span class="mline"><svg width="26" height="8"><line x1="0" y1="4" x2="26" y2="4" style="stroke:var(--concord);stroke-width:2.5"/></svg><b>Affinità</b></span> i due condividono note aromatiche o si rinforzano.</p><p><span class="mline"><svg width="26" height="8"><line x1="0" y1="4" x2="26" y2="4" style="stroke:var(--contrast);stroke-width:2.5;stroke-dasharray:5 4"/></svg><b>Contrasto</b></span> un gusto bilancia l'altro: acido contro grasso, sale contro dolce.</p></div>
+  <div class="mcol"><h4>Il punteggio</h4><div class="scale"><i></i><i></i><i></i><i></i></div><div class="scale-l"><span>0</span><span>10</span><span>17</span><span>24</span><span>30</span></div><p>Sei criteri da 0 a 5. <b>24–30</b> forte, <b>17–23</b> promettente, <b>10–16</b> rischioso, sotto 10 sconsigliato. Passa sulle <span class="info static">i</span> per la spiegazione di ogni criterio.</p></div>`;
 }
 
 // ---------- tooltip e interazioni ----------
@@ -336,7 +382,7 @@ function showInfo(el){const html=tipHTML(el);if(!html)return;infoEl=el;tip.inner
   const r=el.getBoundingClientRect();const w=tip.offsetWidth,h=tip.offsetHeight;let x=r.left+r.width/2-w/2,y=r.bottom+8;
   if(y+h>innerHeight-8)y=r.top-h-8;x=Math.max(8,Math.min(innerWidth-w-8,x));tip.style.left=x+'px';tip.style.top=Math.max(8,y)+'px';}
 function hideInfo(){if(!infoEl)return;infoEl=null;tip.hidden=true;tip.classList.remove('infotip');}
-document.addEventListener('pointerover',e=>{const b=e.target.closest&&e.target.closest('.info[data-info],.glass[data-sty]');if(b)showInfo(b);});
+document.addEventListener('pointerover',e=>{if(e.pointerType==='touch')return;const b=e.target.closest&&e.target.closest('.info[data-info],.glass[data-sty]');if(b)showInfo(b);});
 document.addEventListener('pointerout',e=>{const b=e.target.closest&&e.target.closest('.info[data-info],.glass[data-sty]');if(b&&!b.contains(e.relatedTarget))hideInfo();});
 document.addEventListener('focusin',e=>{const b=e.target.closest&&e.target.closest('.info[data-info],.glass[data-sty]');if(b)showInfo(b);});
 document.addEventListener('focusout',e=>{if(e.target.closest&&e.target.closest('.info[data-info],.glass[data-sty]'))hideInfo();});
@@ -357,33 +403,72 @@ function highlight(id,kind){
     const on=isLk?(n.dataset.p===id||n.dataset.s===id):keep.has(k);if(!on)n.classList.add('dim');else if(isLk)n.style.opacity=.9;});
   svg.querySelector(`[data-id="${id}"]`)?.classList.add('hl');
   const B=BYID[id];if(B&&state.mode==='ego'){$('#radars').innerHTML=renderRadars(state.sel,B);const r=S(state.sel,B);
-    $('#cmp').innerHTML=`Confronto con <b>${esc(B.name)}</b> (tratteggio) · ${TYPELBL[r.type].toLowerCase()} · ${r.total}/30`;
+    $('#cmp').innerHTML=`Confronto con <b>${esc(B.name)}</b> (tratteggio) · ${vword(verdict(r.total)[0]).toLowerCase()} · ${TYPEUI[r.type].toLowerCase()} · ${r.total}/30`;
     if(kind==='s')document.querySelector(`.sp[data-sid="${id}"]`)?.classList.add('hl');else document.querySelector(`.card[data-pid="${id}"]`)?.classList.add('hl');}
 }
 function resetLinks(){$('#wheel').querySelectorAll('.lk').forEach(l=>l.style.opacity=.28);}
 const wheel=$('#wheel');
-wheel.addEventListener('pointerover',e=>{const g=e.target.closest('[data-id],[data-t]');if(!g)return;
+wheel.addEventListener('pointerover',e=>{if(e.pointerType==='touch')return;const g=e.target.closest('[data-id],[data-t]');if(!g)return;
   if(g.dataset.id){const B=BYID[g.dataset.id];
     if(state.mode==='ego'){const r=S(state.sel,B);highlight(B.id,g.dataset.kind);
-      showTip(`<b>${esc(B.name)}</b> · ${TYPELBL[r.type]} · ${r.total}/30<br>${esc(r.summary.split(/(?<=\.)\s/)[0])}`,e);}
-    else showTip(`<b>${esc(B.name)}</b><br>${esc(CATS[B.cat][0])} · ${TLABEL[B.dom]}<br>Firma: ${esc(topFams(B).join(', ')||'—')}`,e);}
-  else if(g.dataset.cat)showTip(`<b>${esc(CATS[g.dataset.cat][0])}</b>`,e);
+      showTip(`<b>${esc(B.name)}</b> · ${vword(verdict(r.total)[0])} · ${TYPEUI[r.type].toLowerCase()} <span style="opacity:.7">${r.total}/30</span><br>${esc(r.summary.split(/(?<=\.)\s/)[0])}`,e);}
+    else showTip(`<b>${esc(B.name)}</b><br>${esc(CATS[B.cat][0])} · ${TLABEL[B.dom]}<br>Note principali: ${esc(topFams(B).join(', ')||'—')}`,e);}
+  else if(g.dataset.cat){const [t,c]=g.dataset.cat.split("|");showTip(`<b>${esc(CATS[c][0])}</b> · ${TLABEL[t].toLowerCase()}`,e);}
 });
 wheel.addEventListener('pointermove',moveTip);
-wheel.addEventListener('pointerout',e=>{const g=e.target.closest('[data-id],[data-t]');if(!g)return;if(g.contains(e.relatedTarget))return;hideTip();if(state.mode==='ego'){resetLinks();highlight(null);}});
+wheel.addEventListener('pointerout',e=>{if(e.pointerType==='touch')return;const g=e.target.closest('[data-id],[data-t]');if(!g)return;if(g.contains(e.relatedTarget))return;hideTip();if(state.mode==='ego'){resetLinks();highlight(null);}});
 function activate(g){if(!g)return;
   if(g.dataset.id){const B=BYID[g.dataset.id];hideTip();
-    if(B.isSpirit){const c=document.querySelector(`.sp[data-sid="${B.id}"]`);if(c){const tr=$('#spTrack');tr.scrollTo({left:c.offsetLeft-tr.offsetLeft,behavior:'smooth'});$('#spirits').scrollIntoView({block:'nearest',behavior:'smooth'});c.classList.add('hl');}}
+    if(B.isSpirit){if(!document.querySelector(`.sp[data-sid="${B.id}"]`)){state.spAll=true;renderSpirits();}
+      const c=document.querySelector(`.sp[data-sid="${B.id}"]`);if(c){c.scrollIntoView({block:'nearest',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});c.classList.add('hl');}}
     else{state.mode='ego';select(B);}}
-  else if(g.dataset.t!==undefined){const t=g.dataset.t;state.zoom=(t==='__all'||!t||state.zoom===t)?null:t;hideTip();renderWheel();}}
-wheel.addEventListener('click',e=>activate(e.target.closest('[data-id],[data-t]')));
-wheel.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){const g=e.target.closest('[data-id]');if(g){e.preventDefault();activate(g);}}});
+  else if(g.dataset.cat){state.cat=state.cat===g.dataset.cat?null:g.dataset.cat;hideTip();renderWheel();
+    if(state.cat)$('#catList').scrollIntoView({block:'nearest',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});}
+  else if(g.dataset.t!==undefined){const t=g.dataset.t;state.cat=null;state.zoom=(t==='__all'||!t||state.zoom===t)?null:t;hideTip();renderWheel();}}
+// ---------- anteprima al tocco (UX-04) ----------
+// col mouse il motivo è nel tooltip; al tocco il primo tocco seleziona e mostra l'anteprima, il secondo (o «Apri») apre
+let lastPT='mouse',peekId=null;
+wheel.addEventListener('pointerdown',e=>{lastPT=e.pointerType||'mouse';});
+function peekHTML(id){const B=BYID[id];if(!B)return'';
+  if(state.mode==='ego'&&state.sel){const r=S(state.sel,B);const [v]=verdict(r.total);
+    return `<div class="pk-t"><b>${esc(B.name)}</b><span class="muted">${esc(B.isSpirit?SGROUP[B.grp][0]:CATS[B.cat][0])}</span></div>
+      <p class="pk-v"><span class="vw">${vword(v)}</span> · ${TYPEUI[r.type].toLowerCase()} <span class="muted">${r.total}/30</span></p>
+      <p class="pk-w">${esc(firstSentence(r.summary))}</p>
+      <button type="button" class="btn pk-go" data-peek-open="${B.id}">${B.isSpirit?'Vedi come berlo':'Apri '+esc(B.name)}</button>`;}
+  return `<div class="pk-t"><b>${esc(B.name)}</b><span class="muted">${esc(CATS[B.cat][0])} · ${TLABEL[B.dom]}</span></div>
+    <p class="pk-w">Note principali: ${esc(topFams(B).join(', ')||'—')}</p>
+    <button type="button" class="btn pk-go" data-peek-open="${B.id}">Apri ${esc(B.name)}</button>`;}
+function showPeek(id,kind){peekId=id;const el=$('#wheelPeek');el.innerHTML=peekHTML(id);el.hidden=false;
+  if(state.mode==='ego'){highlight(id,kind);}else{wheel.querySelectorAll('.hl').forEach(n=>n.classList.remove('hl'));wheel.querySelector(`[data-id="${id}"]`)?.classList.add('hl');}}
+function hidePeek(){peekId=null;const el=$('#wheelPeek');if(el){el.hidden=true;el.innerHTML='';}}
+$('#wheelPeek').addEventListener('click',e=>{const b=e.target.closest('[data-peek-open]');if(!b)return;const g=wheel.querySelector(`[data-id="${b.dataset.peekOpen}"]`);hidePeek();activate(g);});
+wheel.addEventListener('click',e=>{const g=e.target.closest('[data-id],[data-t]');if(!g)return;
+  if(lastPT==='touch'&&g.dataset.id&&peekId!==g.dataset.id){showPeek(g.dataset.id,g.dataset.kind);return;}
+  hidePeek();activate(g);});
+// ---------- tastiera: roving tabindex (UX-05) ----------
+// un solo punto della ruota è raggiungibile con Tab; le frecce si muovono tra i punti, Invio apre
+function rove(){const ns=[...wheel.querySelectorAll('[data-nav]')];if(!ns.length)return;
+  const cur=(state.sel&&wheel.querySelector(`[data-nav][data-id="${state.sel.id}"]`))||(state.cat&&wheel.querySelector(`[data-nav][data-cat="${state.cat}"]`))||ns[0];
+  ns.forEach(n=>n.setAttribute('tabindex',n===cur?'0':'-1'));}
+wheel.addEventListener('keydown',e=>{const g=e.target.closest('[data-nav]');if(!g)return;
+  if(e.key==='Enter'||e.key===' '){e.preventDefault();const id=g.dataset.id,cat=g.dataset.cat,t=g.dataset.t;activate(g);
+    // dopo un nuovo disegno il focus resta sulla ruota: sullo stesso punto se c'è ancora, altrimenti sul primo
+    const back=(id&&wheel.querySelector(`[data-nav][data-id="${id}"]`))||(cat&&wheel.querySelector(`[data-nav][data-cat="${cat}"]`))||(t&&wheel.querySelector(`[data-nav][data-t="${t}"]:not([data-cat])`))||wheel.querySelector('[data-nav][tabindex="0"]');
+    if(back&&!$('#tab-ruota').hidden){wheel.querySelectorAll('[data-nav]').forEach(n=>n.setAttribute('tabindex',n===back?'0':'-1'));back.focus();}
+    return;}
+  const ns=[...wheel.querySelectorAll('[data-nav]')];const i=ns.indexOf(g);let j=-1;
+  if(e.key==='ArrowRight'||e.key==='ArrowDown')j=(i+1)%ns.length;else if(e.key==='ArrowLeft'||e.key==='ArrowUp')j=(i-1+ns.length)%ns.length;
+  else if(e.key==='Home')j=0;else if(e.key==='End')j=ns.length-1;else return;
+  e.preventDefault();g.setAttribute('tabindex','-1');ns[j].setAttribute('tabindex','0');ns[j].focus();});
 wheel.addEventListener('focusin',e=>{const g=e.target.closest('[data-id]');if(g&&state.mode==='ego')highlight(g.dataset.id,g.dataset.kind);});
 
+$('#egoAll').addEventListener('click',()=>{state.egoAll=!state.egoAll;renderWheel();});
 $('#mEgo').addEventListener('click',()=>{if(!state.sel)return;state.mode='ego';renderWheel();});
-$('#mBrowse').addEventListener('click',()=>{state.mode='browse';state.zoom=state.sel?state.sel.dom:null;renderWheel();});
+$('#mBrowse').addEventListener('click',()=>{state.mode='browse';state.zoom=state.sel?state.sel.dom:null;state.cat=state.sel?state.sel.dom+'|'+state.sel.cat:null;renderWheel();});
+$('#catList').addEventListener('click',e=>{const o=e.target.closest('[data-cl-open]');if(o){state.mode='ego';state.cat=null;select(BYID[o.dataset.clOpen]);$('#wheel').scrollIntoView({block:'nearest'});return;}
+  if(e.target.closest('[data-cl-close]')){state.cat=null;renderWheel();}});
 $('#rand').addEventListener('click',()=>{let f;do{f=FOODS[Math.floor(Math.random()*FOODS.length)];}while(f===state.sel);state.mode='ego';select(f);});
-document.querySelectorAll('#pairs .seg button').forEach(b=>b.addEventListener('click',()=>{state.filter=b.dataset.f;renderPairs();}));
+document.querySelectorAll('#pairs .seg button').forEach(b=>b.addEventListener('click',()=>{state.filter=b.dataset.f;state.pAll=false;renderPairs();}));
 $('#spTrack').addEventListener('click',e=>{const b=e.target.closest('[data-mkck]');if(!b||!state.sel)return;CK.ings=[state.sel];CK.base=BYID[b.dataset.mkck];showTab('cocktail');window.scrollTo({top:0});});
 $('#pairGrid').addEventListener('click',e=>{const o=e.target.closest('[data-open]'),c=e.target.closest('[data-check]');
   if(o){select(BYID[o.dataset.open]);window.scrollTo({top:0,behavior:'smooth'});}
@@ -392,11 +477,11 @@ $('#pairGrid').addEventListener('click',e=>{const o=e.target.closest('[data-open
 function assignTrio(){const used={};state.trio={};
   state.sps.forEach(rs=>{let best=null,bv=-1;state.parts.forEach(p=>{const sp=S(p.B,rs.B).total;if(sp<15)return;const v=p.total+sp-2.5*(used[p.B.id]||0);if(v>bv){bv=v;best=p.B;}});
     if(best){state.trio[rs.B.id]=best;used[best.id]=(used[best.id]||0)+1;}});}
-function select(f,fromHash){state.sel=f;state.parts=partnersOf(f);state.sps=spiritsOf(f);assignTrio();if(state.mode==='browse')state.zoom=f.dom;
+function select(f,fromHash){state.sel=f;state.egoAll=false;state.spAll=false;state.pAll=false;state.parts=partnersOf(f);state.sps=spiritsOf(f);assignTrio();if(state.mode==='browse')state.zoom=f.dom;
   renderWheel();renderProfile();renderPairs();if(mainCombo)mainCombo.set(f);
   if(!fromHash){showTab('ruota',true);if(location.hash!=='#'+f.id){try{history.replaceState(null,'','#'+f.id);}catch(e){location.hash=f.id;}}}}
 
-mainCombo=makeCombo($('#mainSearch'),{id:'q-main',placeholder:`Cerca tra ${FOODS.length} alimenti…`,source:()=>FOODS,keep:true,onPick:f=>{state.mode='ego';select(f);$('#q-main').blur();}});
+mainCombo=makeCombo($('#mainSearch'),{id:'q-main',placeholder:'Cerca un alimento',source:()=>FOODS,keep:true,onPick:f=>{state.mode='ego';select(f);$('#q-main').blur();}});
 mainCombo.set(state.sel);
 $('#q-main').addEventListener('blur',()=>setTimeout(()=>{if(document.activeElement!==$('#q-main'))mainCombo.set(state.sel);},200));
 document.addEventListener('keydown',e=>{if(e.key!=='/'||e.ctrlKey||e.metaKey)return;const t=e.target;if(t.closest&&t.closest('input,textarea,select'))return;if($('#tab-ruota').hidden)return;e.preventDefault();$('#q-main').focus();});
@@ -404,7 +489,7 @@ const comboA=makeCombo($('#cA'),{id:'q-a',placeholder:'Alimento A',source:()=>FO
 const comboB=makeCombo($('#cB'),{id:'q-b',placeholder:'Alimento o alcolico B',source:()=>FOODS.concat(SPIRITS),keep:true,onPick:f=>{state.B=f;renderCheck();},onClear:()=>{state.B=null;renderCheck();}});
 comboA.set(state.A);comboB.set(state.B);
 $('#stats').textContent=`${FOODS.length} alimenti · ${Object.keys(CATS).length} categorie · ${SPIRITS.length} alcolici`;
-renderMethod();
+renderMethod();renderExamples();
 if(state.sel)select(state.sel,true);else{renderWheel();renderProfile();renderPairs();}
 
 
@@ -425,17 +510,17 @@ function triangleSVG(t){
   h+=`<text x="180" y="166" text-anchor="middle" style="font-family:var(--f-display);font-size:19px;fill:var(--ink)">${t.structure}</text><text x="180" y="184" text-anchor="middle" style="font-family:var(--f-mono);font-size:10px;letter-spacing:.08em;fill:var(--muted)">STRUTTURA</text>`;
   return h+'</svg>';
 }
-function triCap(){return `<p class="tiny muted tricap"><span><svg width="22" height="8"><line x1="0" y1="4" x2="22" y2="4" style="stroke:var(--concord);stroke-width:2.5"/></svg>concordanza</span><span><svg width="22" height="8"><line x1="0" y1="4" x2="22" y2="4" style="stroke:var(--contrast);stroke-width:2.5;stroke-dasharray:5 4"/></svg>contrasto</span><span>spessore = punteggio</span></p>`;}
+function triCap(){return `<p class="tiny muted tricap"><span><svg width="22" height="8"><line x1="0" y1="4" x2="22" y2="4" style="stroke:var(--concord);stroke-width:2.5"/></svg>affinità</span><span><svg width="22" height="8"><line x1="0" y1="4" x2="22" y2="4" style="stroke:var(--contrast);stroke-width:2.5;stroke-dasharray:5 4"/></svg>contrasto</span><span>spessore = punteggio</span></p>`;}
 
 // ---- render ----
 function renderLensPick(){
-  $('#lensPick').innerHTML=`<span class="eyebrow">Lente del trio</span><div class="lensbar" role="group" aria-label="Lente del trio">${TLENS.map(l=>`<button type="button" data-lens="${l[0]}" aria-pressed="${state.lens===l[0]}">${l[1]}</button>`).join('')}</div><p class="tiny muted">${TLENS.find(l=>l[0]===state.lens)[2]}</p>`;
+  $('#lensPick').innerHTML=`<span class="eyebrow">Criterio per il terzo ingrediente</span><div class="lensbar" role="group" aria-label="Criterio per il terzo ingrediente">${TLENS.map(l=>`<button type="button" data-lens="${l[0]}" aria-pressed="${state.lens===l[0]}">${LENSUI[l[0]]}</button>`).join('')}</div><p class="tiny muted">${TLENS.find(l=>l[0]===state.lens)[2]}</p>`;
 }
 function renderSuggest(){
   const A=state.A,B=state.B;const host=$('#thirdSug');
   if(!A||!B||A===B){host.innerHTML='';return;}
   const L=TLENS.find(l=>l[0]===state.lens);const list=suggestThird(A,B,state.lens);
-  host.innerHTML=`<span class="eyebrow">Terzo ingrediente consigliato · ${L[1]} ${info('third','terzo ingrediente')}</span><ul class="sug">${list.map(x=>`<li><button type="button" data-setc="${x.C.id}" class="${state.C===x.C?'on':''}"><i style="background:${tcol(x.C.dom)}"></i><span class="sg-n"><b>${esc(x.C.name)}</b><small>${esc(lensReason(state.lens,A,B,x.C,x.t))}</small></span><span class="sg-s"><b>${fmtN(x.lv)}</b><em>/5</em><small>trio ${fmtN(x.t.total)}</small></span></button></li>`).join('')}</ul>`;
+  host.innerHTML=`<span class="eyebrow">Terzo ingrediente consigliato · ${LENSUI[state.lens]} ${info('third','terzo ingrediente')}</span><ul class="sug">${list.map(x=>`<li><button type="button" data-setc="${x.C.id}" class="${state.C===x.C?'on':''}"><i style="background:${tcol(x.C.dom)}"></i><span class="sg-n"><b>${esc(x.C.name)}</b><small>${esc(lensReason(state.lens,A,B,x.C,x.t))}</small></span><span class="sg-s"><b>${fmtN(x.lv)}</b><em>/5</em><small>trio ${fmtN(x.t.total)}</small></span></button></li>`).join('')}</ul>`;
 }
 function renderSide(){
   const A=state.A,B=state.B,C=state.C;if(!A||!B){$('#checkSide').innerHTML='';return;}
@@ -452,14 +537,14 @@ function renderTrioOut(){
   $('#checkOut').innerHTML=`
     <div class="trio-top">
       <div>
-        <div class="verdict"><span class="big">${fmtN(t.total)}<small>/30</small></span><div><div class="vtag" style="color:${vc}">${v}${info('score','punteggio')}</div><div class="chips" style="margin-top:4px"><span class="chip">${t.structure}</span>${info('structure','struttura')}</div></div></div>
+        ${verdictHead(t.total,v,vt,`<div class="chips"><span class="chip">${t.structure}</span>${info('structure','struttura')}</div>`)}
         <div style="margin:10px 0 4px"><div class="scale"><i></i><i></i><i></i><i></i><b style="left:calc(${(t.total/30*100).toFixed(1)}% - 1.5px)"></b></div><div class="scale-l"><span>0</span><span>10</span><span>17</span><span>24</span><span>30</span></div></div>
-        <p style="margin:10px 0 0"><b>${esc(t.T.map(I=>I.name).join(' + '))}.</b> ${esc(vt)} La coppia più forte è ${esc(best.p.A.name)} + ${esc(best.p.B.name)} (${fmtN(best.p.total)}, ${TYPELBL[best.p.type].toLowerCase()}).</p>
-        <p class="lensfocus"><b>${esc(sel.n)} · ${fmtN(sel.v)}/5.</b> ${esc(sel.why)}</p>
+        <p style="margin:10px 0 0"><b>${esc(t.T.map(I=>I.name).join(' + '))}.</b> La coppia più forte è ${esc(best.p.A.name)} + ${esc(best.p.B.name)} (${fmtN(best.p.total)}, ${TYPEUI[best.p.type].toLowerCase()}).</p>
+        <p class="lensfocus"><b>${LENSUI[state.lens]} · ${fmtN(sel.v)}/5.</b> ${esc(sel.why)}</p>
       </div>
       <div>${triangleSVG(t)}${triCap()}</div>
     </div>
-    <table class="lens tlens"><tbody>${t.rows.map(x=>`<tr class="${x.k===state.lens?'sel':''}"><td>${x.n}${info(x.n)}</td><td>${esc(x.why)}</td><td class="v">${fmtN(x.v)}/5</td></tr>`).join('')}</tbody></table>
+    <details class="lensd"><summary>I criteri del trio, uno per uno</summary><table class="lens tlens"><tbody>${t.rows.map(x=>`<tr class="${x.k===state.lens?'sel':''}"><td>${x.n}${info(x.n)}</td><td>${esc(x.why)}</td><td class="v">${fmtN(x.v)}/5</td></tr>`).join('')}</tbody></table></details>
     <div class="trio-roles">
       <div><span class="eyebrow">Ruoli e dosi ${info('roles','ruoli e dosi')}</span><p class="tiny" style="margin-top:4px"><b>Base:</b> ${esc(r.base.name)} · <b>Complemento:</b> ${esc(r.comp.name)} · <b>Accento:</b> ${esc(r.accent.name)}</p><p class="tiny">Rapporto di partenza ${r.ratio}, in peso o in volume, poi correggi all'assaggio.</p></div>
       <div><span class="eyebrow">Da bere con il trio ${info('spirits','alcolici del trio')}</span><div class="list-inline" style="margin-top:6px">${sp.map(x=>`<span class="chip">${esc(x.s.name)} <span class="muted" style="font-family:var(--f-mono)">${fmtN(x.m)}</span></span>`).join('')}</div></div>
@@ -469,13 +554,21 @@ function renderTrioOut(){
 function renderCheck(){
   const A=state.A,B=state.B,C=state.C;
   if(!$('#lensPick'))return;
+  const ready=A&&B&&A!==B;
+  // il criterio e il terzo ingrediente compaiono solo quando c'è una coppia (UX-06)
+  $('#cCwrap').hidden=!ready;
+  if(!ready){$('#lensPick').innerHTML='';$('#checkSide').innerHTML='';$('#thirdSug').innerHTML='';
+    $('#checkOut').innerHTML=`<div class="empty"><p>${A&&A===B?'Scegli due ingredienti diversi.':'Scegli due ingredienti, oppure parti da un esempio:'}</p>
+      <div class="pairex">${PAIR_EX.map(([a,b])=>`<button type="button" class="ex" data-pair="${a.id}|${b.id}"><i style="background:${tcol(a.dom)}"></i>${esc(a.name)} + ${esc(b.name)}</button>`).join('')}</div></div>`;return;}
   renderLensPick();
-  if(!A||!B||A===B){$('#checkOut').innerHTML='<p class="muted">Scegli almeno due ingredienti diversi.</p>';$('#checkSide').innerHTML='';$('#thirdSug').innerHTML='';return;}
   if(C&&(C===A||C===B))state.C=null;
   renderSuggest();renderSide();
   if(state.C)renderTrioOut();else renderPairOut();
   $('#cClear').hidden=!state.C;
 }
+var PAIR_EX=[['Gorgonzola','Pera'],['Fragola','Basilico'],['Cioccolato fondente','Arancia']].map(p=>p.map(n=>BYNAME[n])).filter(p=>p[0]&&p[1]);
+$('#checkOut').addEventListener('click',e=>{const b=e.target.closest('[data-pair]');if(!b)return;const [a,c]=b.dataset.pair.split('|').map(id=>BYID[id]);
+  state.A=a;state.B=c;state.C=null;comboA.set(a);comboB.set(c);comboC.set(null);renderCheck();});
 var comboC=makeCombo($('#cC'),{id:'q-c',placeholder:'Terzo ingrediente (facoltativo)',source:()=>FOODS.concat(SPIRITS),keep:true,onPick:f=>{state.C=f;renderCheck();},onClear:()=>{state.C=null;renderCheck();}});
 $('#cClear').addEventListener('click',()=>{state.C=null;comboC.set(null);renderCheck();});
 $('#lensPick').addEventListener('click',e=>{const b=e.target.closest('[data-lens]');if(!b)return;state.lens=b.dataset.lens;renderCheck();});
@@ -487,6 +580,7 @@ const TABS=['ruota','verifica','cocktail'];
 function showTab(t,silent){
   TABS.forEach(k=>{$('#tab-'+k).hidden=k!==t;const b=$('#tb-'+k);b.setAttribute('aria-selected',String(k===t));b.tabIndex=k===t?0:-1;});
   $('#ruotaTools').hidden=t!=='ruota';
+  if(t==='ruota')renderWheel();
   if(!silent){const h=t==='ruota'?(state.sel?'#'+state.sel.id:''):'#'+t;if(location.hash!==h){try{history.replaceState(null,'',h||location.pathname+location.search);}catch(e){location.hash=h;}}}
   if(t==='cocktail')renderCocktail();
 }
@@ -506,7 +600,7 @@ const MODELBL={classic:'Classica',lab:'Laboratorio',low:'A bassa gradazione'};
 const MODEDESC={classic:'Tecniche da bancone: succhi freschi, sciroppi, infusioni a freddo, pestato.',lab:'Roner, fat-wash, acidi corretti con citrico e malico, carbonazione.',low:'Stessa idea con un vino aromatizzato o fortificato come base.'};
 
 
-const SHELVES=[['Stirred',['oldfashioned','martini','negroni']],['Shaken',['sour','sour_albume','flip','royale']],['Lunghi e costruiti',['collins','highball','spritz','julep']],['Speciali',['tiki','milkpunch']]];
+const SHELVES=[['Mescolati',['oldfashioned','martini','negroni']],['Shakerati',['sour','sour_albume','flip','royale']],['Lunghi',['collins','highball','spritz','julep']],['Speciali',['tiki','milkpunch']]];
 const MODEICON={classic:'Bancone',lab:'Roner e acidi',low:'Low ABV'};
 const ckFoods=()=>CK.ings.filter(i=>!i.isSpirit);
 const ingBase=()=>CK.ings.find(i=>i.isSpirit&&(i.grp==='bia'||i.grp==='inv'))||null;
@@ -557,31 +651,55 @@ function renderBase(){
       <span class="bmeter"><span class="bar"><i style="width:${(x.mean/30*100).toFixed(0)}%"></i></span><span class="num">${fmt(x.mean)}<em>/30</em></span></span>
       <span class="bwhy">${x.ov.length?'Ponte: '+esc(listIt(x.ov)):'Contrasto più che affinità'}</span>
       ${x.fit?`<span class="bfit">Tipico dello stile</span>`:''}
-      <span class="bnote">Lega meglio con ${esc(x.best.f.name)}: ${esc(TYPELBL[x.best.r.type].toLowerCase())}.</span>
+      <span class="bnote">Lega meglio con ${esc(x.best.f.name)}: ${esc(TYPEUI[x.best.r.type].toLowerCase())}.</span>
       <div class="bradar" aria-hidden="true">${radar(FAM.map(()=>({t:''})),[{v:mixAr,c:'var(--muted)',fo:.12},{v:x.s.ar,c:'var(--spirit)',fo:.28}],56,4)}</div>
       <ul class="bper" aria-label="Punteggio con ogni ingrediente">${x.per.map(p=>`<li><span>${esc(p.f.name)}</span><span class="bar"><i style="width:${(p.r.total/30*100).toFixed(0)}%"></i></span><b>${fmt(p.r.total)}</b></li>`).join('')}</ul>
     </button>`;};
   const chips=`<div class="bfilter" role="group" aria-label="Tipo di base">${[['all','Tutte']].concat(BGROUPS.map(g=>[g[0],g[1]])).filter(g=>g[0]==='all'||suggestBases(fs.length?fs:[FOODS[0]],CK.style,g[0]).length).map(g=>`<button type="button" data-bg="${g[0]}" aria-pressed="${CK.bgroup===g[0]}">${g[1]}</button>`).join('')}</div>`;
-  host.innerHTML=fs.length?chips+`<div class="bcards">${top.map(x=>card(x,sug.findIndex(y=>y.s===x.s))).join('')}</div>`
-    :`<p class="note">Aggiungi almeno un alimento: il suggerimento confronta il profilo di ogni base (distillati, amari, vermouth, liquori) con quello degli ingredienti.</p>`;
+  // la base in una riga; «Cambia» apre filtri, carte e tendina (UX-11)
+  const open=CK.baseOpen&&fs.length>0;
+  if(!eb){host.innerHTML=`<p class="note">Aggiungi un ingrediente: ti propongo la base più adatta.</p>`;$('.force').hidden=true;}
+  else{const ex=sug.find(x=>x.s===eb);const lbl=CK.base?'Base scelta da te':ib?'Base dai tuoi ingredienti':'Base consigliata';
+    host.innerHTML=`<div class="bline"><span class="bl-l">${lbl}:</span> <b>${esc(eb.name)}</b>${ex&&ex.ov.length?`<span class="bl-w">note in comune: ${esc(listIt(ex.ov))}</span>`:''}${fs.length?`<button type="button" class="link" data-bopen aria-expanded="${open}">${open?'Chiudi':'Cambia'}</button>`:''}</div>`
+      +(open?chips+`<div class="bcards">${top.map(x=>card(x,sug.findIndex(y=>y.s===x.s))).join('')}</div>`:'');
+    $('.force').hidden=!open;}
   const sel=$('#ckBase');
   sel.innerHTML=`<option value="">${ib&&!CK.base?'Dai tuoi ingredienti: '+esc(ib.name):'Consigliato'+(sug[0]?': '+esc(sug[0].s.name):'')}</option>`+
     BGROUPS.map(([g,l,fn])=>`<optgroup label="${l}">${BASES.filter(fn).filter(s=>CK.style!=='spritz'||!(s.grp==='bia'||s.grp==='inv')||true).map(s=>{const x=sug.find(y=>y.s===s);const ok=styleFit(s,CK.style).ok;return `<option value="${s.id}"${CK.base===s?' selected':''}>${esc(s.name)}${x?' · '+fmt(x.mean)+'/30':''}${ok?'':' · non adatto allo stile'}</option>`;}).join('')}</optgroup>`).join('');
   $('#ckReset').hidden=!CK.base;
 }
-$('#ckBaseBox').addEventListener('click',e=>{const g=e.target.closest('[data-bg]');if(g){CK.bgroup=g.dataset.bg;renderBase();return;}const b=e.target.closest('[data-base]');if(!b)return;const s=BYID[b.dataset.base];
+$('#ckBaseBox').addEventListener('click',e=>{if(e.target.closest('[data-bopen]')){CK.baseOpen=!CK.baseOpen;renderBase();return;}const g=e.target.closest('[data-bg]');if(g){CK.bgroup=g.dataset.bg;renderBase();return;}const b=e.target.closest('[data-base]');if(!b)return;const s=BYID[b.dataset.base];
   const sug=suggestBases(ckFoods(),CK.style);const auto=ingBase()||sug[0]?.s;CK.base=s===auto?null:s;renderCocktail();});
 $('#ckBase').addEventListener('change',e=>{CK.base=BYID[e.target.value]||null;renderCocktail();});
 $('#ckReset').addEventListener('click',()=>{CK.base=null;renderCocktail();});
 
 // ---- 3. stile ----
 function renderStyles(){
+  stPeek=null;$('#ckStylePeek').hidden=true;
   $('#ckStyles').innerHTML=SHELVES.map(([lbl,ids])=>`<div class="shelf"><span class="shelf-l">${lbl}</span><div class="shelf-row">${ids.map(id=>{const s=STY[id];
     const fit=styleFit(effBaseFor(id),id);
-    return `<button type="button" class="glass${fit.ok?'':' nofit'}" data-sty="${id}" aria-pressed="${id===CK.style}" aria-description="${esc(s.fam+'. '+s.desc+(fit.ok?'':' Non adatto: '+fit.why))}">${fit.ok?'':'<i class="nf" aria-hidden="true">×</i>'}${glassSVG(id,56,s.name)}<span>${esc(s.name)}</span></button>`;}).join('')}</div></div>`).join('');
-  const st=STY[CK.style];
+    return `<button type="button" class="glass${fit.ok?'':' nofit'}" data-sty="${id}" aria-pressed="${id===CK.style}" aria-description="${esc(s.fam+'. '+s.desc+(fit.ok?'':' Non adatto: '+fit.why))}">${fit.ok?'':'<i class="nf" aria-hidden="true">×</i>'}${glassSVG(id,56,s.name)}<span>${esc(s.name)}</span>${CK.styleAuto&&id===CK.style?'<small class="sugtag">suggerito</small>':''}</button>`;}).join('')}</div></div>`).join('');
+  $('#ckStyHint').textContent=CK.styleAuto&&CK.style?`Suggerito: ${STY[CK.style].name}. Scegli un altro bicchiere per cambiare la ricetta.`:'';
 }
-$('#ckStyles').addEventListener('click',e=>{const b=e.target.closest('[data-sty]');if(!b)return;CK.style=b.dataset.sty;renderCocktail();});
+// stile suggerito appena c'è un ingrediente (UX-12). Criterio: si tiene la base consigliata senza stile;
+// si scartano gli stili non adatti a quella base (styleFit) e quelli che la combinazione non regge (coherence);
+// tra i rimasti vince quello in cui la base è tipica (PREFB, via suggestBases().fit); a parità, il più versatile
+// secondo l'ordine qui sotto (dal più tollerante al più specifico).
+const STY_VERSATILE=['sour','highball','collins','spritz','negroni','oldfashioned','julep','martini','royale','sour_albume','flip','tiki','milkpunch'];
+function autoStyle(){const fs=ckFoods();const b0=CK.base||ingBase()||suggestBases(fs,null)[0]?.s||null;if(!b0)return null;
+  let best=null,bv=-1;STY_VERSATILE.filter(id=>STY[id]).forEach(id=>{if(!styleFit(b0,id).ok)return;let v=1;
+    if(!coherence(CK.ings,id,b0).block.length)v+=4;
+    if(fs.length&&suggestBases(fs,id).find(y=>y.s===b0)?.fit)v+=2;
+    if(v>bv){bv=v;best=id;}});return best;}
+let stPT='mouse',stPeek=null;
+$('#ckStyles').addEventListener('pointerdown',e=>{stPT=e.pointerType||'mouse';});
+$('#ckStyles').addEventListener('click',e=>{const b=e.target.closest('[data-sty]');if(!b)return;
+  // al tocco il primo tocco mostra la descrizione del bicchiere, il secondo lo sceglie (UX-04)
+  if(stPT==='touch'&&stPeek!==b.dataset.sty&&b.dataset.sty!==CK.style){stPeek=b.dataset.sty;const el=$('#ckStylePeek');
+    el.innerHTML=`<p class="pk-w">${tipHTML(b)}</p><button type="button" class="btn pk-go" data-pick-sty="${b.dataset.sty}">Scegli ${esc(STY[b.dataset.sty].name)}</button>`;el.hidden=false;
+    $('#ckStyles').querySelectorAll('.glass').forEach(x=>x.classList.toggle('peeked',x===b));return;}
+  stPeek=null;$('#ckStylePeek').hidden=true;CK.style=b.dataset.sty;CK.styleAuto=false;renderCocktail();});
+$('#ckStylePeek').addEventListener('click',e=>{const b=e.target.closest('[data-pick-sty]');if(!b)return;stPeek=null;$('#ckStylePeek').hidden=true;CK.style=b.dataset.pickSty;CK.styleAuto=false;renderCocktail();});
 
 // ---- 4. ricette ----
 function sheet(R,ins){
@@ -622,12 +740,15 @@ function renderRecipes(){
       <span class="rtag ${r.mode}">${MODELBL[r.mode]}</span><b>${esc(drinkName(r,ins))}</b><span class="tk-m">${esc(r.base?r.base.name:r.mods[0]?.name||'')} · ~${fmt(r.abv)}% · ${r.vol} ml</span><span class="tk-d">${esc(MODEDESC[r.mode])}</span></button>`).join('')}</div>${sheet(R,ins)}`;
 }
 $('#ckOut').addEventListener('click',e=>{const b=e.target.closest('[data-view]');if(b){CK.view=b.dataset.view;renderRecipes();return;}
-  const s=e.target.closest('[data-gosty]');if(s){CK.style=s.dataset.gosty;renderCocktail();return;}
+  const s=e.target.closest('[data-gosty]');if(s){CK.style=s.dataset.gosty;CK.styleAuto=false;renderCocktail();return;}
   const g=e.target.closest('[data-gobase]');if(g){CK.base=BYID[g.dataset.gobase];renderCocktail();return;}
   const a=e.target.closest('[data-goadd]');if(a&&CK.ings.length<5){CK.ings.push(BYID[a.dataset.goadd]);renderCocktail();}});
 $('#ckFromWheel').addEventListener('click',()=>{if(!state.sel){showTab('ruota');$('#q-main').focus();return;}const p=state.parts.slice(0,2).map(r=>r.B);CK.ings=[state.sel,...p];CK.base=null;renderCocktail();});
 
-function renderCocktail(){renderIngs();renderBase();renderStyles();renderRecipes();}
+function renderCocktail(){
+  if(!CK.ings.length){if(CK.styleAuto){CK.style=null;CK.styleAuto=false;}}
+  else if(!CK.style||CK.styleAuto){CK.style=autoStyle();CK.styleAuto=!!CK.style;}
+  renderIngs();renderBase();renderStyles();renderRecipes();}
 
 function route(){const h=location.hash.slice(1);if(h==='verifica'||h==='cocktail'){showTab(h,true);return;}
   showTab('ruota',true);const f=BYID[h];if(f&&!f.isSpirit&&f!==state.sel){state.mode='ego';select(f,true);}}

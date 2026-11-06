@@ -20,15 +20,15 @@
   </header>
 
   <nav class="tabbar" id="tabbar" role="tablist" aria-label="Sezioni">
-    <button type="button" role="tab" id="tb-ruota" aria-controls="tab-ruota" aria-selected="true"><span class="tb-t">Ruota e abbinamenti</span><span class="tb-d">Esplora un alimento, i suoi abbinamenti e gli alcolici</span></button>
-    <button type="button" role="tab" id="tb-verifica" aria-controls="tab-verifica" aria-selected="false" tabindex="-1"><span class="tb-t">Pairing Studio</span><span class="tb-d">Verifica una coppia o un trio di ingredienti</span></button>
-    <button type="button" role="tab" id="tb-cocktail" aria-controls="tab-cocktail" aria-selected="false" tabindex="-1"><span class="tb-t">Cocktail creator</span><span class="tb-d">Dagli ingredienti a una ricetta completa</span></button>
+    <button type="button" role="tab" id="tb-ruota" aria-controls="tab-ruota" aria-selected="true"><span class="tb-t">Esplora un ingrediente</span><span class="tb-d">Con cosa si abbina e cosa berci</span></button>
+    <button type="button" role="tab" id="tb-verifica" aria-controls="tab-verifica" aria-selected="false" tabindex="-1"><span class="tb-t">Prova un abbinamento</span><span class="tb-d">Due o tre ingredienti stanno bene insieme?</span></button>
+    <button type="button" role="tab" id="tb-cocktail" aria-controls="tab-cocktail" aria-selected="false" tabindex="-1"><span class="tb-t">Crea un drink</span><span class="tb-d">Da ciò che hai a una ricetta completa</span></button>
   </nav>
 
   <div id="tab-ruota" role="tabpanel" aria-labelledby="tb-ruota" class="tabpanel">
     <div class="intro">
-      <div class="intro-t"><h2>Ruota degli abbinamenti</h2>
-        <p>Scegli un alimento. Al centro trovi i suoi cinque gusti, intorno gli alimenti con cui si sposa (linea piena se per concordanza, tratteggiata se per contrasto) e all'esterno gli alcolici adatti. Passa sopra un nodo per leggere il motivo, cliccalo per aprirlo.</p></div>
+      <div class="intro-t"><h2>Esplora un ingrediente</h2>
+        <p>Scegli un alimento: vedi con cosa si abbina e cosa berci.</p></div>
       <div class="tools">
         <div id="ruotaTools" class="tools">
           <div class="seg" role="group" aria-label="Vista della ruota">
@@ -40,17 +40,22 @@
       </div>
     </div>
 
+  <div class="centerpick finder">
+    <label for="q-main" class="eyebrow">Cerca un alimento</label>
+    <div class="searchbox"><svg class="sicon" viewBox="0 0 20 20" aria-hidden="true"><circle cx="8.5" cy="8.5" r="5.5" style="fill:none;stroke:currentColor;stroke-width:2"/><path d="M13 13l4.5 4.5" style="stroke:currentColor;stroke-width:2;stroke-linecap:round"/></svg><div class="combo" id="mainSearch"></div><kbd class="kbd-hint" title="Premi / per cercare">/</kbd></div>
+    <div class="examples" id="examples"></div>
+  </div>
+
   <div class="main">
     <section class="panel stage" aria-label="Ruota">
-      <div class="centerpick">
-        <label for="q-main" class="eyebrow">Al centro della ruota</label>
-        <div class="searchbox"><svg class="sicon" viewBox="0 0 20 20" aria-hidden="true"><circle cx="8.5" cy="8.5" r="5.5" style="fill:none;stroke:currentColor;stroke-width:2"/><path d="M13 13l4.5 4.5" style="stroke:currentColor;stroke-width:2;stroke-linecap:round"/></svg><div class="combo" id="mainSearch"></div><kbd title="Premi / per cercare">/</kbd></div>
-      </div>
       <div class="wheel-head">
         <span class="eyebrow" id="wheelCap">Gusto · alimento · abbinamenti · alcolici</span>
-        <span class="tiny muted" id="wheelHint">Passa sopra un nodo per il motivo, clicca per aprirlo.</span>
+        <span class="tiny muted" id="wheelHint"></span>
+        <button type="button" class="link" id="egoAll" hidden></button>
       </div>
       <svg id="wheel" viewBox="-540 -540 1080 1080" role="img" aria-label="Ruota degli abbinamenti"></svg>
+      <div class="peek" id="wheelPeek" aria-live="polite" hidden></div>
+      <div class="catlist" id="catList" aria-live="polite" hidden></div>
       <div class="legend" id="legend"></div>
     </section>
 
@@ -60,9 +65,9 @@
   <section id="spirits" class="rail" aria-label="Abbinamenti alcolici" hidden>
     <div class="rail-head">
       <div><span class="eyebrow">Abbinamenti alcolici</span><h2 id="spTitle">Da bere con</h2></div>
-      <div class="rail-nav"><span class="rail-count" id="spCount"></span><button type="button" class="rnav" data-rail="spTrack" data-dir="-1" aria-label="Alcolici precedenti">←</button><button type="button" class="rnav" data-rail="spTrack" data-dir="1" aria-label="Alcolici successivi">→</button></div>
     </div>
-    <div class="rail-track" id="spTrack" tabindex="0" aria-label="Elenco degli alcolici abbinati"></div>
+    <div class="rail-track" id="spTrack" aria-label="Elenco degli alcolici abbinati"></div>
+    <button type="button" class="btn more" id="spMore" hidden></button>
   </section>
 
   <section id="pairs" class="rail" aria-label="Abbinamenti alimentari">
@@ -70,27 +75,28 @@
       <div><span class="eyebrow">Abbinamenti alimentari</span><h2 id="pairsTitle">Con cosa si sposa</h2></div>
       <div class="rail-nav"><div class="seg" role="group" aria-label="Filtra per tipo">
         <button type="button" data-f="all" aria-pressed="true">Tutti</button>
-        <button type="button" data-f="concordanza" aria-pressed="false">Concordanza</button>
+        <button type="button" data-f="concordanza" aria-pressed="false">Affinità</button>
         <button type="button" data-f="contrasto" aria-pressed="false">Contrasto</button>
-      </div><span class="rail-count" id="pairCount"></span><button type="button" class="rnav" data-rail="pairGrid" data-dir="-1" aria-label="Abbinamenti precedenti">←</button><button type="button" class="rnav" data-rail="pairGrid" data-dir="1" aria-label="Abbinamenti successivi">→</button></div>
+      </div></div>
     </div>
-    <div class="rail-track" id="pairGrid" tabindex="0" aria-label="Elenco degli alimenti abbinati"></div>
+    <div class="rail-track" id="pairGrid" aria-label="Elenco degli alimenti abbinati"></div>
+    <button type="button" class="btn more" id="pairMore" hidden></button>
   </section>
 
   </div>
 
   <div id="tab-verifica" role="tabpanel" aria-labelledby="tb-verifica" class="tabpanel" hidden>
-    <div class="intro"><div class="intro-t"><h2>Pairing Studio</h2>
-      <p>Metti alla prova due o tre ingredienti, anche un alcolico. Il punteggio su 30 somma sei lenti da 0 a 5. Con due ingredienti scegli una lente (piramide, equilibrio, intensità o anello debole) e ti consiglio il terzo che la migliora; con tre vedi il triangolo, i ruoli e le dosi. Più sotto trovi come ragiona il metodo.</p></div></div>
+    <div class="intro"><div class="intro-t"><h2>Prova un abbinamento</h2>
+      <p>Scegli due ingredienti, anche un alcolico: ti dico se stanno bene insieme, perché e quale terzo ingrediente li completa.</p></div></div>
   <section id="check" aria-label="Verifica una coppia">
     <div class="sec-head">
       <div><span class="eyebrow">Compatibilità</span><h3 class="sec-t">Coppia o trio</h3></div>
     </div>
     <div class="check">
       <div class="panel pick">
-        <label>Ingrediente A<div class="combo" id="cA"></div></label>
-        <label>Ingrediente B (anche un alcolico)<div class="combo" id="cB"></div></label>
-        <label>Ingrediente C<span class="cwrap"><div class="combo" id="cC"></div><button type="button" class="x" id="cClear" aria-label="Togli il terzo ingrediente" hidden>×</button></span></label>
+        <label>Primo ingrediente<div class="combo" id="cA"></div></label>
+        <label>Secondo ingrediente (anche un alcolico)<div class="combo" id="cB"></div></label>
+        <label id="cCwrap" hidden>Terzo ingrediente (facoltativo)<span class="cwrap"><div class="combo" id="cC"></div><button type="button" class="x" id="cClear" aria-label="Togli il terzo ingrediente" hidden>×</button></span></label>
         <div id="lensPick" class="lenspick"></div>
         <div id="thirdSug"></div>
         <div id="checkSide"></div>
@@ -108,8 +114,8 @@
   </div>
 
   <div id="tab-cocktail" role="tabpanel" aria-labelledby="tb-cocktail" class="tabpanel" hidden>
-    <div class="intro"><div class="intro-t"><h2>Cocktail creator</h2>
-      <p>Inserisci da 1 a 5 ingredienti: ti suggerisco la base più vicina al loro profilo (un distillato, ma anche un bitter, un vermouth o un liquore), e puoi sceglierne un'altra. Poi scegli lo stile e ricevi le ricette complete: da bancone, da laboratorio e, quando la base è forte, a bassa gradazione.</p></div></div>
+    <div class="intro"><div class="intro-t"><h2>Crea un drink</h2>
+      <p>Aggiungi da 1 a 5 ingredienti: ti propongo subito una base e una ricetta, poi puoi cambiare base e bicchiere.</p></div></div>
     <div class="builder">
       <section class="step" aria-labelledby="h-ing">
         <header class="step-h"><span class="sn">1</span><h3 id="h-ing">Ingredienti</h3><span class="tiny muted" id="ckCount"></span></header>
@@ -119,13 +125,14 @@
         <div id="ckMix"></div>
       </section>
       <section class="step" aria-labelledby="h-base">
-        <header class="step-h"><span class="sn">2</span><h3 id="h-base">Base</h3><span class="tiny muted">per vicinanza aromatica e coerenza con lo stile</span></header>
+        <header class="step-h"><span class="sn">2</span><h3 id="h-base">Base</h3></header>
         <div id="ckBaseBox"></div>
         <div class="force"><label class="tiny muted" for="ckBase">Oppure scegli tu</label><select id="ckBase" class="sel"></select><button type="button" class="link" id="ckReset" hidden>Torna al consigliato</button></div>
       </section>
       <section class="step wide" aria-labelledby="h-sty">
-        <header class="step-h"><span class="sn">3</span><h3 id="h-sty">Stile del drink</h3></header>
+        <header class="step-h"><span class="sn">3</span><h3 id="h-sty">Bicchiere e stile</h3><span class="tiny muted" id="ckStyHint"></span></header>
         <div id="ckStyles" class="shelves"></div>
+        <div class="peek" id="ckStylePeek" aria-live="polite" hidden></div>
       </section>
     </div>
     <section aria-label="Ricette"><div class="sec-head" style="margin-bottom:12px"><div><span class="eyebrow">Ricette</span><h2 id="ckVerTitle">Tre versioni, stessa idea</h2></div></div>
