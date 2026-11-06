@@ -13,6 +13,7 @@ export const ORIG = originsData;
 export const CATS = Object.fromEntries(Object.entries(categoriesData).map(([k,v])=>[k,[v.nome,v.breve,v.estrazione]]));
 export const ALLERG = Object.fromEntries(Object.entries(categoriesData).filter(([,v])=>v.allergene).map(([k,v])=>[k,v.allergene]));
 export const SGROUP = Object.fromEntries(Object.entries(groupsData).map(([k,v])=>[k,[v.nome,v.struttura]]));
+
 export const TYPELBL = {concordanza:'Concordanza',contrasto:'Contrasto'};
 export const TK = ['dolce','salato','acido','umami','amaro'];           // ordine nei dati
 export const TORDER = ['dolce','acido','amaro','umami','salato'];       // ordine sulla ruota

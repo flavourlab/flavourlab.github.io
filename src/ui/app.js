@@ -1,193 +1,38 @@
 // Interfaccia: ruota, Pairing Studio e Cocktail creator.
-// ===== ICONE 8-BIT DEGLI STILI =====
+// ===== ICONE DEI BICCHIERI (tratto sottile) =====
+// s = tratto del bicchiere, lq = liquido, ac = garnish/dettagli. --c è il colore mostrato al passaggio del mouse.
 import { ALLERG, BYID, BYNAME, CATS, FAM, FOODS, ORIG, SGROUP, SPIRITS, TLABEL, TORDER, TYPELBL, norm } from '../domain/core.js';
 import { S, howTo, listIt, monthsTxt, partnersOf, score, spiritsOf, trioSpirits, verdict } from '../domain/scoring.js';
 import { TLENS, fmtN, lensReason, roles, spiritsForTrio, suggestThird, trio } from '../domain/trio.js';
 import { ABV, BASES, BGROUPS, STY, abvOf, buildRecipe, coherence, fmt, styleFit, suggestBases } from '../domain/recipes.js';
-const PX_ROCKS=(liq,peel)=>[
-"................",
-"................",
-"................",
-"...........PP...",
-"..o........PPo..",
-"..og.........o..",
-"..og.iiiiii..o..",
-"..ogLiwiiiiLLo..",
-"..ogLiiiiiiLLo..",
-"..ogLiiiiiiLLo..",
-"..ogLiiiiiiLLo..",
-"..ogLLLLLLLLLo..",
-"..ogLLLLLLLLLo..",
-"..oooooooooooo..",
-"..oggggggggggo..",
-"..oooooooooooo.."].map(r=>r.replace(/L/g,liq).replace(/P/g,peel));
-const PX_COUPE=(top1,top2,liq,garn)=>{const rows=[
-"................",
-garn?"............ll..":"................",
-garn?"...........lwwl.":"................",
-"oooooooooooooooo",
-"o"+top1+"o",
-"o"+top2+"o",
-".o"+liq.repeat(12)+"o.",
-"..o"+liq.repeat(10)+"o..",
-"...o"+liq.repeat(8)+"o...",
-"....oooooooo....",
-".......oo.......",
-".......oo.......",
-".......oo.......",
-".......oo.......",
-"....oooooooo....",
-"................"];return rows;};
-const SPRITES={
-  oldfashioned:PX_ROCKS('a','p'),
-  negroni:PX_ROCKS('r','q'),
-  milkpunch:PX_ROCKS('h','l'),
-  martini:[
-"...........d....",
-"..........d.....",
-".........d......",
-"ooooooood0oooooo".replace('0','o'),
-".occcccceecccco.".slice(0,16),
-"..occcceecccco..",
-"...occcccccco...",
-"....occcccco....",
-".....occcco.....",
-"......occo......",
-".......oo.......",
-".......oo.......",
-".......oo.......",
-".......oo.......",
-"....oooooooo....",
-"................"],
-  sour:PX_COUPE('y'.repeat(14),'y'.repeat(14),'y',true),
-  sour_albume:PX_COUPE('fffffrffffrfff','ffffffffffffff','y',false),
-  collins:[
-".........z......",
-"....o....z.o....",
-"....og...z.o....",
-"....ogyyyzyo....",
-"....ogiiyzyo....",
-"....ogiiyzbo....",
-"....ogyiizyo....",
-"....ogybizyo....",
-"....ogiiyzyo....",
-"....ogiiyzbo....",
-"....ogyyiiyo....",
-"....ogybiiyo....",
-"....ogyyyyyo....",
-"....ogyybyyo....",
-"....oooooooo....",
-"....oooooooo...."],
-  highball:[
-"................",
-"..........ll....",
-"...o......llo...",
-"...ogcccccclo...",
-"...ogiicccbco...",
-"...ogiiccicco...",
-"...ogcciicbco...",
-"...ogcbiiccco...",
-"...ogciicccbo...",
-"...ogciiciico...",
-"...ogcccciico...",
-"...ogcbccccco...",
-"...ogccccbcco...",
-"...ogccccccco...",
-"...oooooooooo...",
-"...oooooooooo..."],
-  julep:[
-"................",
-".....mm.m.......",
-"....mmmmmm.z....",
-"....imimmi.z....",
-"...iiiiiiiiiz...",
-"...oooooooooo...",
-"...owssssssso...",
-"...owswsssswo...",
-"...owsssssswo...",
-"...owsswssssо...".replace('о','o'),
-"...owssssssso...",
-"...owsssswsso...",
-"...owssssssso...",
-"....oooooooo....",
-".....oooooo.....",
-"....oooooooo...."],
-  flip:[
-"................",
-"................",
-"................",
-"................",
-"...oooooooooo...",
-"...onkknkknko...",
-"...okkkkkkkko...",
-"...okkkkkkkko...",
-"....okkkkkko....",
-".....okkkko.....",
-"......oooo......",
-".......oo.......",
-".......oo.......",
-".......oo.......",
-".....oooooo.....",
-"................"],
-  spritz:[
-"................",
-"....oooooooo....",
-"...o........o...",
-"..og.........o..".slice(0,13)+"o..",
-"..ogppqqqpppo..".replace('po..','ppo..'),
-"..ogpqwwqpbpo..".replace('po..','ppo..'),
-"..ogppqqqiipo..".replace('po..','ppo..'),
-"..ogpbppppbpo..".replace('po..','ppo..'),
-"...opppppppo...".replace('po...','ppo...'),
-"....opppbppo....",
-".....oooooo.....",
-".......oo.......",
-".......oo.......",
-".......oo.......",
-".....oooooo.....",
-"................"],
-  royale:[
-"..........ll....",
-".....ooooool....",
-".....offffo.....",
-".....ohbhho.....",
-".....ohhbho.....",
-".....obhhho.....",
-".....ohhhbo.....",
-".....ohbhho.....",
-"......ohho......",
-".......oo.......",
-".......oo.......",
-".......oo.......",
-".......oo.......",
-"....oooooooo....",
-"................",
-"................"],
-  tiki:[
-"......uuuu......",
-".....uuuuuu.....",
-"........z.......",
-"....oooozooo....",
-"....ottttttо....".replace('о','o'),
-"....otottoto....",
-"....otottoto....",
-"....ottttttо....".replace('о','o'),
-"....ottootto....",
-"....otooooto....",
-"....otowwoto....",
-"....otooooto....",
-"....otttttto....",
-"....oooooooo....",
-"................",
-"................"],
+const ROCKS='M11.5 13 L13 40.5 Q13.2 42 15 42 L33 42 Q34.8 42 35 40.5 L36.5 13';
+const ROCKS_BASE='M13.1 38.5 L34.9 38.5';
+const ROCKS_LIQ='M12.4 24 L35.6 24 L35 38.5 L13 38.5 Z';
+const CUBE='M18 20 L28 18.5 L29.5 28.5 L19.5 30 Z';
+const COUPE_BOWL='M7 14 L41 14 Q40.5 27 24 27 Q7.5 27 7 14 Z';
+const COUPE_STEM='M24 27 L24 41 M17 41.5 L31 41.5';
+const STEM_FOOT=(y0,y1)=>`M24 ${y0} L24 ${y1} M17.5 ${y1+0.5} L30.5 ${y1+0.5}`;
+const GLASSES={
+  oldfashioned:{s:[ROCKS,ROCKS_BASE],lq:[[ROCKS_LIQ,'#C98A2E']],ac:[[CUBE,'#DCEBF0','f'],['M30 9.5 Q34 8 37.5 11.5 Q35.5 13 33 12.2','#E58A2E','f']]},
+  martini:{s:['M7 11 L41 11 L24 28 Z',STEM_FOOT(28,41)],lq:[['M10.5 14 L37.5 14 L24 27 Z','#DCE4D6']],ac:[['M29 4 L21.5 19','#8B5A2B','l'],['M21.6 18.6 m-2.6 0 a2.6 2.6 0 1 0 5.2 0 a2.6 2.6 0 1 0 -5.2 0','#6F8A2A','f']]},
+  negroni:{s:[ROCKS,ROCKS_BASE],lq:[[ROCKS_LIQ,'#B23A2A']],ac:[[CUBE,'#E7C9C2','f'],['M28 13 A6 6 0 0 1 40 13 Z','#E8892E','f']]},
+  sour:{s:[COUPE_BOWL,COUPE_STEM],lq:[['M9.3 17 L38.7 17 Q37 25.5 24 25.5 Q11 25.5 9.3 17 Z','#E3CF74']],ac:[['M33 14 m-4 0 a4 4 0 0 1 8 0 Z','#9DBA4A','f']]},
+  sour_albume:{s:[COUPE_BOWL,COUPE_STEM],lq:[['M9.3 19 L38.7 19 Q37 25.5 24 25.5 Q11 25.5 9.3 19 Z','#E3CF74'],['M7.6 15.5 L40.4 15.5 L39.4 19 L8.6 19 Z','#F3ECDD']],ac:[['M18 17.2 m-0.9 0 a0.9 0.9 0 1 0 1.8 0 a0.9 0.9 0 1 0 -1.8 0 M24 17.2 m-0.9 0 a0.9 0.9 0 1 0 1.8 0 a0.9 0.9 0 1 0 -1.8 0 M30 17.2 m-0.9 0 a0.9 0.9 0 1 0 1.8 0 a0.9 0.9 0 1 0 -1.8 0','#9E2B2B','f']]},
+  collins:{s:['M15.5 5 L16.5 42 L31.5 42 L32.5 5','M16.4 39 L31.6 39'],lq:[['M15.8 12 L32.2 12 L31.6 39 L16.4 39 Z','#E9DE9A']],ac:[['M29.5 1.5 L25.5 37','#C9737D','l'],['M19 20 h6 v6 h-6 Z M21 29 h6 v6 h-6 Z','#E4F0F3','f']]},
+  highball:{s:['M12.5 9 L13.5 42 L34.5 42 L35.5 9','M13.4 39 L34.6 39'],lq:[['M12.8 15 L35.2 15 L34.6 39 L13.4 39 Z','#D6E7EA']],ac:[['M29 9 Q33 4 38 7.5 L33 12 Z','#9DBA4A','f'],['M19 22 h7 v7 h-7 Z M23 30 h7 v7 h-7 Z','#F2F7F8','f']]},
+  julep:{s:['M12 15 L14.5 41.5 L33.5 41.5 L36 15 Z','M12 15 L36 15'],lq:[['M12.6 21 L35.4 21 L33.6 40 L14.4 40 Z','#C3CBCE']],ac:[['M12 15 Q24 4 36 15 Z','#EEF4F6','f'],['M22 9 Q18 3 23 1.5 Q25 6 22 9 Z M25 9.5 Q29 4 32 7 Q29.5 10 25 9.5 Z','#4E9A5B','f']]},
+  flip:{s:['M14 11 Q13.5 26 24 27.5 Q34.5 26 34 11 Z',STEM_FOOT(27.5,41)],lq:[['M14.1 15 L33.9 15 Q33.4 25 24 26 Q14.6 25 14.1 15 Z','#E2CFA6']],ac:[['M19 13 m-0.8 0 a0.8 0.8 0 1 0 1.6 0 a0.8 0.8 0 1 0 -1.6 0 M24 12.4 m-0.8 0 a0.8 0.8 0 1 0 1.6 0 a0.8 0.8 0 1 0 -1.6 0 M28.5 13.2 m-0.8 0 a0.8 0.8 0 1 0 1.6 0 a0.8 0.8 0 1 0 -1.6 0','#8B5A2B','f']]},
+  spritz:{s:['M13 6 Q10.5 25 24 28 Q37.5 25 35 6 Z',STEM_FOOT(28,42)],lq:[['M11.9 15 L36.1 15 Q36 24.5 24 26.8 Q12 24.5 11.9 15 Z','#E36A2E']],ac:[['M20 20 m-4.5 0 a4.5 4.5 0 1 0 9 0 a4.5 4.5 0 1 0 -9 0','#F4B04A','f']]},
+  royale:{s:['M19 3 L18.6 25 Q19 30.5 24 30.5 Q29 30.5 29.4 25 L29 3',STEM_FOOT(30.5,42)],lq:[['M18.8 9 L29.2 9 L29.3 25 Q29 29.5 24 29.5 Q19 29.5 18.7 25 Z','#E3C15E']],ac:[['M22 14 m-0.7 0 a0.7 0.7 0 1 0 1.4 0 a0.7 0.7 0 1 0 -1.4 0 M25.5 19 m-0.7 0 a0.7 0.7 0 1 0 1.4 0 a0.7 0.7 0 1 0 -1.4 0 M22.5 24 m-0.7 0 a0.7 0.7 0 1 0 1.4 0 a0.7 0.7 0 1 0 -1.4 0','#FFF8E0','f']]},
+  tiki:{s:['M14 10 L14 40 Q14 42 16 42 L32 42 Q34 42 34 40 L34 10','M18.5 19 L22 19 M26 19 L29.5 19 M24 21 L24 26 M19 31 Q24 35 29 31'],lq:[['M14.6 12 L33.4 12 L33.4 40 Q33.4 41.4 32 41.4 L16 41.4 Q14.6 41.4 14.6 40 Z','#A9683A']],ac:[['M20 8 L31 3 L29 9 Z','#C9737D','f'],['M26.5 6 L28 13','#8B5A2B','l']]},
+  milkpunch:{s:[ROCKS,ROCKS_BASE],lq:[[ROCKS_LIQ,'#EFE3B8']],ac:[[CUBE,'#F7FAFB','f'],['M30.5 9 Q35 9.5 37 13.5','#E9C93A','l']]},
 };
-const PXCOL={o:'var(--ink)',g:'var(--px-glass)',w:'var(--px-white)',b:'var(--px-white)',a:'#C98A2E',r:'#C23B2A',y:'#E6CF6A',c:'var(--px-clear)',f:'#F4EEDD',
-  p:'#E8642A',q:'#F5A531',l:'#EFCB2F',i:'var(--px-ice)',m:'#3E9E4A',s:'#AEB8BD',k:'#E6D2A8',n:'#8B5A2B',d:'#8B5A2B',h:'#E3C15E',t:'#9A5B2E',e:'#6F8A2A',z:'#D94E4E',u:'#E05C9A'};
-function pixelSVG(id,size,label){
-  const rows=SPRITES[id];if(!rows)return'';const paths={};
-  rows.forEach((row,y)=>{let x=0;while(x<16){const ch=row[x]||'.';let e=x+1;while(e<16&&row[e]===ch)e++;
-    if(ch!=='.'&&PXCOL[ch])(paths[ch]=paths[ch]||[]).push(`M${x} ${y}h${e-x}v1h-${e-x}z`);x=e;}});
-  return `<svg class="px" width="${size}" height="${size}" viewBox="0 0 16 16" shape-rendering="crispEdges" role="img" aria-label="${esc(label||'')}">${Object.entries(paths).map(([c,d])=>`<path d="${d.join('')}" style="fill:${PXCOL[c]}"/>`).join('')}</svg>`;
+function glassSVG(id,size,label,on){
+  const g=GLASSES[id];if(!g)return'';
+  const lq=g.lq.map(([d,c])=>`<path class="lq" d="${d}" style="--c:${c}"/>`).join('');
+  const ac=g.ac.map(([d,c,k])=>`<path class="ac ${k==='l'?'acl':'acf'}" d="${d}" style="--c:${c}"/>`).join('');
+  const s=g.s.map(d=>`<path class="s" d="${d}"/>`).join('');
+  return `<svg class="gl${on?' on':''}" width="${size}" height="${size}" viewBox="0 0 48 48" role="img" aria-label="${esc(label||'')}">${lq}${ac}${s}</svg>`;
 }
 
 let mainCombo=null;
@@ -534,7 +379,7 @@ select(state.sel,true);
 
 
 // ===== PAIRING STUDIO: TRIO =====
-var TCOL=['var(--ink)','var(--concord)','var(--t-dolce)'];
+var TCOL=['var(--ink)','var(--accent)','var(--spirit)'];
 var TDASH=[0,1,'1.5 2.5'];
 state.C=null;state.lens='piramide';
 // ---- triangolo ----
@@ -649,7 +494,7 @@ function mixProfile(){const fs=ckFoods();if(!fs.length)return'';
   const labels=g?TORDER.map(k=>({t:TLABEL[k],c:tcol(k)})):FAM.map(f=>({t:f[2]}));
   const val=I=>g?TORDER.map(k=>I.t[k]):I.ar;
   const mix=g?TORDER.map(k=>Math.max(...fs.map(f=>f.t[k]))):ar;
-  const PAL=['var(--concord)','var(--t-dolce)','var(--t-amaro)','var(--t-salato)','var(--spirit)'];
+  const PAL=['var(--accent)','var(--spirit)','var(--t-amaro)','var(--t-salato)','var(--t-dolce)'];
   const ser=[{v:mix,c:'var(--ink)',fo:.14}].concat(fs.length>1?fs.map((f,i)=>({v:val(f),c:PAL[i],fo:0,dash:'3 3'})):[]);
   return `<div class="mix"><div class="mix-h"><span class="eyebrow">Profilo del mix</span><div class="seg mini" role="group" aria-label="Profilo da mostrare"><button type="button" data-mv="gusti" aria-pressed="${g}">Gusti</button><button type="button" data-mv="aromi" aria-pressed="${!g}">Aromi</button></div></div>
     <div class="mixradar">${g?radar(labels,ser,70,44):radar(labels,ser,82,66)}</div>
@@ -703,7 +548,7 @@ $('#ckReset').addEventListener('click',()=>{CK.base=null;renderCocktail();});
 function renderStyles(){
   $('#ckStyles').innerHTML=SHELVES.map(([lbl,ids])=>`<div class="shelf"><span class="shelf-l">${lbl}</span><div class="shelf-row">${ids.map(id=>{const s=STY[id];
     const fit=styleFit(effBaseFor(id),id);
-    return `<button type="button" class="glass${fit.ok?'':' nofit'}" data-sty="${id}" aria-pressed="${id===CK.style}" aria-description="${esc(s.fam+'. '+s.desc+(fit.ok?'':' Non adatto: '+fit.why))}">${fit.ok?'':'<i class="nf" aria-hidden="true">×</i>'}${pixelSVG(id,56,s.name)}<span>${esc(s.name)}</span></button>`;}).join('')}</div></div>`).join('');
+    return `<button type="button" class="glass${fit.ok?'':' nofit'}" data-sty="${id}" aria-pressed="${id===CK.style}" aria-description="${esc(s.fam+'. '+s.desc+(fit.ok?'':' Non adatto: '+fit.why))}">${fit.ok?'':'<i class="nf" aria-hidden="true">×</i>'}${glassSVG(id,56,s.name)}<span>${esc(s.name)}</span></button>`;}).join('')}</div></div>`).join('');
   const st=STY[CK.style];
 }
 $('#ckStyles').addEventListener('click',e=>{const b=e.target.closest('[data-sty]');if(!b)return;CK.style=b.dataset.sty;renderCocktail();});
@@ -715,7 +560,7 @@ function sheet(R,ins){
   const baseTxt=[R.base?R.base.name:R.mods[0]?.name,R.base2?.name].filter(Boolean).join(' + ');
   return `<article class="sheet">
     <div class="sheet-l">
-      <div class="hero"><div class="hero-ic">${pixelSVG(R.st.id,112,R.st.name)}</div>
+      <div class="hero"><div class="hero-ic">${glassSVG(R.st.id,104,R.st.name,true)}</div>
         <div><span class="rtag ${R.mode}">${MODELBL[R.mode]}</span><h3>${esc(drinkName(R,ins))}</h3><p class="tiny muted">${esc(R.st.name)} · ${esc(baseTxt)}</p></div></div>
       <dl class="rstats"><div><dt>Volume</dt><dd>${R.vol} ml</dd></div><div><dt>Alcol</dt><dd>~${fmt(R.abv)}%</dd></div><div><dt>Bicchiere</dt><dd>${esc(R.st.glass)}</dd></div><div><dt>Ghiaccio</dt><dd>${esc(R.st.ice)}</dd></div></dl>
       <div><h4>Ricetta</h4><ul class="spec">${spec}</ul></div>
@@ -734,7 +579,7 @@ function renderRecipes(){
   if(!rs.length){$('#ckOut').innerHTML='<p class="note">Aggiungi almeno un ingrediente per vedere le ricette.</p>';return;}
   const coh=coherence(ins,CK.style,effBase());
   if(coh.block.length){$('#ckVerTitle').textContent='Questa combinazione non regge';
-    $('#ckOut').innerHTML=`<div class="nogo"><div class="nogo-ic">${pixelSVG(CK.style,72,'')}</div><div class="nogo-b">
+    $('#ckOut').innerHTML=`<div class="nogo"><div class="nogo-ic">${glassSVG(CK.style,72,'')}</div><div class="nogo-b">
       <h3>Meglio non servirla</h3><ul>${coh.block.map(b=>`<li>${esc(b.txt)}</li>`).join('')}</ul>
       ${coh.block.some(b=>b.k==='style')&&coh.altStyles.length?`<p class="tiny muted">Con ${esc(effBase().name)} funzionano meglio questi stili:</p><div class="list-inline">${coh.altStyles.map(s=>`<button type="button" class="btn" data-gosty="${s.id}">${esc(s.name)}</button>`).join('')}</div>`:''}
       ${coh.block.some(b=>b.k!=='pair')&&coh.altBases.length?`<p class="tiny muted">Oppure tieni lo stile ${esc(STY[CK.style].name)} e cambia base:</p><div class="list-inline">${coh.altBases.map(s=>`<button type="button" class="btn" data-gobase="${s.id}">${esc(s.name)}</button>`).join('')}</div>`:''}

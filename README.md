@@ -10,6 +10,8 @@ L'app ha tre sezioni:
 
 Contenuto attuale: 352 alimenti in 53 categorie, 105 alcolici, 340 abbinamenti classici, 13 stili di drink.
 
+La grafica è minimale: tipografia Geist, palette monocromatica con un solo accento bordeaux, filetti sottili e icone dei bicchieri al tratto, che si colorano al passaggio del mouse. Segue il tema chiaro o scuro del sistema.
+
 > I profili (valori da 0 a 5) sono stime sensoriali, non misure di laboratorio. Sono un punto di partenza da verificare e correggere all'assaggio.
 
 ---
@@ -166,7 +168,7 @@ flavour-lab/
 │  │  ├─ scoring.js         # le sei lenti, stridore aromatico, partner e alcolici
 │  │  ├─ trio.js            # analisi del trio, ruoli, terzo ingrediente consigliato
 │  │  └─ recipes.js         # stili, preparazioni, garnish, coerenza base-stile
-│  ├─ ui/app.js             # interfaccia: ruota, Pairing Studio, Cocktail creator, icone 8-bit
+│  ├─ ui/app.js             # interfaccia: ruota, Pairing Studio, Cocktail creator, icone dei bicchieri
 │  ├─ styles/main.css       # stili, token colore, tema chiaro e scuro
 │  └─ main.js               # punto di ingresso
 ├─ public/favicon.svg
