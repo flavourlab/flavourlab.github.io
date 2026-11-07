@@ -4,137 +4,115 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Flavour Lab</title>
-  <meta name="description" content="Profili aromatici degli alimenti, metodo di abbinamento e generatore di cocktail.">
-  <meta name="theme-color" content="#FBFBFA" media="(prefers-color-scheme: light)">
-  <meta name="theme-color" content="#0F0F10" media="(prefers-color-scheme: dark)">
+  <meta name="description" content="Scopri con cosa si abbina un ingrediente, prova coppie e trii, trasforma il tuo banco in un drink.">
+  <meta name="theme-color" content="#F6F4EF" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#111013" media="(prefers-color-scheme: dark)">
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&display=swap">
 </head>
 <body>
-<div class="wrap">
-  <header class="top">
-    <h1 class="logo">Flavour Lab</h1>
-    <span class="logo-sub" id="stats">Profili aromatici e abbinamenti per la miscelazione</span>
-  </header>
+<a class="skip" href="#main">Vai al contenuto</a>
+<header class="bar">
+  <div class="bar-in">
+    <a class="brand" href="#esplora" aria-label="Flavour Lab, torna all'inizio">Flavour <em>Lab</em></a>
+    <nav class="nav" id="tabbar" role="tablist" aria-label="Sezioni">
+      <button type="button" role="tab" id="tb-esplora" aria-controls="v-esplora" aria-selected="true"><b>Esplora</b><span>un ingrediente</span></button>
+      <button type="button" role="tab" id="tb-abbina" aria-controls="v-abbina" aria-selected="false" tabindex="-1"><b>Abbina</b><span>coppie e trii</span></button>
+      <button type="button" role="tab" id="tb-crea" aria-controls="v-crea" aria-selected="false" tabindex="-1"><b>Crea</b><span>un drink</span></button>
+    </nav>
+    <button type="button" class="btn ghost share" id="share" title="Copia il link di questa pagina"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M8.5 11.5l3-3M7 13.5l-1.2 1.2a2.6 2.6 0 01-3.7-3.7L5.3 8M12.7 12l1.4-1.4M14.7 6.5l1.2-1.2a2.6 2.6 0 00-3.7-3.7L9 4.8"/></svg><span>Copia link</span></button>
+  </div>
+</header>
 
-  <nav class="tabbar" id="tabbar" role="tablist" aria-label="Sezioni">
-    <button type="button" role="tab" id="tb-ruota" aria-controls="tab-ruota" aria-selected="true"><span class="tb-t">Esplora un ingrediente</span><span class="tb-d">Con cosa si abbina e cosa berci</span></button>
-    <button type="button" role="tab" id="tb-verifica" aria-controls="tab-verifica" aria-selected="false" tabindex="-1"><span class="tb-t">Prova un abbinamento</span><span class="tb-d">Due o tre ingredienti stanno bene insieme?</span></button>
-    <button type="button" role="tab" id="tb-cocktail" aria-controls="tab-cocktail" aria-selected="false" tabindex="-1"><span class="tb-t">Crea un drink</span><span class="tb-d">Da ciò che hai a una ricetta completa</span></button>
-  </nav>
+<main id="main">
 
-  <div id="tab-ruota" role="tabpanel" aria-labelledby="tb-ruota" class="tabpanel">
-    <div class="intro">
-      <div class="intro-t"><h2>Esplora un ingrediente</h2>
-        <p>Scegli un alimento: vedi con cosa si abbina e cosa berci.</p></div>
+  <!-- ================= ESPLORA ================= -->
+  <section id="v-esplora" role="tabpanel" aria-labelledby="tb-esplora" class="view">
+    <div class="hero" id="exHero">
+      <p class="kicker">352 alimenti · 105 alcolici · un metodo</p>
+      <h1>Cosa hai in mano?</h1>
+      <p class="lead">Scegli un ingrediente: scopri con cosa si abbina, cosa berci e come trasformarlo in un drink.</p>
+    </div>
+    <div class="finder" id="finder">
+      <label for="q-main" class="sr">Cerca un alimento o un alcolico</label>
+      <div class="searchbox"><svg class="sicon" viewBox="0 0 20 20" aria-hidden="true"><circle cx="8.5" cy="8.5" r="5.5"/><path d="M13 13l4.5 4.5"/></svg><div class="combo" id="mainSearch"></div><kbd class="kbd" title="Premi / per cercare">/</kbd></div>
+      <div class="examples" id="examples"></div>
     </div>
 
-  <div class="centerpick finder">
-    <label for="q-main" class="eyebrow">Cerca un alimento</label>
-    <div class="searchbox"><svg class="sicon" viewBox="0 0 20 20" aria-hidden="true"><circle cx="8.5" cy="8.5" r="5.5" style="fill:none;stroke:currentColor;stroke-width:2"/><path d="M13 13l4.5 4.5" style="stroke:currentColor;stroke-width:2;stroke-linecap:round"/></svg><div class="combo" id="mainSearch"></div><kbd class="kbd-hint" title="Premi / per cercare">/</kbd></div>
-    <div class="examples" id="examples"></div>
-  </div>
+    <div class="food" id="exFood" hidden></div>
 
-  <div class="main">
-    <section class="panel stage" aria-label="Ruota">
-      <div class="wheel-head">
-        <div class="seg" id="wheelMode" role="group" aria-label="Vista della ruota">
-          <button type="button" id="mEgo" aria-pressed="true">Abbinamenti</button>
-          <button type="button" id="mBrowse" aria-pressed="false">Esplora per gusto</button>
+    <div class="explore">
+      <section class="panel wheelbox" id="wheelbox" aria-label="Ruota">
+        <div class="wheel-head">
+          <div class="seg" id="wheelMode" role="group" aria-label="Vista della ruota">
+            <button type="button" id="mEgo" aria-pressed="true">Abbinamenti</button>
+            <button type="button" id="mBrowse" aria-pressed="false">Per gusto</button>
+          </div>
+          <span class="hint" id="wheelHint"></span>
         </div>
-        <span class="tiny muted" id="wheelHint"></span>
-      </div>
-      <div class="wheel-sub">
-        <span class="eyebrow" id="wheelCap">Gusto · alimento · abbinamenti · alcolici</span>
+        <p class="wheel-cap" id="wheelCap"></p>
+        <svg id="wheel" viewBox="-540 -540 1080 1080" role="img" aria-label="Ruota"></svg>
+        <div class="peek" id="wheelPeek" aria-live="polite" hidden></div>
+        <div class="legend" id="legend"></div>
         <button type="button" class="link" id="egoAll" hidden></button>
+      </section>
+      <aside class="side" id="side" aria-live="polite"></aside>
+    </div>
+
+    <section class="block" id="pairs" aria-labelledby="pairsTitle" hidden>
+      <div class="block-h">
+        <h2 id="pairsTitle">Con cosa si abbina</h2>
+        <div class="seg" role="group" aria-label="Filtra per relazione">
+          <button type="button" data-f="all" aria-pressed="true">Tutti</button>
+          <button type="button" data-f="concordanza" aria-pressed="false">Si somigliano</button>
+          <button type="button" data-f="contrasto" aria-pressed="false">Si bilanciano</button>
+        </div>
       </div>
-      <svg id="wheel" viewBox="-540 -540 1080 1080" role="img" aria-label="Ruota degli abbinamenti"></svg>
-      <div class="peek" id="wheelPeek" aria-live="polite" hidden></div>
-      <div class="catlist" id="catList" aria-live="polite" hidden></div>
-      <div class="legend" id="legend"></div>
+      <div class="cards" id="pairGrid"></div>
+      <button type="button" class="btn more" id="pairMore" hidden></button>
     </section>
 
-    <aside class="panel profile" id="profile" aria-label="Profilo aromatico"></aside>
-  </div>
-
-  <section id="spirits" class="rail" aria-label="Abbinamenti alcolici" hidden>
-    <div class="rail-head">
-      <div><span class="eyebrow">Abbinamenti alcolici</span><h2 id="spTitle">Da bere con</h2></div>
-    </div>
-    <div class="rail-track" id="spTrack" aria-label="Elenco degli alcolici abbinati"></div>
-    <button type="button" class="btn more" id="spMore" hidden></button>
+    <section class="block" id="spirits" aria-labelledby="spTitle" hidden>
+      <div class="block-h"><h2 id="spTitle">Da bere</h2></div>
+      <div class="cards" id="spTrack"></div>
+      <button type="button" class="btn more" id="spMore" hidden></button>
+    </section>
   </section>
 
-  <section id="pairs" class="rail" aria-label="Abbinamenti alimentari">
-    <div class="rail-head">
-      <div><span class="eyebrow">Abbinamenti alimentari</span><h2 id="pairsTitle">Con cosa si sposa</h2></div>
-      <div class="rail-nav"><div class="seg" role="group" aria-label="Filtra per tipo">
-        <button type="button" data-f="all" aria-pressed="true">Tutti</button>
-        <button type="button" data-f="concordanza" aria-pressed="false">Affinità</button>
-        <button type="button" data-f="contrasto" aria-pressed="false">Contrasto</button>
-      </div></div>
+  <!-- ================= ABBINA ================= -->
+  <section id="v-abbina" role="tabpanel" aria-labelledby="tb-abbina" class="view" hidden>
+    <div class="vhead">
+      <h1>Abbina</h1>
+      <p class="lead">Metti sul banco da 2 a 5 ingredienti, anche un alcolico: ti dico se stanno bene insieme, perché e cosa aggiungere.</p>
     </div>
-    <div class="rail-track" id="pairGrid" aria-label="Elenco degli alimenti abbinati"></div>
-    <button type="button" class="btn more" id="pairMore" hidden></button>
+    <div class="work">
+      <aside class="panel bench" data-bench="abbina" aria-label="Il tuo banco"></aside>
+      <div class="result" id="pbOut" aria-live="polite"></div>
+    </div>
+    <details class="method" id="method"><summary>Come ragiona Flavour Lab</summary><div class="method-b" id="methodBody"></div></details>
   </section>
 
-  </div>
-
-  <div id="tab-verifica" role="tabpanel" aria-labelledby="tb-verifica" class="tabpanel" hidden>
-    <div class="intro"><div class="intro-t"><h2>Prova un abbinamento</h2>
-      <p>Scegli due ingredienti, anche un alcolico: ti dico se stanno bene insieme, perché e quale terzo ingrediente li completa.</p></div></div>
-  <section id="check" aria-label="Verifica una coppia">
-    <div class="sec-head">
-      <div><span class="eyebrow">Compatibilità</span><h3 class="sec-t">Coppia o trio</h3></div>
+  <!-- ================= CREA ================= -->
+  <section id="v-crea" role="tabpanel" aria-labelledby="tb-crea" class="view" hidden>
+    <div class="vhead">
+      <h1>Crea un drink</h1>
+      <p class="lead">Parti dal tuo banco: scelgo io base e bicchiere, tu cambi quello che vuoi e la ricetta si aggiorna subito.</p>
     </div>
-    <div class="check">
-      <div class="panel pick">
-        <label>Primo ingrediente<div class="combo" id="cA"></div></label>
-        <label>Secondo ingrediente (anche un alcolico)<div class="combo" id="cB"></div></label>
-        <label id="cCwrap" hidden>Terzo ingrediente (facoltativo)<span class="cwrap"><div class="combo" id="cC"></div><button type="button" class="x" id="cClear" aria-label="Togli il terzo ingrediente" hidden>×</button></span></label>
-        <div id="lensPick" class="lenspick"></div>
-        <div id="thirdSug"></div>
+    <div class="work create">
+      <div class="controls">
+        <aside class="panel bench" data-bench="crea" aria-label="Il tuo banco"></aside>
+        <section class="panel ctl" id="ctlBase" aria-labelledby="h-base"><h2 id="h-base" class="ctl-h">Base</h2><div id="ckBase"></div></section>
+        <section class="panel ctl" id="ctlGlass" aria-labelledby="h-gl"><h2 id="h-gl" class="ctl-h">Bicchiere</h2><div id="ckGlass" class="glasses"></div><div class="peek" id="ckGlassPeek" aria-live="polite" hidden></div></section>
+        <details class="panel ctl mixd" id="ckMixBox"><summary class="ctl-h">Profilo del banco</summary><div id="ckMix"></div></details>
       </div>
-      <div class="panel stage" id="checkOut"></div>
+      <div class="recipe" id="ckOut" aria-live="polite"></div>
     </div>
   </section>
+</main>
 
-  <section id="method" aria-label="Il metodo">
-    <div class="sec-head">
-      <div><span class="eyebrow">Come ragiona la ruota</span><h3 class="sec-t">Il metodo in breve</h3></div>
-    </div>
-    <div class="mstrip" id="lensCards"></div>
-  </section>
-  </div>
-
-  <div id="tab-cocktail" role="tabpanel" aria-labelledby="tb-cocktail" class="tabpanel" hidden>
-    <div class="intro"><div class="intro-t"><h2>Crea un drink</h2>
-      <p>Aggiungi da 1 a 5 ingredienti: ti propongo subito una base e una ricetta, poi puoi cambiare base e bicchiere.</p></div></div>
-    <div class="builder">
-      <section class="step" aria-labelledby="h-ing">
-        <header class="step-h"><span class="sn">1</span><h3 id="h-ing">Ingredienti</h3><span class="tiny muted" id="ckCount"></span></header>
-        <ul class="ings" id="ckIngs"></ul>
-        <div id="ckAddWrap"><div class="combo" id="ckAdd"></div></div>
-        <button type="button" class="link" id="ckFromWheel">Usa l'alimento aperto nella ruota e i suoi due abbinamenti migliori</button>
-        <div id="ckMix"></div>
-      </section>
-      <section class="step" aria-labelledby="h-base">
-        <header class="step-h"><span class="sn">2</span><h3 id="h-base">Base</h3></header>
-        <div id="ckBaseBox"></div>
-        <div class="force"><label class="tiny muted" for="ckBase">Oppure scegli tu</label><select id="ckBase" class="sel"></select><button type="button" class="link" id="ckReset" hidden>Torna al consigliato</button></div>
-      </section>
-      <section class="step wide" aria-labelledby="h-sty">
-        <header class="step-h"><span class="sn">3</span><h3 id="h-sty">Bicchiere e stile</h3><span class="tiny muted" id="ckStyHint"></span></header>
-        <div id="ckStyles" class="shelves"></div>
-        <div class="peek" id="ckStylePeek" aria-live="polite" hidden></div>
-      </section>
-    </div>
-    <section aria-label="Ricette"><div class="sec-head" style="margin-bottom:12px"><div><span class="eyebrow">Ricette</span><h2 id="ckVerTitle">Tre versioni, stessa idea</h2></div></div>
-    <div id="ckOut"></div></section>
-  </div>
-</div>
+<div class="tray" id="tray" hidden></div>
 <div id="tip" hidden></div>
 <script type="module" src="/src/main.js"></script>
 </body>
