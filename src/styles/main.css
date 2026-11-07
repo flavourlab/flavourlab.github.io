@@ -598,3 +598,7 @@ details[open]>summary::before{transform:rotate(45deg) translate(-2px,-2px)}
 .result{container-type:inline-size}
 .meter.big{flex-wrap:wrap;row-gap:8px}
 @container (max-width:720px){.verdict{grid-template-columns:minmax(0,1fr)}.verdict .figs{min-height:0}}
+/* versione scelta: inchiostro, non accento (il rosso sembrava un errore) */
+.vers button[aria-checked="true"]{border-color:var(--ink);background:var(--raise);box-shadow:inset 0 0 0 1px var(--ink)}
+.vers button[aria-checked="true"] b::before{border-color:var(--ink);box-shadow:inset 0 0 0 3.5px var(--surface),inset 0 0 0 10px var(--ink)}
+.vers button[aria-checked="true"] .vm{color:var(--ink)}

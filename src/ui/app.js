@@ -34,7 +34,11 @@ function hashFor(tab){
   if(ids&&((CK.style&&!CK.styleAuto)||CK.base))h+=`/${CK.style&&!CK.styleAuto?CK.style:'-'}`;
   if(ids&&CK.base)h+=`/${CK.base.id}`;
   return h;}
-function sync(push){const h=hashFor(S.tab);if(location.hash===h)return;try{history[push?'pushState':'replaceState'](null,'',h);}catch(e){location.hash=h;}}
+// in alcune anteprime (iframe isolati, file aperti in locale) la cronologia non si può scrivere: si ripiega sull'hash, e se anche quello è bloccato si va avanti senza indirizzo
+let histOK=true;
+function setHash(h,push){if(location.hash===h)return;if(histOK){try{history[push?'pushState':'replaceState'](null,'',h);return;}catch(e){histOK=false;}}
+  try{location.hash=h;}catch(e){}}
+function sync(push){setHash(hashFor(S.tab),push);}
 function benchFromIds(s){const arr=s.split('+').map(id=>BYID[id]).filter(Boolean);const out=[];arr.forEach(I=>{if(!out.includes(I)&&out.length<MAXB)out.push(I);});bench=out;saveBench();}
 function route(){
   const raw=decodeURIComponent(location.hash.slice(1));const [t,a,b,c]=raw.split('/');
@@ -664,5 +668,5 @@ $('#ckOut').addEventListener('click',e=>{const x=e.target.closest('[data-set]');
 
 // ===================== avvio =====================
 $('.kicker').textContent=`${FOODS.length} alimenti · ${SPIRITS.length} alcolici · un metodo per abbinarli`;
-if(!location.hash)history.replaceState(null,'','#esplora');
+if(!location.hash)setHash('#esplora',false);
 route();
