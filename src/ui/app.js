@@ -43,7 +43,7 @@ function route(){
     if(b&&b!=='-'&&STY[b]){CK.style=b;CK.styleAuto=false;}else if(a&&!b){CK.styleAuto=true;}
     CK.base=c&&BYID[c]?BYID[c]:(a?null:CK.base);show('crea');return;}
   const id=t==='esplora'?a:t;const f=id&&BYID[id];
-  if(f&&!f.isSpirit){if(f!==S.sel)select(f,{nav:false,keepMode:true});}
+  if(f&&!f.isSpirit){if(f!==S.sel)select(f,{nav:false,keepMode:!!S.sel});}
   else if(t==='esplora'&&!a&&S.sel){S.sel=null;S.mode='browse';}
   show('esplora');}
 addEventListener('popstate',route);addEventListener('hashchange',route);
@@ -58,7 +58,7 @@ function show(t,{push=false}={}){
 TABS.forEach(k=>$('#tb-'+k).addEventListener('click',()=>{if(S.tab===k)return;show(k,{push:true});scrollTo({top:0});}));
 $('#tabbar').addEventListener('keydown',e=>{if(e.key!=='ArrowRight'&&e.key!=='ArrowLeft')return;const i=TABS.indexOf(S.tab);
   const nx=TABS[(i+(e.key==='ArrowRight'?1:TABS.length-1))%TABS.length];show(nx,{push:true});$('#tb-'+nx).focus();});
-$('.brand').addEventListener('click',e=>{e.preventDefault();S.sel=null;S.mode='browse';S.zoom=null;S.cat=null;show('esplora',{push:true});scrollTo({top:0});});
+$('.brand').addEventListener('click',e=>{e.preventDefault();goHome();});
 $('#share').addEventListener('click',()=>copyText(location.href,'Link copiato'));
 document.addEventListener('keydown',e=>{if(e.key!=='/'||e.ctrlKey||e.metaKey||e.altKey)return;const t=e.target;if(t.closest&&t.closest('input,textarea,select'))return;
   if(S.tab!=='esplora')show('esplora',{push:true});e.preventDefault();$('#q-main').focus();});
@@ -155,7 +155,8 @@ const DICE='<svg viewBox="0 0 16 16" aria-hidden="true"><rect x="1.5" y="1.5" wi
 $('#examples').innerHTML=`<span class="lbl">Prova</span>${EXAMPLES.map(f=>`<button type="button" class="ex" data-ex="${f.id}">${mark(f)}${esc(f.name)}</button>`).join('')}<button type="button" class="ex ex-rand" data-rand>${DICE}A caso</button>`;
 $('#examples').addEventListener('click',e=>{const b=e.target.closest('[data-ex]');if(b){select(BYID[b.dataset.ex]);return;}
   if(e.target.closest('[data-rand]')){let f;do{f=FOODS[Math.floor(Math.random()*FOODS.length)];}while(f===S.sel);select(f);}});
-const mainCombo=makeCombo($('#mainSearch'),{id:'q-main',placeholder:'Cerca un alimento: limone, miso, cardamomo…',source:()=>FOODS,keep:true,onPick:f=>{select(f);$('#q-main').blur();}});
+const mainCombo=makeCombo($('#mainSearch'),{id:'q-main',placeholder:'Cerca un alimento: limone, miso, cardamomo…',source:()=>FOODS,keep:true,onPick:f=>{select(f);$('#q-main').blur();},
+  onClear:()=>{if(S.sel)goHome();}});
 
 function assignTrio(){const used={};S.trio={};
   S.sps.forEach(rs=>{let best=null,bv=-1;S.parts.forEach(p=>{const sp=score(p.B,rs.B).total;if(sp<15)return;const v=p.total+sp-2.5*(used[p.B.id]||0);if(v>bv){bv=v;best=p.B;}});
@@ -178,7 +179,8 @@ function renderFood(){const A=S.sel;const p=S.parts,sp=S.sps;
   const sum=`${fams.length?`Sa di ${esc(listY(fams))}. `:''}${pt.length?`Sta bene soprattutto con ${listY(pt)}`:'Ha pochi abbinamenti forti'}${st.length?`; da bere, prova ${listY(st)}.`:'.'}`;
   const onB=onBench(A);
   $('#exFood').innerHTML=`<div>
-      <nav class="crumbs" aria-label="Percorso"><button type="button" data-crumb="all">Tutti</button><span aria-hidden="true">/</span><button type="button" data-crumb="t">${TLABEL[A.dom]}</button><span aria-hidden="true">/</span><button type="button" data-crumb="c">${esc(CATS[A.cat][0])}</button></nav>
+      <div class="food-top"><button type="button" class="back" data-home><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M12.5 4.5L7 10l5.5 5.5"/></svg>Tutti gli alimenti</button>
+      <nav class="crumbs" aria-label="Percorso"><button type="button" data-crumb="t">${TLABEL[A.dom]}</button><span aria-hidden="true">/</span><button type="button" data-crumb="c">${esc(CATS[A.cat][0])}</button></nav></div>
       <h1 class="fname">${esc(A.name)}</h1>
       <p class="fsum">${sum}</p>
       <div class="chips"><span class="chip">${mark(A)}Gusto ${TLABEL[A.dom].toLowerCase()}</span><span class="chip">Intensità <span aria-hidden="true">${dots(A.int)}</span><span class="sr">${A.int} su 5</span></span><span class="chip">${A.season?'Stagione: '+monthsTxt(A.season):'Tutto l\'anno'}</span>${A.o?`<span class="chip">${esc(ORIG[A.o])}</span>`:''}</div>
@@ -188,7 +190,8 @@ function renderFood(){const A=S.sel;const p=S.parts,sp=S.sps;
       <button type="button" class="btn" data-fgo="abbina">Abbina con…</button>
       <button type="button" class="btn" data-fgo="crea">Crea un drink</button>
     </div>`;}
-$('#exFood').addEventListener('click',e=>{const A=S.sel;if(!A)return;
+function goHome(){S.sel=null;S.mode='browse';S.zoom=null;S.cat=null;mainCombo.set(null);show('esplora',{push:true});scrollTo({top:0,behavior:calm()?'auto':'smooth'});}
+$('#exFood').addEventListener('click',e=>{const A=S.sel;if(!A)return;if(e.target.closest('[data-home]')){goHome();return;}
   const c=e.target.closest('[data-crumb]');if(c){const k=c.dataset.crumb;S.mode='browse';S.zoom=k==='all'?null:A.dom;S.cat=k==='c'?A.dom+'|'+A.cat:null;if(k==='all'){S.sel=null;show('esplora',{push:true});}else renderEsplora();$('#wheelbox').scrollIntoView({block:'start',behavior:calm()?'auto':'smooth'});return;}
   const g=e.target.closest('[data-fgo]');if(!g)return;
   if(g.dataset.fgo==='abbina'){benchAdd(A,{quiet:true});show('abbina',{push:true});scrollTo({top:0});if(bench.length<2)setTimeout(()=>$('#q-bench-abbina')?.focus(),60);}
@@ -211,7 +214,9 @@ function renderSide(){const el=$('#side');
     <p class="cmp" id="cmp">${TOUCH()?'Tocca un abbinamento della ruota per sovrapporne il profilo.':'Passa su un abbinamento della ruota per sovrapporne il profilo.'}</p>
     <details class="more-d"><summary>Note fresche, centrali e profonde</summary>
       <dl class="kv"><dt>Note fresche</dt><dd>${lv.testa.join(', ')||'—'}</dd><dt>Note centrali</dt><dd>${lv.cuore.join(', ')||'—'}</dd><dt>Note profonde</dt><dd>${lv.fondo.join(', ')||'—'}</dd><dt>In bocca</dt><dd>${st}</dd></dl>
-    </details></section>`;}
+    </details></section>`;fitRadars($('#side'));}
+// i radar scalano con la colonna: le etichette restano a 12 px reali
+function fitRadars(root){(root||document).querySelectorAll('.radar svg').forEach(svg=>{const vb=svg.viewBox.baseVal;const w=svg.getBoundingClientRect().width;if(vb&&w)svg.style.setProperty('--rfs',(12*vb.width/w).toFixed(2)+'px');});}
 function renderRadars(A,B){
   const tl=TORDER.map(k=>({t:TLABEL[k],c:tcol(k)}));
   const s1=[{v:TORDER.map(k=>A.t[k]),c:'var(--ink)',fo:.12}],s2=[{v:A.ar,c:'var(--ink)',fo:.1}];
@@ -369,7 +374,7 @@ function renderBrowse(){
 function renderWheel(){hidePeek();if(!S.sel&&S.mode==='ego')S.mode='browse';S.mode==='ego'?renderEgo():renderBrowse();rove();
   $('#wheelMode').hidden=!S.sel;$('#mEgo').setAttribute('aria-pressed',String(S.mode==='ego'));$('#mBrowse').setAttribute('aria-pressed',String(S.mode==='browse'));
   $('#wheelbox').setAttribute('aria-label',S.mode==='ego'?`Ruota degli abbinamenti di ${S.sel.name}`:'Ruota dei gusti e delle categorie');}
-let rzT;addEventListener('resize',()=>{clearTimeout(rzT);rzT=setTimeout(()=>{if(S.tab==='esplora')renderWheel();if(S.tab==='crea'&&$('#ckMixBox').open)$('#ckMix').innerHTML=mixProfile();},150);});
+let rzT;addEventListener('resize',()=>{clearTimeout(rzT);rzT=setTimeout(()=>{fitRadars();stickRecipe();if(S.tab==='esplora')renderWheel();if(S.tab==='crea'&&$('#ckMixBox').open)$('#ckMix').innerHTML=mixProfile();},150);});
 $('#mEgo').addEventListener('click',()=>{if(!S.sel)return;S.mode='ego';S.cat=null;renderWheel();renderSide();});
 $('#mBrowse').addEventListener('click',()=>{S.mode='browse';S.zoom=S.sel?S.sel.dom:null;S.cat=S.sel?S.sel.dom+'|'+S.sel.cat:null;renderWheel();renderSide();});
 $('#egoAll').addEventListener('click',()=>{S.egoAll=!S.egoAll;renderWheel();});
@@ -378,11 +383,11 @@ function highlight(id,kind){
   wheel.querySelectorAll('.hl').forEach(n=>n.classList.remove('hl'));wheel.querySelectorAll('.anim').forEach(n=>n.classList.remove('dim'));
   $$('.card.hl').forEach(n=>n.classList.remove('hl'));
   if(!S.sel)return;
-  if(!id){const r=$('#radars');if(r)r.innerHTML=renderRadars(S.sel,null);const c=$('#cmp');if(c)c.textContent='Passa su un abbinamento della ruota per sovrapporne il profilo.';return;}
+  if(!id){const r=$('#radars');if(r){r.innerHTML=renderRadars(S.sel,null);fitRadars(r);}const c=$('#cmp');if(c)c.textContent='Passa su un abbinamento della ruota per sovrapporne il profilo.';return;}
   const keep=new Set([id]);wheel.querySelectorAll('.lk').forEach(l=>{if(l.dataset.p===id||l.dataset.s===id){keep.add(l.dataset.p);keep.add(l.dataset.s);}});
   wheel.querySelectorAll('.anim').forEach(n=>{const k=n.dataset.id||n.dataset.p;const isLk=n.classList.contains('lk');const on=isLk?(n.dataset.p===id||n.dataset.s===id):keep.has(k);if(!on)n.classList.add('dim');else if(isLk)n.style.opacity=.9;});
   wheel.querySelector(`[data-id="${id}"]`)?.classList.add('hl');
-  const B=BYID[id];if(B&&S.mode==='ego'){const r=$('#radars');if(r)r.innerHTML=renderRadars(S.sel,B);const c=$('#cmp');if(c)c.innerHTML=`Tratteggio: <b>${esc(B.name)}</b> · ${vOf(score(S.sel,B).total).w.toLowerCase()}`;
+  const B=BYID[id];if(B&&S.mode==='ego'){const r=$('#radars');if(r){r.innerHTML=renderRadars(S.sel,B);fitRadars(r);}const c=$('#cmp');if(c)c.innerHTML=`Tratteggio: <b>${esc(B.name)}</b> · ${vOf(score(S.sel,B).total).w.toLowerCase()}`;
     (kind==='s'?$(`.card[data-sid="${id}"]`):$(`.card[data-pid="${id}"]`))?.classList.add('hl');}}
 wheel.addEventListener('pointerover',e=>{if(e.pointerType==='touch')return;const g=e.target.closest('[data-id],[data-t]');if(!g)return;
   if(g.dataset.id){const B=BYID[g.dataset.id];
@@ -432,34 +437,87 @@ function figRadar(T){const ser=T.map((I,i)=>({v:I.ar,c:i===0?'var(--ink)':i===1?
     <p class="flegend">${T.map((I,i)=>`<span><svg width="24" height="8"><line x1="0" y1="4" x2="24" y2="4" style="stroke:${i===0?'var(--ink)':i===1?'var(--ink2)':'var(--muted)'};stroke-width:2.2;${legendLine(i)}"/></svg>${esc(I.name)}</span>`).join('')}</p>`;}
 function names(T){return `<p class="v-names">${T.map(I=>`${mark(I)}<b>${esc(I.name)}</b>`).join('<span aria-hidden="true">+</span>')}</p>`;}
 const ctaCrea=()=>`<div class="r-cta"><button type="button" class="btn primary" data-go-crea>Crea un drink con questi ingredienti →</button></div>`;
-function renderAbbina(){const out=$('#pbOut');const T=analysable();const nSp=T.filter(I=>I.isSpirit).length;
-  if(T.length<2){out.innerHTML=`<div class="empty"><h2>${T.length?`E con ${esc(T[0].name)}, cosa?`:'Il banco è vuoto'}</h2><p class="muted">${T.length?'Aggiungi un secondo ingrediente: nel campo trovi per primi quelli che gli stanno meglio.':'Aggiungi due ingredienti dal banco qui accanto, oppure parti da una coppia classica:'}</p>
+// Abbina ha sempre la stessa impaginazione, da 2 a 5 ingredienti: giudizio con figura, perché, come usarli,
+// coppia per coppia, cosa aggiungere, dettagli. Cambia il contenuto delle sezioni, non la loro posizione.
+function renderAbbina(){const out=$('#pbOut');const T=analysable();const n=T.length;
+  if(n<2){out.innerHTML=`<div class="empty"><h2>${n?`E con ${esc(T[0].name)}, cosa?`:'Il banco è vuoto'}</h2><p class="muted">${n?'Aggiungi un secondo ingrediente: nel campo trovi per primi quelli che gli stanno meglio.':'Aggiungi due ingredienti dal banco qui accanto, oppure parti da una coppia classica:'}</p>
     <div class="pairex">${PAIR_EX.map(p=>`<button type="button" class="ex" data-set="${p.map(I=>I.id).join('+')}">${mark(p[0])}${esc(p[0].name)} + ${esc(p[1].name)}</button>`).join('')}</div></div>`;return;}
-  if(T.length===2&&nSp<2)return renderPairOut(T[0],T[1]);
-  if(T.length===3&&nSp<2)return renderTrioOut(T);
-  renderMatrix(T);}
+  const P=[];for(let i=0;i<n;i++)for(let j=i+1;j<n;j++)P.push({i,j,a:T[i],b:T[j],r:pairT(T[i],T[j])});
+  const V=P.filter(p=>p.r);const foods=T.filter(I=>!I.isSpirit);
+  const weak=V.slice().sort((x,y)=>x.r.total-y.r.total)[0],best=V.slice().sort((x,y)=>y.r.total-x.r.total)[0];
+  let total=null,sub='',tags='',fig='',why=[],how='',details='';
+  if(!V.length){sub='Due alcolici tra loro non si giudicano: aggiungi un alimento per vedere come stanno insieme.';}
+  else if(n===2){const r=V[0].r,[A,B]=[V[0].a,V[0].b];total=r.total;sub=vOf(total).t;
+    tags=relTag(r)+(r.classic?'<span class="chip">Coppia classica</span>':'');fig=figRadar([A,B]);
+    why=String(r.summary).split(/(?<=\.)\s+/).filter(Boolean);
+    const tri=B.isSpirit?[]:trioSpirits(A,B,4);
+    how=`<div><h3>Dosi di partenza</h3><p>${esc(r.ratioTxt)}</p><p class="tiny muted" style="margin-top:6px"><b>Prova veloce:</b> ${esc(testTxt(r))}</p></div>
+      <div><h3>${B.isSpirit?'Al bancone':'Da bere con tutti e due'}</h3>${B.isSpirit?`<p>${esc(howTo(A,B))}</p>`:spiritChips(tri.map(x=>x.s))}</div>`;
+    details=`<p class="scoreline">Punteggio ${num(total)} su 30 ${info('score','punteggio')}</p>${lensTable(r)}`;}
+  else if(n===3&&foods.length>=2){const t=trio(T[0],T[1],T[2]);total=t.total;const r=t.roles;const tw=t.P[t.wi];
+    sub=vOf(total).t.replace(/, o completato con un terzo ingrediente\./,'.');tags=`<span class="chip">${esc(STRUCT[t.structure]||t.structure)}</span>`;fig=triangleSVG(t);
+    why=[`La coppia più forte è ${best.a.name} + ${best.b.name}: ${vOf(best.r.total).w.toLowerCase()}, ${REL[best.r.type].w.toLowerCase()}.`,
+      t.isBridge?`${t.wz.name} fa da ponte tra ${tw.A.name} e ${tw.B.name}, che da soli dialogano poco.`:tw.total<17?`Il punto debole è ${tw.A.name} + ${tw.B.name}: valuta di sostituirne uno.`:'Tutte e tre le coppie reggono anche da sole.',
+      t.rows.find(x=>x.k==='equilibrio').why,t.rows.find(x=>x.k==='intensita').why];
+    how=rolesHow(r,3)+`<div><h3>Da bere con tutti e tre</h3>${spiritChips(spiritsForTrio(t.T).map(x=>x.s))}</div>`;
+    details=`<p class="scoreline">Punteggio ${num(total)} su 30 ${info('score','punteggio')}</p><table class="lens"><tbody>${t.rows.map(x=>`<tr><td>${esc(x.n)}${info(x.n)}</td><td>${esc(plain(x.why))}</td><td class="v">${num(x.v)}/5</td></tr>`).join('')}</tbody></table>`;}
+  else{total=Math.round(V.reduce((a,p)=>a+p.r.total,0)/V.length*2)/2;
+    sub=`${BENCHT[vOf(total).k]} È la media delle ${V.length} coppie.`;
+    tags=`<span class="chip">${n} ingredienti</span>`;fig=netSVG(T,P);
+    const drop=dropSuggestion(T);const tastes=new Set(foods.map(I=>I.dom)).size;
+    why=[`La coppia più forte è ${best.a.name} + ${best.b.name}: ${vOf(best.r.total).w.toLowerCase()}.`,
+      `La più debole è ${weak.a.name} + ${weak.b.name}: ${vOf(weak.r.total).w.toLowerCase()}. Un banco regge quanto il suo legame più fragile.`,
+      drop&&vOf(drop.m).n>vOf(weak.r.total).n?`Senza ${drop.I.name} la coppia più debole diventa ${vOf(drop.m).w.toLowerCase()}.`:'Togliere un solo ingrediente non cambierebbe il giudizio della coppia più debole.',
+      foods.length?`Gli alimenti coprono ${tastes} ${tastes===1?'gusto':'gusti'} su 5${tastes>=3?': un profilo ampio, da dosare con cura.':'.'}`:''].filter(Boolean);
+    how=(foods.length>=3?rolesHow(roles(foods),n):`<div><h3>Dosi di partenza</h3><p>Parti dall'ingrediente più strutturato e aggiungi gli altri in dosi piccole, assaggiando a ogni passo.</p></div>`)+`<div><h3>Da bere con tutto il banco</h3>${spiritChips(foods.length?spiritsForTrio(T).map(x=>x.s):[])}</div>`;
+    details=`<p class="scoreline">Media ${num(total)} su 30 ${info('score','punteggio')}</p><table class="lens"><tbody>${V.map(p=>`<tr><td>${esc(p.a.name)} + ${esc(p.b.name)}</td><td>${REL[p.r.type].w}</td><td class="v">${num(p.r.total)}/30</td></tr>`).join('')}</tbody></table>`;}
+  const add=(n===2&&V.length&&!T[1].isSpirit)?thirdHTML(T[0],T[1]):addHTML();
+  out.innerHTML=`<article class="panel verdict">
+      <div>${names(T)}${total!=null?meter(total,{big:true}):''}<p class="v-sub">${esc(sub)}</p><div class="v-tags">${tags}</div></div>
+      <figure class="figs" style="margin:0">${fig}</figure></article>
+    <section class="panel r-sec why-s"><h2 class="r-h">Perché</h2>${why.length?`<ul class="why">${why.map(s=>`<li>${esc(plain(s))}</li>`).join('')}</ul>`:'<p class="add-empty">Serve almeno un alimento.</p>'}</section>
+    <section class="howto" aria-label="Come usarli">${how||'<div><h3>Dosi</h3><p class="add-empty">—</p></div><div><h3>Da bere</h3><p class="add-empty">—</p></div>'}</section>
+    <section class="panel r-sec"><h2 class="r-h">Coppia per coppia</h2>${matrixHTML(T,weak)}</section>
+    ${add}
+    <details class="panel more-d"><summary>Come si arriva al giudizio</summary>${details||'<p class="add-empty">Nessun punteggio: servono un alimento e un altro ingrediente.</p>'}</details>
+    ${ctaCrea()}`;
+  fitRadars($('#pbOut'));}
+const spiritChips=list=>list.length?`<div class="chips">${list.map(s=>`<span class="chip">${mark(s)}${esc(s.name)}${spInfo(s)}</span>`).join('')}</div>`:'<p class="add-empty">Nessun alcolico adatto a tutti.</p>';
+const BENCHT={forte:'Il banco sta in piedi: da provare.',promettente:'Funziona nel complesso: dosa con cura le coppie più deboli.',rischioso:'Alcune coppie dialogano poco: togli un ingrediente o aggiungine uno che faccia da ponte.',sconsigliato:'Troppe coppie in conflitto: riparti da due o tre ingredienti.'};
+function rolesHow(r,n){return `<div><h3>Ruoli e dosi ${info('roles','ruoli e dosi')}</h3><p><b>${esc(r.base.name)}</b> come base, <b>${esc(r.comp.name)}</b> come complemento, <b>${esc(r.accent.name)}</b> come accento${n>3?'; gli altri in piccole dosi':''}. Parti da ${esc(r.ratio)} e correggi all'assaggio.</p></div>`;}
+function dropSuggestion(T){let drop=null;T.forEach((I,k)=>{const rest=T.filter((_,q)=>q!==k);let m=99;
+  for(let i=0;i<rest.length;i++)for(let j=i+1;j<rest.length;j++){const r=pairT(rest[i],rest[j]);if(r)m=Math.min(m,r.total);}
+  if(m<99&&(!drop||m>drop.m))drop={I,m};});return drop;}
+// metà sotto la diagonale: ogni coppia una volta sola
+function matrixHTML(T,weak){const n=T.length;if(n===2){const r=pairT(T[0],T[1]);
+    return `<div class="matrix-w"><table class="matrix"><tbody><tr><th scope="row">${esc(T[0].name)} + ${esc(T[1].name)}</th><td${r?'':' class="na"'}>${r?meter(r.total):'non si giudica'}</td></tr></tbody></table></div>`;}
+  const cols=T.slice(0,n-1),rows=T.slice(1);
+  return `<div class="matrix-w"><table class="matrix"><thead><tr><td class="blank"></td>${cols.map(I=>`<th scope="col"><span>${esc(I.name)}</span></th>`).join('')}</tr></thead><tbody>
+    ${rows.map((I,ri)=>{const i=ri+1;return `<tr><th scope="row">${esc(I.name)}</th>${cols.map((J,j)=>{if(j>=i)return '<td class="blank"></td>';const r=pairT(I,J);
+      if(!r)return '<td class="na">—</td>';const w=weak&&((weak.a===I&&weak.b===J)||(weak.a===J&&weak.b===I));return `<td${w?' class="weak" title="La coppia più debole"':''}>${meter(r.total)}</td>`;}).join('')}</tr>`;}).join('')}
+  </tbody></table></div>${weak&&n>2?`<p class="tiny muted">Il riquadro evidenziato è la coppia più debole.</p>`:''}`;}
+// da 4 ingredienti: rete delle coppie (spessore = forza, tratteggio = si bilanciano)
+function netSVG(T,P){const n=T.length,cx=180,cy=150,R=88;const pos=T.map((_,i)=>pol(R,-90+i*360/n).map((v,k)=>v+(k?cy:cx)));
+  let h=`<svg class="net" viewBox="0 0 360 300" role="img" aria-label="Le coppie del banco: lo spessore delle linee indica la forza del legame">`;
+  P.forEach(p=>{if(!p.r)return;const [x1,y1]=pos[p.i],[x2,y2]=pos[p.j];const w=(1+Math.max(0,p.r.total-10)/4).toFixed(1);const fr=p.r.total<17;
+    h+=`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" style="stroke:var(--ink);stroke-opacity:${fr?.3:.8};stroke-width:${w};${p.r.type==='contrasto'?'stroke-dasharray:7 5;':''}stroke-linecap:round"/>`;});
+  T.forEach((I,i)=>{const [x,y]=pos[i];const a=-90+i*360/n;const [lx,ly]=pol(R+28,a).map((v,k)=>v+(k?cy:cx));const c=Math.cos(a*Math.PI/180);
+    h+=I.isSpirit?`<rect x="${x-8}" y="${y-8}" width="16" height="16" transform="rotate(45 ${x} ${y})" style="fill:var(--surface);stroke:var(--ink);stroke-width:2.2"/>`:`<circle cx="${x}" cy="${y}" r="10" style="fill:${tcol(I.dom)};stroke:var(--surface);stroke-width:3"/>`;
+    const ln=wrapName(I.name,11,true),anc=Math.abs(c)<.3?'middle':c>0?'start':'end',y0=ly+5-(ln.length-1)*8;
+    h+=`<text text-anchor="${anc}" style="font-size:13.5px;font-weight:600;fill:var(--ink)">${ln.map((l,k)=>`<tspan x="${lx.toFixed(1)}" y="${(y0+k*16).toFixed(1)}">${esc(l)}</tspan>`).join('')}</text>`;});
+  return h+`</svg><p class="flegend"><span><svg width="24" height="8"><line x1="0" y1="4" x2="24" y2="4" style="stroke:var(--ink);stroke-width:2.2"/></svg>si somigliano</span><span><svg width="24" height="8"><line x1="0" y1="4" x2="24" y2="4" style="stroke:var(--ink);stroke-width:2.2;stroke-dasharray:6 5"/></svg>si bilanciano</span><span>più spessa, più forte</span></p>`;}
+// cosa aggiungere quando il banco ha già tre o più ingredienti
+function addHTML(){const full=bench.length>=MAXB;const sg=full?null:benchSuggest();const items=sg?sg.items.slice(0,4):[];
+  return `<section class="panel r-sec add-s" aria-labelledby="h-add"><div class="r-sec-h"><h2 class="r-h" id="h-add">${full?'Il banco è pieno':'Aggiungi un ingrediente'}</h2></div>
+    ${full?'<p class="add-empty">Cinque ingredienti al massimo: togline uno per provarne un altro. La tabella qui sopra ti dice quale pesa di più.</p>'
+      :`<p class="tiny muted">Quelli che stanno meglio con tutto il banco.</p><ul class="sug">${items.map(C=>{const ts=bench.map(i=>pairT(i,C)).filter(Boolean).map(r=>r.total);const m=Math.min(...ts);
+        return `<li>${mark(C)}<span class="sg"><b>${esc(C.name)}</b><small>Con il banco, al peggio: ${vOf(m).w.toLowerCase()}</small></span>${benchBtn(C,'Aggiungi')}</li>`;}).join('')}</ul>`}</section>`;}
 $('#pbOut').addEventListener('click',e=>{const x=e.target.closest('[data-set]');if(x){benchSet(x.dataset.set.split('+').map(id=>BYID[id]));return;}
   if(e.target.closest('[data-go-crea]')){show('crea',{push:true});scrollTo({top:0});return;}
   const l=e.target.closest('[data-lens]');if(l){S.lens=l.dataset.lens;renderAbbina();return;}
   const pg=e.target.closest('[data-sugp]');if(pg){SUGP.page+=+pg.dataset.sugp;renderAbbina();$(`#pbOut [data-sugp="${pg.dataset.sugp}"]:not([disabled])`)?.focus();return;}
   const rm=e.target.closest('[data-drop]');if(rm){benchRemove(BYID[rm.dataset.drop]);}});
 
-function renderPairOut(A,B){const r=score(A,B);const v=vOf(r.total);const sents=String(r.summary).split(/(?<=\.)\s+/).filter(Boolean);
-  const third=B.isSpirit?'':thirdHTML(A,B);const tri=B.isSpirit?[]:trioSpirits(A,B,4);
-  $('#pbOut').innerHTML=`<article class="panel verdict">
-      <div>${names([A,B])}${meter(r.total,{big:true})}<p class="v-sub">${esc(v.t)}</p><div class="v-tags">${relTag(r)}${r.classic?'<span class="chip">Coppia classica</span>':''}</div></div>
-      <figure class="figs" style="margin:0">${figRadar([A,B])}</figure>
-    </article>
-    <section class="panel r-sec"><h2 class="r-h">Perché</h2><ul class="why">${sents.map(s=>`<li>${esc(plain(s))}</li>`).join('')}</ul></section>
-    <section class="howto" aria-label="Come usarli">
-      <div><h3>Dosi di partenza</h3><p>${esc(r.ratioTxt)}</p></div>
-      <div><h3>Prova veloce</h3><p>${esc(cap(testTxt(r)))}</p></div>
-      ${B.isSpirit?`<div><h3>Al bancone</h3><p>${esc(howTo(A,B))}</p></div>`:''}
-      ${tri.length?`<div><h3>Da bere con tutti e due</h3><div class="chips">${tri.map(x=>`<span class="chip">${mark(x.s)}${esc(x.s.name)}${spInfo(x.s)}</span>`).join('')}</div></div>`:''}
-    </section>
-    ${third}
-    <details class="panel more-d"><summary>Come si arriva al giudizio</summary><p class="scoreline">Punteggio ${num(r.total)} su 30 ${info('score','punteggio')}</p>${lensTable(r)}</details>
-    ${ctaCrea()}`;}
 function lensTable(r){return `<table class="lens"><tbody>${r.lens.map(l=>`<tr><td>${esc(l.k)}${info(l.k)}</td><td>${esc(plain(l.why))}</td><td class="v">${num(l.v)}/5</td></tr>`).join('')}</tbody></table>`;}
 const SUG_N=12,SUG_PER=4,SUGP={key:'',list:[],page:0};
 function thirdHTML(A,B){
@@ -467,30 +525,11 @@ function thirdHTML(A,B){
   const list=SUGP.list,pages=Math.max(1,Math.ceil(list.length/SUG_PER));SUGP.page=Math.max(0,Math.min(SUGP.page,pages-1));
   const from=SUGP.page*SUG_PER,shown=list.slice(from,from+SUG_PER);
   const full=bench.length>=MAXB;
-  return `<section class="panel r-sec" aria-labelledby="h-third"><div class="r-sec-h"><h2 class="r-h" id="h-third">Aggiungi un terzo ingrediente</h2>
+  return `<section class="panel r-sec add-s" aria-labelledby="h-third"><div class="r-sec-h"><h2 class="r-h" id="h-third">Aggiungi un terzo ingrediente</h2>
       ${pages>1?`<div class="pager" role="group" aria-label="Altre proposte"><button type="button" data-sugp="-1" aria-label="Proposte precedenti"${SUGP.page?'':' disabled'}>‹</button><span aria-live="polite">${from+1}–${from+shown.length} di ${list.length}</span><button type="button" data-sugp="1" aria-label="Altre proposte"${SUGP.page<pages-1?'':' disabled'}>›</button></div>`:''}</div>
     <div class="lensbar" role="group" aria-label="Che cosa deve fare il terzo ingrediente">${TLENS.map(l=>`<button type="button" data-lens="${l[0]}" aria-pressed="${S.lens===l[0]}">${LENSP[l[0]][0]}</button>`).join('')}</div>
     <p class="tiny muted">${LENSP[S.lens][1]}</p>
     <ul class="sug">${shown.map(x=>`<li>${mark(x.C)}<span class="sg"><b>${esc(x.C.name)}</b><small>${esc(plain(lensReason(S.lens,A,B,x.C,x.t)))}</small></span>${full?'':benchBtn(x.C,'Aggiungi')}</li>`).join('')}</ul></section>`;}
-function renderTrioOut(T){const [A,B,C]=T;const t=trio(A,B,C);const v=vOf(t.total);const r=t.roles;const sp=spiritsForTrio(t.T);
-  const best=t.P.slice().sort((a,b)=>b.total-a.total)[0],weak=t.P[t.wi];
-  const why=[`La coppia più forte è ${best.A.name} + ${best.B.name}: ${vOf(best.total).w.toLowerCase()}, ${REL[best.type].w.toLowerCase()}.`,
-    t.isBridge?`${t.wz.name} fa da ponte tra ${weak.A.name} e ${weak.B.name}, che da soli dialogano poco.`:weak.total<17?`Il punto debole è ${weak.A.name} + ${weak.B.name}: valuta di sostituirne uno.`:'Tutte e tre le coppie reggono anche da sole.',
-    plain(t.rows.find(x=>x.k==='equilibrio').why),plain(t.rows.find(x=>x.k==='intensita').why)];
-  $('#pbOut').innerHTML=`<article class="panel verdict">
-      <div>${names(t.T)}${meter(t.total,{big:true})}<p class="v-sub">${esc(v.t.replace(/, o completato con un terzo ingrediente\./,'.'))}</p><div class="v-tags"><span class="chip">${esc(STRUCT[t.structure]||t.structure)}</span></div></div>
-      <figure class="figs" style="margin:0">${triangleSVG(t)}</figure>
-    </article>
-    <section class="panel r-sec"><h2 class="r-h">Perché</h2><ul class="why">${why.map(s=>`<li>${esc(s)}</li>`).join('')}</ul></section>
-    <section class="howto" aria-label="Come usarli">
-      <div><h3>Ruoli e dosi ${info('roles','ruoli e dosi')}</h3><p><b>${esc(r.base.name)}</b> come base, <b>${esc(r.comp.name)}</b> come complemento, <b>${esc(r.accent.name)}</b> come accento. Parti da ${esc(r.ratio)} e correggi all'assaggio.</p></div>
-      ${sp.length?`<div><h3>Da bere con tutti e tre</h3><div class="chips">${sp.map(x=>`<span class="chip">${mark(x.s)}${esc(x.s.name)}${spInfo(x.s)}</span>`).join('')}</div></div>`:''}
-    </section>
-    <section class="panel r-sec"><h2 class="r-h">Le tre coppie</h2><ul class="sug">${t.P.map(p=>`<li><span class="sg"><b>${esc(p.A.name)} + ${esc(p.B.name)}</b><small>${REL[p.type].w}</small></span>${meter(p.total)}</li>`).join('')}</ul></section>
-    <details class="panel more-d"><summary>Come si arriva al giudizio</summary><p class="scoreline">Punteggio ${num(t.total)} su 30 ${info('score','punteggio')}</p>
-      <table class="lens"><tbody>${t.rows.map(x=>`<tr><td>${esc(x.n)}${info(x.n)}</td><td>${esc(plain(x.why))}</td><td class="v">${num(x.v)}/5</td></tr>`).join('')}</tbody></table>
-      ${figRadar(t.T)}</details>
-    ${ctaCrea()}`;}
 function triangleSVG(t){const P=[[180,46],[62,236],[298,236]];const E=[[0,1],[0,2],[1,2]];
   let h=`<svg class="tri" viewBox="0 0 360 290" role="img" aria-label="Le tre coppie del trio: lo spessore delle linee indica la forza del legame">`;
   E.forEach(([i,j],k)=>{const p=t.P[k];const w=(1.4+Math.max(0,p.total-10)/3.6).toFixed(1);const weak=k===t.wi&&!t.isBridge&&p.total<17;
@@ -501,24 +540,6 @@ function triangleSVG(t){const P=[[180,46],[62,236],[298,236]];const E=[[0,1],[0,
     h+=I.isSpirit?`<rect x="${x-9}" y="${y-9}" width="18" height="18" transform="rotate(45 ${x} ${y})" style="fill:var(--surface);stroke:var(--ink);stroke-width:2.5"/>`:`<circle cx="${x}" cy="${y}" r="11" style="fill:${tcol(I.dom)};stroke:var(--surface);stroke-width:3"/>`;
     h+=`<text x="${x}" y="${ty}" text-anchor="middle" style="font-size:14px;font-weight:600;fill:var(--ink)">${esc(trunc(I.name,22))}</text>`;});
   return h+'</svg><p class="flegend"><span><svg width="24" height="8"><line x1="0" y1="4" x2="24" y2="4" style="stroke:var(--ink);stroke-width:2.2"/></svg>si somigliano</span><span><svg width="24" height="8"><line x1="0" y1="4" x2="24" y2="4" style="stroke:var(--ink);stroke-width:2.2;stroke-dasharray:6 5"/></svg>si bilanciano</span></p>';}
-function renderMatrix(T){const n=T.length;const cell=(a,b)=>pairT(a,b);
-  let weakest=null;for(let i=0;i<n;i++)for(let j=i+1;j<n;j++){const r=cell(T[i],T[j]);if(r&&(!weakest||r.total<weakest.r.total))weakest={i,j,r};}
-  let drop=null;if(n>=3)T.forEach((I,k)=>{const rest=T.filter((_,q)=>q!==k);let m=99;for(let i=0;i<rest.length;i++)for(let j=i+1;j<rest.length;j++){const r=cell(rest[i],rest[j]);if(r)m=Math.min(m,r.total);}
-    if(m<99&&(!drop||m>drop.m))drop={I,m};});
-  const worst=weakest?weakest.r.total:0;
-  const twoSp=T.filter(I=>I.isSpirit).length>=2;
-  $('#pbOut').innerHTML=`<article class="panel r-sec">
-      ${names(T)}
-      <h2 class="r-h" style="margin-top:6px">Il banco, coppia per coppia</h2>
-      <p class="v-sub" style="margin-top:0">${weakest?`Un banco vale quanto la sua coppia più debole: <b>${esc(T[weakest.i].name)} + ${esc(T[weakest.j].name)}</b>, ${vOf(worst).w.toLowerCase()}.`:''}${twoSp?' Due alcolici tra loro non si valutano: conta come stanno con gli alimenti.':''}</p>
-      <div class="matrix-w"><table class="matrix"><thead><tr><th></th>${T.map(I=>`<th scope="col">${esc(I.name)}</th>`).join('')}</tr></thead><tbody>
-        ${T.map((I,i)=>`<tr><th scope="row">${mark(I)} ${esc(I.name)}</th>${T.map((J,j)=>{if(i===j)return '<td class="self"></td>';const r=cell(I,J);if(!r)return '<td class="self"><span class="muted">—</span></td>';
-          const w=weakest&&((weakest.i===i&&weakest.j===j)||(weakest.i===j&&weakest.j===i));return `<td${w?' class="weak"':''}>${meter(r.total)}</td>`;}).join('')}</tr>`).join('')}
-      </tbody></table></div>
-      ${drop&&drop.m>worst?`<p>Togli <b>${esc(drop.I.name)}</b> e la coppia più debole diventa ${vOf(drop.m).w.toLowerCase()}. <button type="button" class="link" data-drop="${drop.I.id}">Toglilo dal banco</button></p>`:''}
-      <p class="tiny muted">Con due o tre ingredienti sul banco vedi l'analisi completa: perché, dosi e cosa aggiungere.</p>
-    </article>${ctaCrea()}`;}
-
 // ---------- il metodo, in breve ----------
 $('#methodBody').innerHTML=`
   <div><h3>Il profilo di ogni ingrediente</h3><p>Cinque gusti, la sensazione in bocca (grasso, piccante, astringente, fresco) e diciotto famiglie di profumi, tutto da 0 a 5. Il gusto più alto decide il posto nella ruota.</p></div>
@@ -616,8 +637,8 @@ function renderRecipe(){const out=$('#ckOut');
   out.innerHTML=`<article class="sheet" aria-labelledby="dname">
     <div class="sheet-hero">${glassSVG(R.st.id,96,R.st.name,true)}<div><h2 class="dname" id="dname">${esc(drinkName(R,bench))}</h2><p class="dmeta">${esc(R.st.name)} · base ${esc(baseTxt)}</p>
       <div class="sheet-acts"><button type="button" class="btn sm" data-copy-recipe>Copia la ricetta</button><button type="button" class="btn sm ghost" data-copy-link>Copia il link</button></div></div></div>
-    <div class="tickets" role="tablist" aria-label="Versioni della ricetta">${rs.map(r=>`<button type="button" role="tab" data-view="${r.mode}" aria-selected="${r.mode===CK.view}">${MODELBL[r.mode]}<small>~${fmt(r.abv)}% · ${r.vol} ml</small></button>`).join('')}</div>
-    <p class="tk-d">${esc(MODEDESC[R.mode])}</p>
+    <div class="versions"><div class="versions-h"><h3 id="vers-h">Scegli la versione</h3><span class="tiny muted">${rs.length===3?'tre modi':'due modi'} di fare lo stesso drink</span></div>
+      <div class="vers" role="radiogroup" aria-labelledby="vers-h">${rs.map(r=>`<button type="button" role="radio" data-view="${r.mode}" aria-checked="${r.mode===CK.view}" tabindex="${r.mode===CK.view?0:-1}"><b>${MODELBL[r.mode]}</b><small>${esc(MODEDESC[r.mode])}</small><span class="vm">~${fmt(r.abv)}% vol · ${r.vol} ml</span></button>`).join('')}</div></div>
     <dl class="rstats"><div><dt>Volume</dt><dd>${R.vol} ml</dd></div><div><dt>Alcol</dt><dd>~${fmt(R.abv)}%</dd></div><div><dt>Bicchiere</dt><dd>${esc(R.st.glass)}</dd></div><div><dt>Ghiaccio</dt><dd>${esc(R.st.ice)}</dd></div></dl>
     <div class="sheet-b">
       <div><section><h3>Ricetta</h3><ul class="spec">${spec}</ul></section><section><h3>Guarnizione</h3><p>${esc(cap(R.garnish[0]))}.</p></section></div>
@@ -627,7 +648,12 @@ function renderRecipe(){const out=$('#ckOut');
         ${warns.length?`<section><p class="safety">${warns.map(esc).join(' ')}</p></section>`:''}</div>
     </div>
   </article>`;
-  renderRecipe.R=R;}
+  renderRecipe.R=R;stickRecipe();}
+// la ricetta resta in vista mentre scegli a sinistra; se è più alta dello schermo scorre con la pagina e si ferma quando se ne vede il fondo
+function stickRecipe(){const el=$('#ckOut');if(!el)return;if(innerWidth<961||S.tab!=='crea'){el.style.top='';return;}
+  requestAnimationFrame(()=>{const h=el.offsetHeight;el.style.top=Math.min(84,innerHeight-h-16)+'px';});}
+$('#ckOut').addEventListener('keydown',e=>{const b=e.target.closest('.vers [role=radio]');if(!b||!['ArrowRight','ArrowLeft','ArrowDown','ArrowUp'].includes(e.key))return;e.preventDefault();
+  const bs=[...b.parentNode.children];const i=bs.indexOf(b);const nx=bs[(i+(e.key==='ArrowRight'||e.key==='ArrowDown'?1:bs.length-1))%bs.length];CK.view=nx.dataset.view;renderRecipe();$(`#ckOut [data-view="${CK.view}"]`)?.focus();});
 $('#ckOut').addEventListener('click',e=>{const x=e.target.closest('[data-set]');if(x){benchSet(x.dataset.set.split('+').map(id=>BYID[id]));return;}
   const v=e.target.closest('[data-view]');if(v){CK.view=v.dataset.view;renderRecipe();$(`#ckOut [data-view="${CK.view}"]`)?.focus();return;}
   const s=e.target.closest('[data-gosty]');if(s){CK.style=s.dataset.gosty;CK.styleAuto=false;renderCrea();sync(false);return;}

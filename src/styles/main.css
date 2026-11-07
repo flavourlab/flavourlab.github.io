@@ -19,7 +19,7 @@ img,svg{max-width:100%}
   --shadow:0 1px 2px rgba(24,23,26,.05),0 8px 28px rgba(24,23,26,.07);
   --shadow-up:0 -1px 0 rgba(24,23,26,.04),0 12px 40px rgba(24,23,26,.16);
   --f-ui:'Geist',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
-  --f-display:'Instrument Serif','Iowan Old Style','Palatino Linotype',Georgia,serif;
+  --f-display:'Geist',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
   --f-mono:'Geist Mono',ui-monospace,'SF Mono',Menlo,Consolas,monospace;
   --r:14px; --r-lg:20px;
   --gut:max(16px,env(safe-area-inset-left,0px));
@@ -517,3 +517,84 @@ details[open]>summary::before{transform:rotate(45deg) translate(-2px,-2px)}
   .create .controls{display:contents}
   .create .bench{order:1}.create .recipe{order:2}#ctlBase{order:3}#ctlGlass{order:4}#ckMixBox{order:5}
 }
+
+/* =====================================================================
+   Revisione 2: un solo carattere (Geist) anche per i titoli, gerarchia data da peso e dimensione
+   ===================================================================== */
+.brand{font-family:var(--f-ui);font-weight:600;font-size:20px;letter-spacing:-.03em}
+.brand em{font-style:normal;font-weight:300;color:var(--accent);margin-left:1px}
+.hero h1,.vhead h1,.fname{font-weight:300;letter-spacing:-.045em;line-height:1}
+.hero h1{font-size:clamp(42px,5.6vw,72px)}
+.vhead h1{font-size:clamp(36px,4.2vw,52px)}
+.fname{font-size:clamp(44px,6vw,76px)}
+.block-h h2{font-weight:400;letter-spacing:-.03em;font-size:clamp(26px,2.8vw,34px)}
+.meter.big .m-w{font-weight:300;letter-spacing:-.04em;font-size:clamp(38px,4.2vw,54px)}
+.dname{font-weight:400;letter-spacing:-.035em;font-size:clamp(28px,3vw,40px);line-height:1.05}
+.empty h2,.nogo h2{font-weight:400;letter-spacing:-.03em;font-size:28px}
+
+/* ritorno a tutti gli alimenti */
+.food-top{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;margin-bottom:10px}
+.back{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line2);background:var(--surface);border-radius:999px;padding:6px 14px 6px 10px;font-size:13.5px;font-weight:500;cursor:pointer}
+.back:hover{border-color:var(--ink)}
+.back svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.food-top .crumbs{margin:0}
+
+/* scheda laterale: i due grafici uno sotto l'altro, a tutta larghezza */
+.side .radars{grid-template-columns:minmax(0,1fr);gap:18px}
+.side .radar svg{max-width:420px;margin-inline:auto;display:block}
+.side .radar text{font-size:var(--rfs,11px)}
+
+/* Abbina: stessa struttura da 2 a 5 ingredienti */
+.verdict{min-height:300px}
+.verdict .figs{min-height:260px;justify-content:center}
+.howto{grid-template-columns:repeat(2,minmax(0,1fr))}
+@media (max-width:640px){.howto{grid-template-columns:minmax(0,1fr)}}
+.howto>div{min-height:120px}
+.add-empty{font-size:14.5px;color:var(--muted)}
+.net{width:100%;height:auto;max-width:340px;margin:0 auto;display:block;overflow:visible}
+.net text{font-family:var(--f-ui)}
+
+/* matrice coppia per coppia: solo metà sotto la diagonale, intestazioni oblique, niente pallini */
+.matrix-w{overflow-x:auto;padding-top:4px}
+.matrix{border-collapse:separate;border-spacing:6px;font-size:14px}
+.matrix thead th{writing-mode:horizontal-tb;transform:none;height:96px;width:110px;min-width:110px;padding:0;vertical-align:bottom;position:relative}
+.matrix thead th span{position:absolute;left:50%;bottom:10px;transform-origin:left bottom;transform:rotate(-38deg);white-space:nowrap;font-weight:500;color:var(--ink2)}
+.matrix tbody th{font-weight:500;text-align:right;padding:0 10px 0 0;color:var(--ink2);white-space:nowrap}
+.matrix td{min-width:110px;height:64px;padding:8px 10px;border-radius:12px;background:var(--raise);border:1px solid var(--line);text-align:center;vertical-align:middle}
+.matrix td.blank{background:transparent;border-color:transparent}
+.matrix td.weak{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
+.matrix td.na{color:var(--muted);font-size:13px}
+.matrix .meter{flex-direction:column;gap:6px}
+.matrix .m-w{font-size:13.5px;font-weight:600}
+
+/* Crea: niente scorrimento interno; la ricetta segue la pagina e si ferma quando il fondo è visibile */
+@media (min-width:961px){.recipe{max-height:none;overflow:visible}}
+
+/* versioni della ricetta: tre schede chiare */
+.versions{padding:18px 24px 0;display:flex;flex-direction:column;gap:10px}
+.versions-h{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
+.versions-h h3{font-size:12.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.vers{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,170px),1fr));gap:8px}
+.vers button{display:flex;flex-direction:column;align-items:flex-start;gap:4px;text-align:left;padding:12px 14px;border:1.5px solid var(--line2);border-radius:14px;background:var(--surface);cursor:pointer;transition:border-color .15s,background .15s}
+.vers button:hover{border-color:var(--ink2)}
+.vers button b{font-size:15px;font-weight:600;display:flex;align-items:center;gap:8px}
+.vers button b::before{content:"";width:14px;height:14px;border-radius:50%;border:1.5px solid var(--line2);flex:none;transition:border-color .15s,box-shadow .15s}
+.vers button small{font-size:12.5px;color:var(--muted);line-height:1.4}
+.vers button .vm{font-family:var(--f-mono);font-size:12px;color:var(--ink2)}
+.vers button[aria-checked="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.vers button[aria-checked="true"] b::before{border-color:var(--accent);box-shadow:inset 0 0 0 3.5px var(--surface),inset 0 0 0 10px var(--accent)}
+@media (max-width:760px){.versions{padding:16px 18px 0}}
+
+.radar svg text{font-size:var(--rfs,10.5px)}
+.recipe{transition:none}
+
+.radar svg text{font-size:var(--rfs,10.5px)}
+/* Abbina: altezze minime uguali da 2 a 5 ingredienti, cresce solo la tabella delle coppie */
+.result .verdict{min-height:380px}
+.result .why-s{min-height:230px}
+.result .howto>div{min-height:150px}
+.result .add-s{min-height:300px}
+/* il giudizio va in colonna quando lo spazio non basta per testo e figura affiancati */
+.result{container-type:inline-size}
+.meter.big{flex-wrap:wrap;row-gap:8px}
+@container (max-width:720px){.verdict{grid-template-columns:minmax(0,1fr)}.verdict .figs{min-height:0}}
