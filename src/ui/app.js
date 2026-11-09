@@ -2,7 +2,8 @@
 // Un solo banco di lavoro attraversa le tre sezioni: in «Esplora» si scoprono gli ingredienti e si mettono sul banco,
 // in «Abbina» si capisce se il banco sta in piedi, in «Crea» il banco diventa una ricetta.
 // Ogni vista ha un indirizzo (#esplora/…, #abbina/…, #crea/…): si condivide e il tasto «indietro» funziona.
-import { ALLERG, BYID, BYNAME, CATS, FAM, FOODS, ORIG, SGROUP, SPIRITS, TLABEL, TORDER } from '../domain/core.js';
+import { ALLERG, BYID, BYNAME, CATS, FAM, FOODS, ORIG, SGROUP, SPIRITS, TLABEL, TORDER, W } from '../domain/core.js';
+import { impronta, sharedFams, famLbl, catIcon, catIconOf, icon } from './visual.js';
 import { S as score, howTo, listIt, monthsTxt, partnersOf, spiritsOf, trioSpirits } from '../domain/scoring.js';
 import { TLENS, roles, spiritsForTrio, suggestThird, trio, lensReason } from '../domain/trio.js';
 import { BASES, BGROUPS, STY, abvOf, buildRecipe, coherence, fmt, styleFit, suggestBases } from '../domain/recipes.js';
@@ -96,7 +97,7 @@ function renderBenches(){$$('[data-bench]').forEach(host=>{const ctx=host.datase
       if(e.target.closest('[data-go-abbina]')){show('abbina',{push:true});scrollTo({top:0});}});}
   const n=bench.length;
   host.querySelector('[data-count]').textContent=`${n} di ${MAXB}`;
-  host.querySelector('[data-list]').innerHTML=bench.map(I=>`<li>${mark(I)}<span class="bi"><b>${esc(I.name)}${spInfo(I)}</b><small>${esc(shortKind(I))}</small></span><button type="button" class="x" data-rm="${I.id}" aria-label="Togli ${esc(I.name)} dal banco">×</button></li>`).join('')
+  host.querySelector('[data-list]').innerHTML=bench.map(I=>`<li>${impronta(I,34,{label:false})}<span class="bi"><b>${esc(I.name)}${spInfo(I)}</b><small>${esc(shortKind(I))}</small></span><button type="button" class="x" data-rm="${I.id}" aria-label="Togli ${esc(I.name)} dal banco">×</button></li>`).join('')
     +(n<2?`<li class="ph" aria-hidden="true">${n?'Aggiungi almeno un altro ingrediente':'Il banco è vuoto'}</li>`:'');
   host.querySelector('[data-add]').hidden=n>=MAXB;
   const exs=ctx==='crea'?DRINK_EX:PAIR_EX;
@@ -172,6 +173,7 @@ function select(f,{nav=true,keepMode=false}={}){S.sel=f;S.egoAll=false;S.spAll=f
   if(nav){show('esplora',{push:true});const top=$('#exFood').getBoundingClientRect().top+scrollY-90;if(scrollY>top)scrollTo({top:Math.max(0,top),behavior:calm()?'auto':'smooth'});}}
 
 function renderEsplora(){const A=S.sel;
+  $('#v-esplora').classList.toggle('has-food',!!A);
   $('#exHero').hidden=!!A;$('#exFood').hidden=!A;$('#pairs').hidden=!A;$('#spirits').hidden=!A;
   if(A)renderFood();renderWheel();renderSide();if(A){renderPairs();renderSpirits();}}
 function refreshBenchMarks(){if(!S.sel)return;renderFood();renderPairs();renderSpirits();}
@@ -185,9 +187,9 @@ function renderFood(){const A=S.sel;const p=S.parts,sp=S.sps;
   $('#exFood').innerHTML=`<div>
       <div class="food-top"><button type="button" class="back" data-home><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M12.5 4.5L7 10l5.5 5.5"/></svg>Tutti gli alimenti</button>
       <nav class="crumbs" aria-label="Percorso"><button type="button" data-crumb="t">${TLABEL[A.dom]}</button><span aria-hidden="true">/</span><button type="button" data-crumb="c">${esc(CATS[A.cat][0])}</button></nav></div>
-      <h1 class="fname">${esc(A.name)}</h1>
+      <div class="fhead"><div><h1 class="fname">${esc(A.name)}</h1></div>${impronta(A,132,{cls:'ip-big'})}</div>
       <p class="fsum">${sum}</p>
-      <div class="chips"><span class="chip">${mark(A)}Gusto ${TLABEL[A.dom].toLowerCase()}</span><span class="chip">Intensità <span aria-hidden="true">${dots(A.int)}</span><span class="sr">${A.int} su 5</span></span><span class="chip">${A.season?'Stagione: '+monthsTxt(A.season):'Tutto l\'anno'}</span>${A.o?`<span class="chip">${esc(ORIG[A.o])}</span>`:''}</div>
+      <div class="chips"><span class="chip">${catIcon(A,16)}${esc(CATS[A.cat][0])}</span><span class="chip">${mark(A)}Gusto ${TLABEL[A.dom].toLowerCase()}</span><span class="chip">Intensità <span aria-hidden="true">${dots(A.int)}</span><span class="sr">${A.int} su 5</span></span><span class="chip">${A.season?'Stagione: '+monthsTxt(A.season):'Tutto l\'anno'}</span>${A.o?`<span class="chip">${esc(ORIG[A.o])}</span>`:''}</div>
     </div>
     <div class="food-acts">
       <button type="button" class="btn${onB?'':' primary'}" data-bench-t="${A.id}" aria-pressed="${onB}">${onB?'✓ Sul banco':'<span class="plus" aria-hidden="true">+</span>Metti sul banco'}</button>
@@ -210,15 +212,18 @@ function renderSide(){const el=$('#side');
   const lv={testa:[],cuore:[],fondo:[]};A.ar.forEach((v,i)=>{if(v>=2)lv[FAM[i][3]].push(FAM[i][1].toLowerCase());});
   const st=[['grassezza',A.st.g],['piccantezza',A.st.p],['astringenza',A.st.t],['freschezza',A.st.f]].filter(x=>x[1]>0).map(x=>`${x[0]} ${x[1]}/5`).join(', ')||'nessuna sensazione rilevante';
   const allerg=ALLERG[A.cat];const notes=[A.note,allerg&&!A.note.includes(allerg)?'Allergene: '+allerg:''].filter(Boolean);
-  el.innerHTML=`<section class="panel" aria-labelledby="h-prof"><h2 id="h-prof">I suoi profumi</h2>
+  el.innerHTML=`<section class="panel" aria-labelledby="h-prof"><h2 id="h-prof">La sua impronta</h2>
+    <div class="ip-read">${impronta(A,176)}<p class="tiny muted">Al centro il gusto prevalente, nell'anello i cinque gusti, intorno i profumi: <b>in alto a destra le note fresche</b>, in basso le centrali, a sinistra le profonde. Più lungo il tratto, più forte la nota.</p></div>
+    <h3 class="side-h3">I suoi profumi</h3>
     ${fams.length?`<ul class="fbars">${fams.map(([v,i])=>`<li><span>${esc(FAM[i][1])}</span><span class="bar" role="img" aria-label="${v} su 5"><i style="width:${v/5*100}%"></i></span></li>`).join('')}</ul>`:'<p class="muted">Profumo neutro: conta soprattutto il gusto.</p>'}
     <p class="tiny"><b>Al bancone:</b> ${esc(CATS[A.cat][2])}.</p>
     ${notes.length?`<p class="safety">${esc(notes.join(' · '))}</p>`:''}
-    <div class="radars" id="radars">${renderRadars(A,null)}</div>
-    <p class="cmp" id="cmp">${TOUCH()?'Tocca un abbinamento della ruota per sovrapporne il profilo.':'Passa su un abbinamento della ruota per sovrapporne il profilo.'}</p>
+    <details class="more-d" id="radarBox"><summary>Profilo completo: gusti e profumi</summary>
+      <div class="radars" id="radars">${renderRadars(A,null)}</div>
+      <p class="cmp" id="cmp">${TOUCH()?'Tocca un abbinamento della ruota per sovrapporne il profilo.':'Passa su un abbinamento della ruota per sovrapporne il profilo.'}</p></details>
     <details class="more-d"><summary>Note fresche, centrali e profonde</summary>
       <dl class="kv"><dt>Note fresche</dt><dd>${lv.testa.join(', ')||'—'}</dd><dt>Note centrali</dt><dd>${lv.cuore.join(', ')||'—'}</dd><dt>Note profonde</dt><dd>${lv.fondo.join(', ')||'—'}</dd><dt>In bocca</dt><dd>${st}</dd></dl>
-    </details></section>`;fitRadars($('#side'));}
+    </details></section>`;fitRadars($('#side'));$('#radarBox').addEventListener('toggle',()=>fitRadars($('#side')));}
 // i radar scalano con la colonna: le etichette restano a 12 px reali
 function fitRadars(root){(root||document).querySelectorAll('.radar svg').forEach(svg=>{const vb=svg.viewBox.baseVal;const w=svg.getBoundingClientRect().width;if(vb&&w)svg.style.setProperty('--rfs',(12*vb.width/w).toFixed(2)+'px');});}
 function renderRadars(A,B){
@@ -244,28 +249,38 @@ $('#side').addEventListener('click',e=>{const zb=e.target.closest('[data-zoom]')
 
 // ---------- liste ----------
 function why2(r){const s=String(r.summary).split(/(?<=\.)\s+/).filter(Boolean);return s;}
+// una riga che cambia davvero da carta a carta: le famiglie di profumi in comune (o il ponte tra due famiglie);
+// per i contrasti resta la frase, che parla di gusti ed è già specifica
+function famsLine(A,B){const sh=sharedFams(A,B).slice(0,3);
+  if(sh.length)return `<p class="c-fams"><span class="muted">In comune</span> ${sh.map(i=>`<b>${esc(famLbl(i))}</b>`).join('<span class="dot" aria-hidden="true">·</span>')}</p>`;
+  let best=null;for(let i=0;i<FAM.length;i++){if(A.ar[i]<2)continue;for(let j=0;j<FAM.length;j++){if(i===j||B.ar[j]<2||!W[i][j])continue;const p=A.ar[i]*B.ar[j];if(!best||p>best[2])best=[i,j,p];}}
+  return best?`<p class="c-fams"><span class="muted">Si legano</span> <b>${esc(famLbl(best[0]))}</b><span class="dot" aria-hidden="true">↔</span><span class="sr"> con </span><b>${esc(famLbl(best[1]))}</b></p>`:'';}
+function cardLine(r){const fl=r.type==='concordanza'?famsLine(r.A,r.B):'';return fl||`<p class="c-why">${esc(firstSentence(r.summary))}</p>`;}
+function cardWhy(r){return (r.type==='concordanza'&&famsLine(r.A,r.B)?why2(r):why2(r).slice(1)).map(s=>`<p>${esc(plain(s))}</p>`).join('');}
+const classicTag=r=>r.classic?`<span class="rel classic" title="Coppia della tradizione, in cucina o al bancone">Classico</span>`:'';
+function cardTop(r,nameHTML,kindHTML){return `<div class="c-top"><div class="c-id">${impronta(r.B,46,{hi:sharedFams(r.A,r.B),label:false})}<div><h3 class="c-name">${nameHTML}</h3><span class="c-kind">${kindHTML}</span></div></div>${meter(r.total)}</div>
+    <div class="c-tags">${relTag(r)}${classicTag(r)}</div>`;}
 function pairCard(r){const B=r.B;
   return `<article class="card" data-pid="${B.id}">
-    <div class="c-top"><div><h3 class="c-name"><button type="button" class="nm" data-open="${B.id}">${esc(B.name)}</button></h3><span class="c-kind">${mark(B)}${esc(CATS[B.cat][0])}</span></div>${meter(r.total)}</div>
-    <div>${relTag(r)}</div>
-    <p class="c-why">${esc(firstSentence(r.summary))}</p>
-    <details><summary>Perché, dosi e una prova veloce</summary>${why2(r).slice(1).map(s=>`<p>${esc(plain(s))}</p>`).join('')}<p><b>Rapporto:</b> ${esc(r.ratioTxt)}</p><p><b>Prova:</b> ${esc(testTxt(r))}</p><p class="tiny muted">Punteggio ${num(r.total)} su 30 ${info('score','punteggio')}</p></details>
+    ${cardTop(r,`<button type="button" class="nm" data-open="${B.id}">${esc(B.name)}</button>`,`${catIcon(B,14)}${esc(CATS[B.cat][0])}`)}
+    ${cardLine(r)}
+    <details><summary>Perché, dosi e una prova veloce</summary>${cardWhy(r)}<p><b>Rapporto:</b> ${esc(r.ratioTxt)}</p><p><b>Prova:</b> ${esc(testTxt(r))}</p><p class="tiny muted">Punteggio ${num(r.total)} su 30 ${info('score','punteggio')}</p></details>
     <div class="c-acts">${benchBtn(B)}<button type="button" class="btn sm ghost" data-open="${B.id}">Apri →</button></div>
   </article>`;}
 function testTxt(r){return r.type==='concordanza'?`assaggia ${r.A.name} da solo, poi insieme a ${r.B.name}: se i profumi in comune si allungano senza confondersi, funziona.`
   :`un boccone con entrambi: nessuno dei due deve prevalere. Se uno copre l'altro, riducilo e riprova.`;}
 function spiritCard(r){const B=r.B,A=S.sel;const t=S.trio[B.id];const how=SGROUP[B.grp][1];
   return `<article class="card sp" data-sid="${B.id}">
-    <div class="c-top"><div><h3 class="c-name">${esc(B.name)}${spInfo(B)}</h3><span class="c-kind">${mark(B)}${esc((B.ex?B.ex+' · ':'')+SGROUP[B.grp][0])}</span></div>${meter(r.total)}</div>
-    <div>${relTag(r)}</div>
-    <p class="c-why">${esc(firstSentence(r.summary))}</p>
+    ${cardTop(r,`${esc(B.name)}${spInfo(B)}`,`${catIcon(B,14)}${esc((B.ex?B.ex+' · ':'')+SGROUP[B.grp][0])}`)}
+    ${cardLine(r)}
     <p class="tiny"><b>Come:</b> ${esc(cap(how))}.${t?` Con un terzo: <b>${esc(t.name)}</b>.`:''}</p>
-    <details><summary>Perché e come prepararlo</summary>${why2(r).slice(1).map(s=>`<p>${esc(plain(s))}</p>`).join('')}<p>${esc(howTo(A,B))}</p><p class="tiny muted">Punteggio ${num(r.total)} su 30 ${info('score','punteggio')}</p></details>
+    <details><summary>Perché e come prepararlo</summary>${cardWhy(r)}<p>${esc(howTo(A,B))}</p><p class="tiny muted">Punteggio ${num(r.total)} su 30 ${info('score','punteggio')}</p></details>
     <div class="c-acts">${benchBtn(B)}<button type="button" class="btn sm ghost" data-mkck="${B.id}">Crea un drink →</button></div>
   </article>`;}
 function moreBtn(sel,total,shown,all){const b=$(sel);b.hidden=total<=6;b.textContent=all?'Mostra meno':`Mostra altri ${total-shown}`;b.setAttribute('aria-expanded',String(!!all));}
 function renderPairs(){const A=S.sel;$('#pairsTitle').textContent=`Con cosa si abbina`;
-  const list=S.parts.filter(r=>S.filter==='all'||r.type===S.filter);
+  const list=S.parts.filter(r=>S.filter==='all'||(S.filter==='classic'?r.classic:r.type===S.filter));
+  const cb=$('#pairs .seg [data-f="classic"]');if(cb)cb.hidden=!S.parts.some(r=>r.classic);
   $$('#pairs .seg button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.f===S.filter)));
   const shown=S.pAll?list:list.slice(0,6);
   $('#pairGrid').innerHTML=list.length?shown.map(pairCard).join(''):`<p class="muted">Nessun abbinamento di questo tipo per ${esc(A.name)}.</p>`;
@@ -439,6 +454,11 @@ const legendLine=(i)=>['','stroke-dasharray:6 4','stroke-dasharray:1.5 3.5'][i];
 function figRadar(T){const ser=T.map((I,i)=>({v:I.ar,c:i===0?'var(--ink)':i===1?'var(--ink2)':'var(--muted)',fo:i===0?.1:.04,dash:['','6 4','1.5 3.5'][i]}));
   return `<div class="radar"><span class="tiny muted">Profumi a confronto</span>${radar(FAM.map(f=>({t:f[2]})),ser,96,72)}</div>
     <p class="flegend">${T.map((I,i)=>`<span><svg width="24" height="8"><line x1="0" y1="4" x2="24" y2="4" style="stroke:${i===0?'var(--ink)':i===1?'var(--ink2)':'var(--muted)'};stroke-width:2.2;${legendLine(i)}"/></svg>${esc(I.name)}</span>`).join('')}</p>`;}
+// due impronte affiancate: si accendono le famiglie di profumi che i due ingredienti condividono
+function pairFig(A,B){const sh=sharedFams(A,B);
+  return `<div class="pairfig">${impronta(A,124,{hi:sh})}<span class="pf-plus" aria-hidden="true">+</span>${impronta(B,124,{hi:sh})}</div>
+    <p class="pf-cap">${sh.length?`<span class="muted">In comune</span> ${sh.slice(0,4).map(i=>`<b>${esc(famLbl(i))}</b>`).join('<span class="dot" aria-hidden="true">·</span>')}`:'<span class="muted">Nessuna famiglia di profumi in comune: stanno insieme per il gusto.</span>'}</p>
+    <p class="flegend"><span>${esc(A.name)}</span><span>${esc(B.name)}</span></p>`;}
 function names(T){return `<p class="v-names">${T.map(I=>`${mark(I)}<b>${esc(I.name)}</b>`).join('<span aria-hidden="true">+</span>')}</p>`;}
 const ctaCrea=()=>`<div class="r-cta"><button type="button" class="btn primary" data-go-crea>Crea un drink con questi ingredienti →</button></div>`;
 // Abbina ha sempre la stessa impaginazione, da 2 a 5 ingredienti: giudizio con figura, perché, come usarli,
@@ -452,12 +472,12 @@ function renderAbbina(){const out=$('#pbOut');const T=analysable();const n=T.len
   let total=null,sub='',tags='',fig='',why=[],how='',details='';
   if(!V.length){sub='Due alcolici tra loro non si giudicano: aggiungi un alimento per vedere come stanno insieme.';}
   else if(n===2){const r=V[0].r,[A,B]=[V[0].a,V[0].b];total=r.total;sub=vOf(total).t;
-    tags=relTag(r)+(r.classic?'<span class="chip">Coppia classica</span>':'');fig=figRadar([A,B]);
+    tags=relTag(r)+(r.classic?'<span class="chip">Coppia classica</span>':'');fig=pairFig(A,B);
     why=String(r.summary).split(/(?<=\.)\s+/).filter(Boolean);
     const tri=B.isSpirit?[]:trioSpirits(A,B,4);
     how=`<div><h3>Dosi di partenza</h3><p>${esc(r.ratioTxt)}</p><p class="tiny muted" style="margin-top:6px"><b>Prova veloce:</b> ${esc(testTxt(r))}</p></div>
       <div><h3>${B.isSpirit?'Al bancone':'Da bere con tutti e due'}</h3>${B.isSpirit?`<p>${esc(howTo(A,B))}</p>`:spiritChips(tri.map(x=>x.s))}</div>`;
-    details=`<p class="scoreline">Punteggio ${num(total)} su 30 ${info('score','punteggio')}</p>${lensTable(r)}`;}
+    details=`<p class="scoreline">Punteggio ${num(total)} su 30 ${info('score','punteggio')}</p>${lensTable(r)}<div class="figs-d">${figRadar([A,B])}</div>`;}
   else if(n===3&&foods.length>=2){const t=trio(T[0],T[1],T[2]);total=t.total;const r=t.roles;const tw=t.P[t.wi];
     sub=vOf(total).t.replace(/, o completato con un terzo ingrediente\./,'.');tags=`<span class="chip">${esc(STRUCT[t.structure]||t.structure)}</span>`;fig=triangleSVG(t);
     why=[`La coppia più forte è ${best.a.name} + ${best.b.name}: ${vOf(best.r.total).w.toLowerCase()}, ${REL[best.r.type].w.toLowerCase()}.`,
@@ -476,12 +496,13 @@ function renderAbbina(){const out=$('#pbOut');const T=analysable();const n=T.len
     how=(foods.length>=3?rolesHow(roles(foods),n):`<div><h3>Dosi di partenza</h3><p>Parti dall'ingrediente più strutturato e aggiungi gli altri in dosi piccole, assaggiando a ogni passo.</p></div>`)+`<div><h3>Da bere con tutto il banco</h3>${spiritChips(foods.length?spiritsForTrio(T).map(x=>x.s):[])}</div>`;
     details=`<p class="scoreline">Media ${num(total)} su 30 ${info('score','punteggio')}</p><table class="lens"><tbody>${V.map(p=>`<tr><td>${esc(p.a.name)} + ${esc(p.b.name)}</td><td>${REL[p.r.type].w}</td><td class="v">${num(p.r.total)}/30</td></tr>`).join('')}</tbody></table>`;}
   const add=(n===2&&V.length&&!T[1].isSpirit)?thirdHTML(T[0],T[1]):addHTML();
+  // il perché sta nel giudizio, sotto la frase: niente riquadro quasi vuoto; con due ingredienti la tabella delle coppie ripeterebbe il giudizio
   out.innerHTML=`<article class="panel verdict">
-      <div>${names(T)}${total!=null?meter(total,{big:true}):''}<p class="v-sub">${esc(sub)}</p><div class="v-tags">${tags}</div></div>
+      <div>${names(T)}${total!=null?meter(total,{big:true}):''}<p class="v-sub">${esc(sub)}</p><div class="v-tags">${tags}</div>
+        <div class="v-why"><h2 class="r-h">Perché</h2>${why.length?`<ul class="why">${why.map(s=>`<li>${esc(plain(s))}</li>`).join('')}</ul>`:'<p class="add-empty">Serve almeno un alimento.</p>'}</div></div>
       <figure class="figs" style="margin:0">${fig}</figure></article>
-    <section class="panel r-sec why-s"><h2 class="r-h">Perché</h2>${why.length?`<ul class="why">${why.map(s=>`<li>${esc(plain(s))}</li>`).join('')}</ul>`:'<p class="add-empty">Serve almeno un alimento.</p>'}</section>
     <section class="howto" aria-label="Come usarli">${how||'<div><h3>Dosi</h3><p class="add-empty">—</p></div><div><h3>Da bere</h3><p class="add-empty">—</p></div>'}</section>
-    <section class="panel r-sec"><h2 class="r-h">Coppia per coppia</h2>${matrixHTML(T,weak)}</section>
+    ${n>2?`<section class="panel r-sec"><h2 class="r-h">Coppia per coppia</h2>${matrixHTML(T,weak)}</section>`:''}
     ${add}
     <details class="panel more-d"><summary>Come si arriva al giudizio</summary>${details||'<p class="add-empty">Nessun punteggio: servono un alimento e un altro ingrediente.</p>'}</details>
     ${ctaCrea()}`;
@@ -515,7 +536,7 @@ function addHTML(){const full=bench.length>=MAXB;const sg=full?null:benchSuggest
   return `<section class="panel r-sec add-s" aria-labelledby="h-add"><div class="r-sec-h"><h2 class="r-h" id="h-add">${full?'Il banco è pieno':'Aggiungi un ingrediente'}</h2></div>
     ${full?'<p class="add-empty">Cinque ingredienti al massimo: togline uno per provarne un altro. La tabella qui sopra ti dice quale pesa di più.</p>'
       :`<p class="tiny muted">Quelli che stanno meglio con tutto il banco.</p><ul class="sug">${items.map(C=>{const ts=bench.map(i=>pairT(i,C)).filter(Boolean).map(r=>r.total);const m=Math.min(...ts);
-        return `<li>${mark(C)}<span class="sg"><b>${esc(C.name)}</b><small>Con il banco, al peggio: ${vOf(m).w.toLowerCase()}</small></span>${benchBtn(C,'Aggiungi')}</li>`;}).join('')}</ul>`}</section>`;}
+        return `<li>${impronta(C,40,{label:false})}<span class="sg"><b>${esc(C.name)}</b><small>Con il banco, al peggio: ${vOf(m).w.toLowerCase()}</small></span>${benchBtn(C,'Aggiungi')}</li>`;}).join('')}</ul>`}</section>`;}
 $('#pbOut').addEventListener('click',e=>{const x=e.target.closest('[data-set]');if(x){benchSet(x.dataset.set.split('+').map(id=>BYID[id]));return;}
   if(e.target.closest('[data-go-crea]')){show('crea',{push:true});scrollTo({top:0});return;}
   const l=e.target.closest('[data-lens]');if(l){S.lens=l.dataset.lens;renderAbbina();return;}
@@ -533,7 +554,7 @@ function thirdHTML(A,B){
       ${pages>1?`<div class="pager" role="group" aria-label="Altre proposte"><button type="button" data-sugp="-1" aria-label="Proposte precedenti"${SUGP.page?'':' disabled'}>‹</button><span aria-live="polite">${from+1}–${from+shown.length} di ${list.length}</span><button type="button" data-sugp="1" aria-label="Altre proposte"${SUGP.page<pages-1?'':' disabled'}>›</button></div>`:''}</div>
     <div class="lensbar" role="group" aria-label="Che cosa deve fare il terzo ingrediente">${TLENS.map(l=>`<button type="button" data-lens="${l[0]}" aria-pressed="${S.lens===l[0]}">${LENSP[l[0]][0]}</button>`).join('')}</div>
     <p class="tiny muted">${LENSP[S.lens][1]}</p>
-    <ul class="sug">${shown.map(x=>`<li>${mark(x.C)}<span class="sg"><b>${esc(x.C.name)}</b><small>${esc(plain(lensReason(S.lens,A,B,x.C,x.t)))}</small></span>${full?'':benchBtn(x.C,'Aggiungi')}</li>`).join('')}</ul></section>`;}
+    <ul class="sug">${shown.map(x=>`<li>${impronta(x.C,40,{label:false})}<span class="sg"><b>${esc(x.C.name)}</b><small>${esc(plain(lensReason(S.lens,A,B,x.C,x.t)))}</small></span>${full?'':benchBtn(x.C,'Aggiungi')}</li>`).join('')}</ul></section>`;}
 function triangleSVG(t){const P=[[180,46],[62,236],[298,236]];const E=[[0,1],[0,2],[1,2]];
   let h=`<svg class="tri" viewBox="0 0 360 290" role="img" aria-label="Le tre coppie del trio: lo spessore delle linee indica la forza del legame">`;
   E.forEach(([i,j],k)=>{const p=t.P[k];const w=(1.4+Math.max(0,p.total-10)/3.6).toFixed(1);const weak=k===t.wi&&!t.isBridge&&p.total<17;

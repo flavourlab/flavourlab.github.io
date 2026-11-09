@@ -25,3 +25,71 @@
 .kicker{font-family:var(--f-mono);letter-spacing:.08em}
 /* i numeri delle ricette come in un menù: cifre tabellari, unità in piccolo */
 .spec .q{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+
+/* ---------- UX-16 · impronta aromatica ---------- */
+.ip{flex:none;overflow:visible}
+.ip-p{stroke:var(--ink);stroke-width:4.4;stroke-linecap:round;opacity:.8}
+.ip-p.on{stroke:var(--accent);opacity:1}
+.ip-p.off{opacity:.22}
+.ip-z{fill:var(--line2)}
+.ip-sp{fill:var(--surface);stroke:var(--ink);stroke-width:3}
+.fhead{display:flex;align-items:center;gap:20px;justify-content:space-between}
+.fhead .ip-big{margin:-6px 0 -10px}
+@media (max-width:520px){.fhead .ip-big{width:96px;height:96px}}
+.bench-list li{padding-left:8px}
+.bench-list li .ip{margin:-4px 0}
+
+/* ---------- UX-17 · icone di categoria ---------- */
+.ic{flex:none;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.chip .ic,.c-kind .ic{color:var(--muted)}
+
+/* ---------- UX-18 · carte asciutte ---------- */
+.c-id{display:flex;gap:12px;align-items:center;min-width:0}
+.c-id .ip{margin:-4px -2px -4px -6px}
+.c-tags{display:flex;flex-wrap:wrap;gap:6px}
+.rel.classic{background:var(--accent-soft);color:var(--accent)}
+.c-fams{font-size:14.5px;color:var(--ink2);display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 6px}
+.c-fams .muted{font-size:13px;margin-right:2px}
+.dot{color:var(--line2);margin:0 1px}
+
+/* ---------- UX-19 · Abbina compatto ---------- */
+.v-why{margin-top:20px;padding-top:16px;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:10px}
+.pairfig{display:flex;align-items:center;justify-content:center;gap:6px;padding-top:6px}
+.pf-plus{font-family:var(--f-display);font-size:26px;color:var(--muted)}
+.pf-cap{text-align:center;font-size:14px;margin-top:10px;display:flex;flex-wrap:wrap;justify-content:center;gap:2px 6px}
+.verdict .flegend{justify-content:center;gap:4px 70px}
+.figs-d{margin-top:16px;max-width:420px}
+@media (max-width:420px){.pairfig .ip{width:104px;height:104px}}
+
+/* ---------- UX-20 · telefono: prima ciò per cui si è venuti ---------- */
+@media (max-width:980px){
+  #v-esplora.has-food .explore{display:contents}
+  #v-esplora.has-food .finder{order:0}
+  #v-esplora.has-food #exFood{order:1}
+  #v-esplora.has-food #pairs{order:2}
+  #v-esplora.has-food #spirits{order:3}
+  #v-esplora.has-food #wheelbox{order:4}
+  #v-esplora.has-food #side{order:5}
+}
+.nav .nic{display:none}
+@media (max-width:640px){
+  .bar{backdrop-filter:none;-webkit-backdrop-filter:none;background:var(--bg)}
+  .nav{position:fixed;left:0;right:0;bottom:0;z-index:45;margin:0;border-radius:0;padding:6px 8px calc(6px + env(safe-area-inset-bottom,0px));
+    background:color-mix(in srgb,var(--surface) 94%,transparent);border-top:1px solid var(--line);box-shadow:0 -6px 24px rgba(24,23,26,.06)}
+  .nav button{flex-direction:column;align-items:center;gap:2px;padding:6px 4px;border-radius:14px;min-height:52px}
+  .nav button b{font-size:12.5px;font-weight:600}
+  .nav button[aria-selected="true"]{background:var(--sunk);box-shadow:none}
+  .nav button[aria-selected="true"] .nic{color:var(--accent)}
+  .nav .nic{display:block;width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;color:var(--ink2)}
+  html{scroll-padding-top:72px}
+  main{padding-bottom:180px}
+  .tray{bottom:calc(78px + env(safe-area-inset-bottom,0px))}
+  #toast{bottom:calc(150px + env(safe-area-inset-bottom,0px))}
+}
+.ip-read{display:flex;gap:18px;align-items:center}
+.ip-read p{max-width:30ch}
+.side-h3{font-size:13px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-top:4px}
+@media (min-width:981px){.fhead .ip-big{display:none}}
+@media (max-width:980px){#side .ip-read{display:none}}
+@media (max-width:520px){.ip-read{flex-direction:column;align-items:flex-start}}
+.sug li>.ip{margin:-6px -4px -6px -8px}
