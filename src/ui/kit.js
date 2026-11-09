@@ -39,6 +39,8 @@ export const plain=s=>String(s)
   .replace(/concordanza,\s*(\d+(?:[.,]\d+)?)\/30/g,(m,x)=>`si somigliano (${vOf(n30(x)).w.toLowerCase()})`)
   .replace(/contrasto,\s*(\d+(?:[.,]\d+)?)\/30/g,(m,x)=>`si bilanciano (${vOf(n30(x)).w.toLowerCase()})`)
   .replace(/\(?(\d+(?:[.,]\d+)?)\/30\)?/g,(m,x)=>m.startsWith('(')?`(${vOf(n30(x)).w.toLowerCase()})`:vOf(n30(x)).w.toLowerCase());
+// UX-42: i nomi delle molecole tra parentesi sono gergo al primo livello; restano nei dettagli e nella sezione «Capire»
+export const noChem=s=>FAM.reduce((t,f)=>t.split(` (${f[4]})`).join(''),String(s));
 export const firstSentence=t=>(String(t).match(/^.*?[.!?](\s|$)/)||[t])[0].trim();
 
 // pallino del gusto per gli alimenti, rombo per gli alcolici

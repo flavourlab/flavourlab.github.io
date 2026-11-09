@@ -10,7 +10,7 @@ import { S as score, howTo, listIt, monthsTxt, partnersOf, spiritsOf, trioSpirit
 import { TLENS, roles, spiritsForTrio, suggestThird, trio, lensReason } from '../domain/trio.js';
 import { BASES, BGROUPS, STY, abvOf, buildRecipe, coherence, fmt, styleFit, suggestBases, autoStyleFor } from '../domain/recipes.js';
 import SPINFO from '../../data/spirits-info.json';
-import { $, $$, esc, tcol, TOUCH, calm, num, cap, aD, VERD, vOf, meter, REL, relTag, LENSP, STRUCT, plain, firstSentence, mark, kindOf, shortKind,
+import { $, $$, esc, tcol, TOUCH, calm, num, cap, aD, VERD, vOf, meter, REL, relTag, LENSP, STRUCT, plain, noChem, firstSentence, mark, kindOf, shortKind,
   pol, arcPath, trunc, spread, labelAt, wrapName, labelLines, radar, GLASSES, glassSVG, makeCombo, toast, copyText } from './kit.js';
 
 const CATORD={};Object.keys(CATS).forEach((k,i)=>CATORD[k]=i);
@@ -281,7 +281,7 @@ function famsLine(A,B){const sh=sharedFams(A,B).slice(0,3);
   if(sh.length)return `<p class="c-fams"><span class="muted">In comune</span> ${sh.map(i=>`<b>${esc(famLbl(i))}</b>`).join('<span class="dot" aria-hidden="true">·</span>')}</p>`;
   let best=null;for(let i=0;i<FAM.length;i++){if(A.ar[i]<2)continue;for(let j=0;j<FAM.length;j++){if(i===j||B.ar[j]<2||!W[i][j])continue;const p=A.ar[i]*B.ar[j];if(!best||p>best[2])best=[i,j,p];}}
   return best?`<p class="c-fams"><span class="muted">Si legano</span> <b>${esc(famLbl(best[0]))}</b><span class="dot" aria-hidden="true">↔</span><span class="sr"> con </span><b>${esc(famLbl(best[1]))}</b></p>`:'';}
-function cardLine(r){const fl=r.type==='concordanza'?famsLine(r.A,r.B):'';return fl||`<p class="c-why">${esc(firstSentence(r.summary))}</p>`;}
+function cardLine(r){const fl=r.type==='concordanza'?famsLine(r.A,r.B):'';return fl||`<p class="c-why">${esc(noChem(firstSentence(r.summary)))}</p>`;}
 function cardWhy(r){return (r.type==='concordanza'&&famsLine(r.A,r.B)?why2(r):why2(r).slice(1)).map(s=>`<p>${esc(plain(s))}</p>`).join('');}
 const ownTag=B=>owns(B)?`<span class="rel own">Ce l'hai</span>`:'';
 const classicTag=r=>r.classic?`<span class="rel classic" title="Coppia della tradizione, in cucina o al bancone">Classico</span>`:'';
@@ -437,7 +437,7 @@ function highlight(id,kind){
     (kind==='s'?$(`.card[data-sid="${id}"]`):$(`.card[data-pid="${id}"]`))?.classList.add('hl');}}
 wheel.addEventListener('pointerover',e=>{if(e.pointerType==='touch')return;const g=e.target.closest('[data-id],[data-t]');if(!g)return;
   if(g.dataset.id){const B=BYID[g.dataset.id];
-    if(S.mode==='ego'){const r=score(S.sel,B);highlight(B.id,g.dataset.kind);showTip(`<b>${esc(B.name)}</b> · ${vOf(r.total).w} · ${REL[r.type].w.toLowerCase()}<br>${esc(firstSentence(r.summary))}`,e);}
+    if(S.mode==='ego'){const r=score(S.sel,B);highlight(B.id,g.dataset.kind);showTip(`<b>${esc(B.name)}</b> · ${vOf(r.total).w} · ${REL[r.type].w.toLowerCase()}<br>${esc(noChem(firstSentence(r.summary)))}`,e);}
     else showTip(`<b>${esc(B.name)}</b><br>${esc(CATS[B.cat][0])}<br>Sa di ${esc(topFams(B).join(', ')||'—')}`,e);}
   else if(g.dataset.cat){const [t,c]=g.dataset.cat.split('|');showTip(`<b>${esc(CATS[c][0])}</b> · ${TLABEL[t].toLowerCase()}`,e);}});
 wheel.addEventListener('pointermove',moveTip);
@@ -453,7 +453,7 @@ let lastPT='mouse',peekId=null;
 wheel.addEventListener('pointerdown',e=>{lastPT=e.pointerType||'mouse';});
 function peekHTML(id){const B=BYID[id];if(!B)return'';
   if(S.mode==='ego'&&S.sel){const r=score(S.sel,B);
-    return `<div class="pk-t"><b>${esc(B.name)}</b><span class="tiny muted">${esc(kindOf(B))}</span></div><div>${meter(r.total)} ${relTag(r)}</div><p class="tiny">${esc(firstSentence(r.summary))}</p>
+    return `<div class="pk-t"><b>${esc(B.name)}</b><span class="tiny muted">${esc(kindOf(B))}</span></div><div>${meter(r.total)} ${relTag(r)}</div><p class="tiny">${esc(noChem(firstSentence(r.summary)))}</p>
       <div class="pk-acts"><button type="button" class="btn sm primary" data-peek-open="${B.id}">${B.isSpirit?'Vedi come berlo':'Apri '+esc(B.name)}</button>${benchBtn(B)}</div>`;}
   return `<div class="pk-t"><b>${esc(B.name)}</b><span class="tiny muted">${esc(CATS[B.cat][0])}</span></div><p class="tiny">Sa di ${esc(topFams(B).join(', ')||'—')}</p>
     <div class="pk-acts"><button type="button" class="btn sm primary" data-peek-open="${B.id}">Apri ${esc(B.name)}</button>${benchBtn(B)}</div>`;}
@@ -525,7 +525,7 @@ function renderAbbina(){const out=$('#pbOut');const T=analysable();const n=T.len
   // il perché sta nel giudizio, sotto la frase: niente riquadro quasi vuoto; con due ingredienti la tabella delle coppie ripeterebbe il giudizio
   out.innerHTML=`<article class="panel verdict">
       <div>${names(T)}${total!=null?meter(total,{big:true}):''}<p class="v-sub">${esc(sub)}</p><div class="v-tags">${tags}</div>
-        <div class="v-why"><h2 class="r-h">Perché</h2>${why.length?`<ul class="why">${why.map(s=>`<li>${esc(plain(s))}</li>`).join('')}</ul>`:'<p class="add-empty">Serve almeno un alimento.</p>'}</div></div>
+        <div class="v-why"><h2 class="r-h">Perché</h2>${why.length?`<ul class="why">${why.map(s=>`<li>${esc(noChem(plain(s)))}</li>`).join('')}</ul>`:'<p class="add-empty">Serve almeno un alimento.</p>'}</div></div>
       <figure class="figs" style="margin:0">${fig}</figure></article>
     <section class="howto" aria-label="Come usarli">${how||'<div><h3>Dosi</h3><p class="add-empty">—</p></div><div><h3>Da bere</h3><p class="add-empty">—</p></div>'}</section>
     ${n>2?`<section class="panel r-sec"><h2 class="r-h">Coppia per coppia</h2>${matrixHTML(T,weak)}</section>`:''}

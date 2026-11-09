@@ -228,3 +228,6 @@ dialog.bancone{max-width:min(680px,100vw)}
 .matrix-w{max-width:100%;overscroll-behavior-x:contain}
 @media (max-width:640px){.matrix thead th,.matrix td{min-width:84px;width:84px}.matrix thead th{height:84px}.matrix tbody th{white-space:normal;max-width:96px;font-size:13px}}
 @media (max-width:640px){.seasonal{grid-template-columns:repeat(2,minmax(0,1fr))}.sea{padding:6px 8px 6px 2px;min-height:52px}.sea b{font-size:14px}}
+
+/* ---------- UX-41 · telefono: con un alimento aperto gli esempi lasciano spazio al nome ---------- */
+@media (max-width:640px){#v-esplora.has-food .examples{display:none}}
