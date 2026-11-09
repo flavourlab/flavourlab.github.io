@@ -3,7 +3,7 @@ import { describe, it, expect } from 'vitest';
 import { FOODS, SPIRITS, BYNAME, SBYNAME, CLASSIC, MISSING } from '../src/domain/core.js';
 import { S, partnersOf, spiritsOf } from '../src/domain/scoring.js';
 import { trio, suggestThird } from '../src/domain/trio.js';
-import { STYLES, buildRecipe, styleFit, coherence, suggestBases } from '../src/domain/recipes.js';
+import { STYLES, buildRecipe, styleFit, coherence, suggestBases, autoStyleFor } from '../src/domain/recipes.js';
 
 const F = (n) => BYNAME[n];
 const SP = (n) => SBYNAME[n];
@@ -89,6 +89,26 @@ describe('cocktail creator', () => {
         expect(R.abv).toBeGreaterThan(2);
         expect(R.abv).toBeLessThan(40);
       }
+    }
+  });
+});
+
+describe('varietà delle proposte', () => {
+  it('lo stile automatico cambia con il carattere degli ingredienti', () => {
+    const pairs = [['Fragola', 'Basilico'], ['Caffè', 'Arancia'], ['Mango', 'Peperoncino'], ['Pera', 'Gorgonzola'], ['Cetriolo', 'Menta'], ['Limone', 'Basilico']];
+    const styles = new Set(pairs.map(p => { const ins = p.map(F); return autoStyleFor(ins, suggestBases(ins, null)[0].s); }));
+    expect(styles.size).toBeGreaterThanOrEqual(4);
+  });
+  it("l'amaro al carciofo non è il primo alcolico per quasi tutti", () => {
+    const firsts = FOODS.filter((_, i) => i % 3 === 0).map(f => spiritsOf(f)[0].B.name);
+    expect(firsts.filter(n => n === 'Amaro al carciofo').length / firsts.length).toBeLessThan(0.08);
+  });
+  it('lo stesso banco dà sempre la stessa ricetta', () => {
+    const ins = ['Fragola', 'Basilico'].map(F);
+    for (const mode of ['classic', 'lab']) {
+      const a = buildRecipe(ins, 'sour', mode).spec.map(l => l.name).join('|');
+      const b = buildRecipe(ins, 'sour', mode).spec.map(l => l.name).join('|');
+      expect(a).toBe(b);
     }
   });
 });

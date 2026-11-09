@@ -1,6 +1,7 @@
 // Generatore di ricette: stili, preparazioni, garnish e coerenza base-stile.
-import { ALLERG, BYNAME, FAM, FI, SBYNAME, SPIRITS, TYPELBL, r05 } from './core.js';
-import { S, bridgesFor, listIt } from './scoring.js';
+import { ALLERG, BYNAME, FAM, FI, FOODS, SBYNAME, SPIRITS, TYPELBL, r05 } from './core.js';
+const FOODS_ALL=()=>FOODS;
+import { S, bridgesFor, genOf, GENW, listIt } from './scoring.js';
 import { roles } from './trio.js';
 export const STYLES = [
   {id:'oldfashioned',name:'Old Fashioned',fam:'Stirred · on the rocks',desc:'Distillato in primo piano, ammorbidito da poco zucchero e da un bitter.',ex:'Old Fashioned, Sazerac, Oaxaca Old Fashioned',
@@ -47,7 +48,7 @@ export const STY={};STYLES.forEach(s=>STY[s.id]=s);
 export const PREFB={
   oldfashioned:['Bourbon','Rye whiskey','Rum invecchiato','Cognac','Mezcal','Tequila añejo','Scotch malt','Calvados','Armagnac','Whisky giapponese','Amaro siciliano','Amaro alpino','Sotol','Batavia arrack'],
   martini:['Gin London Dry','Gin contemporaneo','Vodka','Rye whiskey','Bourbon','Genever','Tequila blanco','Vermouth dry','Vermouth bianco','Sherry fino','Gin Old Tom'],
-  negroni:['Gin London Dry','Gin contemporaneo','Bourbon','Rye whiskey','Mezcal','Rum invecchiato','Tequila añejo','Bitter rosso','Vermouth rosso','Aperitivo','Amaro al carciofo','Bitter bianco','Vino chinato'],
+  negroni:['Gin London Dry','Gin contemporaneo','Bourbon','Rye whiskey','Mezcal','Rum invecchiato','Tequila añejo','Bitter rosso','Vermouth rosso','Aperitivo','Bitter bianco','Vino chinato','Amaro al carciofo'],
   sour:['Gin London Dry','Gin contemporaneo','Rum bianco','Tequila blanco','Pisco','Bourbon','Cognac','Mezcal','Cachaça','Rhum agricole','Amaretto','Bitter rosso','Sherry oloroso','Liquore di albicocca','Licor 43','Pastis'],
   sour_albume:['Bourbon','Pisco','Gin London Dry','Gin contemporaneo','Rye whiskey','Scotch malt','Calvados','Cognac','Tequila blanco','Amaretto','Bitter rosso','Aperitivo','Irish whiskey','Licor 43'],
   collins:['Gin London Dry','Gin contemporaneo','Vodka','Tequila blanco','Rum bianco','Bourbon','Pisco','Vermouth bianco','Liquore di sambuco','Gin Old Tom'],
@@ -57,7 +58,9 @@ export const PREFB={
   royale:['Gin London Dry','Gin contemporaneo','Cognac','Calvados','Rum invecchiato','Bourbon','Liquore di sambuco','Aperitivo'],
   tiki:['Rum giamaicano','Rum invecchiato','Rum bianco','Rhum agricole','Cachaça','Falernum','Batavia arrack'],
   milkpunch:['Rum invecchiato','Cognac','Bourbon','Rum giamaicano','Gin London Dry','Rhum agricole','Vermouth rosso','Batavia arrack'],
-  spritz:['Aperitivo','Bitter rosso','Vermouth bianco','Liquore di sambuco','Quinquina','Amaro al carciofo','Sherry fino','Bitter bianco','Vino chinato']};
+  spritz:['Aperitivo','Bitter rosso','Vermouth bianco','Liquore di sambuco','Quinquina','Sherry fino','Bitter bianco','Vino chinato','Amaro al carciofo']};
+// basi che si trovano in qualunque bar: senza uno stile scelto valgono un piccolo vantaggio sulle rarità
+export const COMMON=new Set(Object.values(PREFB).flatMap(l=>l.slice(0,6)));
 export const LOWB=['Vermouth bianco','Vermouth dry','Sherry fino','Sherry oloroso','Quinquina','Porto tawny','Marsala','Amaro siciliano'];
 export const ABV={bia:40,inv:43,liq:28,ama:28,ver:17,vin:15,bir:5,sak:15};
 export const ABVX={'Chartreuse verde':55,'Chartreuse gialla':43,'Fernet':39,'Assenzio':60,'Maraschino':32,'Triple sec':40,'Grand Marnier':40,'Bénédictine':40,'Strega':40,'Galliano':42,'Drambuie':40,'Limoncello':30,'Bitter rosso':25,'Aperitivo':11,'Angostura':44,'Orange bitters':40,"Peychaud's":35,'Pedro Ximénez':17,'Porto tawny':20,'Porto ruby':20,'Madeira':19,'Marsala':18,'Sherry fino':15,'Sherry oloroso':18,'Champagne':12,'Prosecco':11,'Rum giamaicano':50,'Scotch torbato':46,'Vodka':40,'Mezcal':45,'Cachaça':40,'Baijiu':52,'Shochu':25,'Sake':15,'Umeshu':12,'Genever':38,'Crème de cassis':16,'Crème de violette':20,'Liquore di sambuco':20,'Amaretto':28,'Liquore al caffè':25,'Falernum':11,'Pimento dram':28,'Sloe gin':26,'Cherry Heering':24,'Mirto':30,'Génépy':40,'Nocino':40,'Pastis':45,'Sambuca':40,'Ouzo e raki':40,'Sotol':42,'Soju':17,'Batavia arrack':50,'Irish whiskey':40,'Gin Old Tom':42,'Bitter bianco':20,'Amer Picon':18,'Licor 43':31,'Amaro alle erbe':35,'Liquore di albicocca':24,'Crema di whisky':17,'Vino chinato':16};
@@ -74,8 +77,10 @@ export const FRUIT=['pom','dru','bos','tro','mel'];
 export const VEG=['fog','ste','cuc','sol','cru','rad','leg'];
 
 // --- preferenze di ruolo per ingrediente ---
-export function prefs(I,lab){
-  const c=I.cat,n=I.name;
+// variante riproducibile: lo stesso ingrediente nello stesso stile dà sempre la stessa tecnica, ingredienti diversi tecniche diverse
+export const pickV=(key,n)=>n<=1?0:hashStr(key)%n;
+export function prefs(I,lab,st){
+  const c=I.cat,n=I.name,sid=st?st.id:'';
   if(n==='Albume'||n==='Tuorlo')return['texture'];
   if(n==='Panna')return lab?['fatwash','texture']:['texture','fatwash'];
   if(LIQDAIRY.includes(n))return['clarify','milkwash','texture'];
@@ -94,14 +99,14 @@ export function prefs(I,lab){
   if(n==='Katsuobushi')return['infuse','season'];
   if(n==='Bresaola')return['infuse'];
   if(c==='agr')return JUICY.includes(n)&&n!=='Arancia amara'?['acid','sweet','garnish']:['sweet','infuse','garnish'];
-  if(FRUIT.includes(c))return lab?['sweet','infuse','muddle']:['muddle','sweet','infuse'];
-  if(VEG.includes(c))return lab?['sweet','infuse']:['muddle','sweet','infuse'];
+  if(FRUIT.includes(c)){if(lab)return['sweet','infuse','muddle'];const v=pickV(n+sid+'r',3);return v===0?['muddle','sweet','infuse']:v===1?['sweet','muddle','infuse']:['infuse','sweet','muddle'];}
+  if(VEG.includes(c))return lab?['sweet','infuse']:(pickV(n+sid+'r',2)?['sweet','muddle','infuse']:['muddle','sweet','infuse']);
   if(c==='sec')return['infuse','sweet'];
   if(['gus','cer','for'].includes(c))return lab?(I.st.g>=4||n==='Pop-corn'?['fatwash','infuse','sweet']:['infuse','sweet']):['sweet','infuse'];
   if(c==='all')return['season','infuse'];
   if(c==='fun')return lab&&n.startsWith('Tartufo')?['fatwash','infuse']:['infuse'];
   if(c==='alg')return['season','infuse'];
-  if(c==='erb')return lab?['sweet','infuse','garnish']:['muddle','sweet','garnish'];
+  if(c==='erb')return lab?['sweet','infuse','garnish']:(sid!=='julep'&&pickV(n+sid+'r',2)?['sweet','muddle','garnish']:['muddle','sweet','garnish']);
   if(c==='spe')return lab?['infuse','sweet']:['sweet','infuse'];
   if(c==='bot')return['season','infuse'];
   if(c==='fio')return lab?['infuse','sweet','garnish']:['sweet','garnish','infuse'];
@@ -161,30 +166,48 @@ export function prepSweet(I,lab,st){const n=I.name,c=I.cat;
   if(n==='Zenzero')return lab?{label:'Sciroppo di zenzero al roner',steps:[`Affetta 150 g di zenzero e mettilo sottovuoto con 250 g di zucchero e 150 ml d'acqua.`,`Roner a 70 °C per 1 h.`,`Raffredda, filtra e aggiungi 2 g di acido citrico per tenere viva la pungenza.`]}
     :{label:'Sciroppo di zenzero fresco',steps:[`Grattugia o centrifuga 200 g di zenzero e spremi il succo in una garza.`,`Mescola succo e zucchero 1:1 a freddo fino a scioglimento.`]};
   if(n==='Matcha')return{label:'Sciroppo al matcha',steps:[`Setaccia 4 g di matcha e sbattilo con 30 ml di acqua a 75 °C.`,`Unisci a 200 ml di sciroppo 1:1; agita prima dell'uso.`]};
+  const sid=st?st.id:'';
   if(FRUIT.includes(c)||VEG.includes(c)){
-    const veg=VEG.includes(c);
-    if(lab){const acid=I.t.acido>=3;return{label:`Cordial di ${lc(n)} al roner`,steps:[`Metti sottovuoto 300 g di ${lc(n)} pulito e a pezzi con 150 g di zucchero.`,`Roner a 55 °C per 2 h: estrai l'aroma fresco senza cuocere.`,`Raffredda in acqua e ghiaccio, filtra premendo e pesa il liquido.`,`Per ogni 500 g di liquido porta lo zucchero a 300 g totali e aggiungi ${acid?'4 g di acido citrico e 2 g di malico (il frutto è già acido)':'8 g di acido citrico e 4 g di malico'}.`,`Mescola a freddo fino a scioglimento; si conserva 2 settimane in frigo.`]};}
+    const veg=VEG.includes(c);const acid=I.t.acido>=3;
+    if(lab&&pickV(n+sid+'l',2)===1)return{label:`Cordial chiarificato di ${lc(n)}`,steps:[`Frulla 400 g di ${lc(n)} con 100 ml d'acqua e passa al colino: ti servono circa 400 ml di succo torbido.`,
+      `Porta a bollore 100 ml del succo con 2 g di agar agar, mescolando, per 1 min.`,`Versa a filo l'agar caldo nel resto del succo, a temperatura ambiente, frustando: in frigo per 30 min si forma un gel morbido.`,
+      `Rompi il gel con una frusta e filtralo in un panno, premendo appena: esce un succo limpido.`,`Per ogni 300 ml sciogli 250 g di zucchero e ${acid?'2 g di acido citrico':'5 g di acido citrico e 2 g di malico'}; dura 10 giorni in frigo.`]};
+    if(lab){return{label:`Cordial di ${lc(n)} al roner`,steps:[`Metti sottovuoto 300 g di ${lc(n)} pulito e a pezzi con 150 g di zucchero.`,`Roner a 55 °C per 2 h: estrai l'aroma fresco senza cuocere.`,`Raffredda in acqua e ghiaccio, filtra premendo e pesa il liquido.`,`Per ogni 500 g di liquido porta lo zucchero a 300 g totali e aggiungi ${acid?'4 g di acido citrico e 2 g di malico (il frutto è già acido)':'8 g di acido citrico e 4 g di malico'}.`,`Mescola a freddo fino a scioglimento; si conserva 2 settimane in frigo.`]};}
     if(veg)return{label:`Cordial di ${lc(n)}`,steps:[`Centrifuga ${lc(n)} e filtra: ti servono 250 ml di estratto.`,`Sciogli a freddo 250 g di zucchero e 3 g di acido citrico; usa entro 3 giorni.`]};
+    const opts=['macera'];if(['pom','dru','bos'].includes(c))opts.push('shrub','cotto');if(['mel','tro'].includes(c)||I.st.f>=3)opts.push('succo');
+    const v=opts[pickV(n+sid+'s',opts.length)];
+    if(v==='shrub')return{label:`Shrub di ${lc(n)}`,steps:[`Taglia 250 g di ${lc(n)}, copri con 250 g di zucchero e lascia macerare 24 h in frigo.`,`Filtra premendo e aggiungi 120 ml di aceto di mele (o di vino bianco).`,`Riposa 2 giorni in frigo: l'aceto si ammorbidisce e lega con la frutta. Dura un mese.`],note:'acidulo: dosa meno succo'};
+    if(v==='cotto')return{label:`Sciroppo cotto di ${lc(n)}`,steps:[`In un pentolino metti 250 g di ${lc(n)}, 200 g di zucchero e 100 ml d'acqua.`,`Sobbolli 8–10 min schiacciando la frutta: il sapore diventa da confettura, più rotondo.`,`Filtra con un colino fine senza premere troppo e raffredda; dura una settimana in frigo.`]};
+    if(v==='succo')return{label:`Sciroppo di succo di ${lc(n)}`,steps:[`Frulla o centrifuga ${lc(n)} e filtra: ti servono 250 ml di succo.`,`Sciogli a freddo 250 g di zucchero mescolando; usa entro 4 giorni.`]};
     return{label:`Sciroppo di ${lc(n)} a freddo`,steps:[`Taglia 250 g di ${lc(n)} a pezzi.`,`Copri con 250 g di zucchero, schiaccia appena e lascia macerare 12 h in frigo.`,`Filtra premendo con un cucchiaio; dura una settimana in frigo.`]};}
+  const SIF=(what,q)=>({label:`Sciroppo di ${lc(n)} al sifone`,steps:[`Metti ${q} di ${what} in un sifone da panna da 0,5 l con 250 ml di sciroppo 1:1 freddo.`,`Carica 2 cartucce di N₂O, agita 30 s e lascia riposare 2 min: la pressione spinge lo sciroppo dentro ${what}.`,`Tieni il sifone dritto e sfiata tutto il gas in un colpo, poi apri e filtra fine.`,`Infusione rapida: aroma fresco senza calore, pronta in 5 minuti.`]});
   if(c==='erb'){
+    if(lab&&pickV(n+sid+'l',2)===1)return SIF('foglie','15 g');
+    if(!lab&&pickV(n+sid+'s',2)===1)return{label:`Sciroppo di ${lc(n)} in infusione`,steps:[`Porta a bollore 250 ml di sciroppo 1:1 e versalo su 15 g di foglie.`,`Copri e lascia in infusione 20 min: più erbaceo e meno colorato dello sciroppo verde.`,`Filtra e raffredda; dura una settimana in frigo.`]};
     if(lab)return{label:`Sciroppo di ${lc(n)} al roner`,steps:[`Metti sottovuoto 15 g di foglie con 250 ml di sciroppo 1:1.`,`Roner a 55 °C per 1 h, poi subito in acqua e ghiaccio.`,`Filtra fine; 1 g di acido ascorbico (vitamina C) fissa il colore, se lo hai.`]};
     return{label:`Sciroppo verde di ${lc(n)}`,steps:[`Sbollenta 30 g di foglie per 10 s e raffreddale in acqua e ghiaccio.`,`Frullale 30 s con 250 ml di sciroppo 1:1 freddo.`,`Filtra con un colino fine; usa entro 3 giorni, poi il verde vira.`]};}
   if(c==='fio'){const q=n==='Lavanda'?'2 g':'10 g';
+    if(lab&&pickV(n+sid+'l',2)===1)return SIF('fiori',q);
     if(lab)return{label:`Sciroppo di ${lc(n)} al roner`,steps:[`Metti sottovuoto ${q} di fiori con 250 ml di sciroppo 1:1.`,`Roner a 50 °C per 45 min, raffredda in acqua e ghiaccio e filtra.`]};
     return{label:`Sciroppo di ${lc(n)}`,steps:[`Metti ${q} di fiori in 250 ml di sciroppo 1:1 freddo.`,`Lascia in infusione 12 h in frigo${n==='Lavanda'?' (la lavanda bastano 2 h: assaggia)':''} e filtra.`]};}
   if(c==='spe'||c==='sec'||c==='bot'){const q=c==='sec'?'100 g a pezzi':'10 g tostati in padella per 1 min';
+    if(lab&&c==='spe'&&pickV(n+sid+'l',2)===1)return SIF(lc(n),'8 g, schiacciati,');
     if(lab)return{label:`Sciroppo di ${lc(n)} al roner`,steps:[`Metti sottovuoto ${q} di ${lc(n)} con 250 g di zucchero e 250 ml d'acqua.`,`Roner a 80 °C per 1 h, raffredda e filtra.`]};
+    if(pickV(n+sid+'s',2)===1)return{label:`Sciroppo di ${lc(n)} a freddo`,steps:[`Metti ${q} di ${lc(n)} in 250 ml di sciroppo 1:1 freddo.`,`Lascia macerare 24 h in frigo, agitando ogni tanto: più delicato e meno legnoso di quello cotto.`,`Filtra fine.`]};
     return{label:`Sciroppo di ${lc(n)}`,steps:[`Unisci ${q} di ${lc(n)} a 250 ml d'acqua e 250 g di zucchero.`,`Sobbolli 5 min, lascia in infusione 30 min a fuoco spento e filtra.`]};}
   if(c==='gus'||c==='cer'||c==='for'){const orz=c==='gus';
     return{label:orz?`Orzata di ${lc(n)}`:`Sciroppo tostato di ${lc(n)}`,steps:[`Tosta 100 g di ${lc(n)} in forno a 160 °C per 8–10 min.`,`Frulla con 300 ml d'acqua${lab?' e passa sottovuoto in roner a 60 °C per 1 h':' e lascia riposare 1 h'}.`,`Filtra in un'étamine strizzando bene; per ogni 100 ml aggiungi 100 g di zucchero.`,orz?`Profuma con 1 goccia di acqua di fiori d'arancio (facoltativa).`:`Conserva in frigo fino a 5 giorni.`]};}
+  if(c==='tea'&&!lab&&pickV(n+sid+'s',2)===1)return{label:`Sciroppo di ${lc(n)} cold brew`,steps:[`Metti 12 g di tè in 300 ml d'acqua fredda e lascia in frigo 10–12 h.`,`Filtra e sciogli 250 g di zucchero a freddo: meno tannico, più profumato.`]};
+  if(c==='tea'&&lab&&pickV(n+sid+'l',2)===1)return SIF('tè','10 g');
   if(c==='tea')return{label:`Sciroppo di ${lc(n)}`,steps:[lab?`Metti sottovuoto 10 g di tè con 250 ml d'acqua; roner a 70 °C per 30 min.`:`Infondi 10 g di tè in 250 ml d'acqua a 80 °C (95 °C per tè nero e rooibos) per 4 min.`,`Filtra e sciogli 250 g di zucchero.`]};
   if(c==='caf')return{label:n==='Cascara'?'Sciroppo di cascara':'Sciroppo al caffè',steps:[n==='Cascara'?`Infondi 30 g di cascara in 250 ml d'acqua a 90 °C per 8 min e filtra.`:`Prepara un cold brew: 50 g di caffè macinato grosso in 250 ml d'acqua per 12 h, poi filtra.`,`Sciogli 250 g di zucchero a freddo.`]};
   if(c==='cac')return{label:`Sciroppo di ${lc(n)}`,steps:[`Sciogli 40 g di ${lc(n)} (o 25 g di cacao amaro) in 250 ml d'acqua calda con 250 g di zucchero.`,`Sobbolli 3 min e filtra fine.`]};
   return{label:`Sciroppo di ${lc(n)}`,steps:[`Infondi ${lc(n)} in 250 ml di sciroppo 1:1 caldo per 30 min e filtra.`]};
 }
-export function prepAcid(I,lab){const n=I.name,c=I.cat;
+export function prepAcid(I,lab,st){const n=I.name,c=I.cat;const LONG=['collins','highball','royale','spritz'];
   if(c==='agr'){
     if(!lab)return{label:`Succo di ${lc(n)}`,steps:null,note:'spremuto al momento e filtrato'};
+    if(st&&LONG.includes(st.id)&&['Limone','Lime','Pompelmo','Arancia'].includes(n)&&pickV(n+st.id+'a',2)===1)return{label:`Succo di ${lc(n)} chiarificato`,steps:[`Spremi 400 ml di ${lc(n)} e filtra la polpa.`,`Porta a bollore 100 ml del succo con 2 g di agar agar per 1 min, poi versalo a filo nel resto, frustando.`,`In frigo 30 min: si forma un gel morbido. Rompilo con la frusta e filtralo in un panno senza strizzare.`,`Ottieni un succo limpido che non intorbida il drink e regge meglio le bollicine. Usalo entro 2 giorni.`]};
     if(['Limone','Lime','Yuzu','Bergamotto'].includes(n))return{label:`Oleo-citrato di ${lc(n)}`,steps:[`Ricava le scorze di 4 frutti senza albedo e coprile con 30 g di acido citrico e 15 g di acido malico.`,`Lascia riposare 1 h: l'acido estrae gli oli dalle scorze.`,`Aggiungi 700 ml d'acqua, frulla 30 s e filtra fine.`,`Ottieni un acido intorno al 6%, come un succo, limpido e stabile una settimana in frigo.`]};
     return{label:`Succo di ${lc(n)} corretto`,steps:[`Spremi e filtra fine.`,`Per ogni 100 ml aggiungi ${n==='Pompelmo'?'2 g di acido citrico e 1 g di malico':'3 g di acido citrico e 2 g di malico'}: arriva all'acidità del lime.`]};}
   if(n==='Acido citrico')return{label:'Soluzione di acido citrico al 6%',steps:[`Sciogli 60 g di acido citrico in 940 ml d'acqua: acidità tipo limone, limpida e senza ossidazione.`]};
@@ -234,19 +257,22 @@ export function fatSrc(I,lab){const n=I.name,c=I.cat;
 }
 
 // --- scelta automatica tramite il motore di abbinamento ---
+// le liste sono in ordine di «classicità»: a parità di affinità vince il primo; gli alcolici generalisti pagano un piccolo dazio
 export function bestOf(names,foods,isSp,extra,excl=[]){
-  let best=null,bv=-1;
-  for(const nm of names){const cand=isSp?SBYNAME[nm]:BYNAME[nm];if(!cand||foods.includes(cand)||excl.includes(cand))continue;
-    const pool=foods.concat(extra||[]).filter(x=>x!==cand);if(!pool.length){if(!best)best=cand;continue;}
+  let best=null,bv=-Infinity;const L=names.length;
+  names.forEach((nm,idx)=>{const cand=isSp?SBYNAME[nm]:BYNAME[nm];if(!cand||foods.includes(cand)||excl.includes(cand))return;
+    const pool=foods.concat(extra||[]).filter(x=>x!==cand);if(!pool.length){if(!best)best=cand;return;}
     const sc=pool.map(f=>f.isSpirit&&cand.isSpirit?12:S(f.isSpirit?cand:f,f.isSpirit?f:cand).total);
-    const v=sc.reduce((a,b)=>a+b,0)/sc.length+0.4*Math.min(...sc);if(v>bv){bv=v;best=cand;}}
+    let v=sc.reduce((a,b)=>a+b,0)/sc.length+0.4*Math.min(...sc);
+    if(isSp)v+=2.5*(L-idx)/L-1.4*GENW*genOf(cand);
+    if(v>bv){bv=v;best=cand;}});
   return best;
 }
 export function rankBases(foods,exclude=[],styleId){
   const pref=PREFB[styleId]||[];
   const cands=SPIRITS.filter(s=>(s.grp==='bia'||s.grp==='inv')&&!exclude.includes(s));
   return cands.map(s=>{const sc=foods.length?foods.map(f=>S(f,s).total):[15];const pi=pref.indexOf(s.name);
-    return{s,v:sc.reduce((a,b)=>a+b,0)/sc.length+0.4*Math.min(...sc)+(pi>=0?4-pi*0.25:-4)};}).sort((a,b)=>b.v-a.v).map(x=>x.s);
+    return{s,v:sc.reduce((a,b)=>a+b,0)/sc.length+0.4*Math.min(...sc)+(pi>=0?4-pi*0.25:-4)-1.4*GENW*genOf(s)};}).sort((a,b)=>b.v-a.v).map(x=>x.s);
 }
 
 // --- costruzione di una ricetta ---
@@ -272,7 +298,7 @@ export function buildRecipe(inputs,styleId,mode,baseOverride){
   const spritzBase=st.id==='spritz'?base:null;
   if(!st.base)base=null;
   const pickDist=()=>rankBases(foods,[base,base2].filter(Boolean),st.id)[0];
-  const BITTERS=['Bitter rosso','Aperitivo','Amaro al carciofo','Amaro alpino','Bitter alla genziana','Amaro al rabarbaro','Amaro siciliano'];
+  const BITTERS=['Bitter rosso','Aperitivo','Amaro siciliano','Bitter alla genziana','Amaro al rabarbaro','Amaro alpino','Amaro al carciofo'];
   const VERMS=['Vermouth rosso','Vermouth bianco','Vermouth dry','Quinquina','Sherry oloroso','Porto tawny'];
   // modificatori di stile
   const modSlots=[];
@@ -285,7 +311,7 @@ export function buildRecipe(inputs,styleId,mode,baseOverride){
     else if(bRole==='vermouth'){modSlots.push({ml:st.mod,s:fill(isDist,null)});modSlots.push({ml:st.mod2,s:fill(x=>x.grp==='ama',BITTERS)});}
     else{modSlots.push({ml:st.mod,s:fill(x=>x.grp==='ama',BITTERS)});modSlots.push({ml:st.mod2,s:fill(x=>x.grp==='ver',VERMS)});}}
   if(st.id==='flip')modSlots.push({ml:st.mod,s:mods.shift()||bestOf(['Porto ruby','Porto tawny','Pedro Ximénez','Marsala','Madeira','Amaretto','Liquore al caffè','Crème de cacao','Liquore di nocciola'],foods,true,[],[base])});
-  if(st.id==='spritz'){const AP=['Aperitivo','Bitter rosso','Vermouth bianco','Liquore di sambuco','Quinquina','Amaro al carciofo','Sherry fino'];
+  if(st.id==='spritz'){const AP=['Aperitivo','Bitter rosso','Vermouth bianco','Liquore di sambuco','Quinquina','Sherry fino','Amaro al carciofo'];
     if(spritzBase&&isDist(spritzBase)){modSlots.push({ml:30,s:spritzBase});modSlots.push({ml:30,s:mods.shift()||bestOf(AP,foods,true)});}
     else modSlots.push({ml:st.mod,s:spritzBase||mods.shift()||bestOf(AP,foods,true)});}
   if(st.id==='tiki')modSlots.push({ml:st.mod,s:liqSweet||mods.shift()||bestOf(['Falernum','Pimento dram','Triple sec','Maraschino','Grand Marnier','Amaretto'],foods,true)});
@@ -294,7 +320,7 @@ export function buildRecipe(inputs,styleId,mode,baseOverride){
   // assegnazione ruoli agli alimenti
   const roles={acid:[],sweet:[],muddle:[],texture:[],length:[]};const acidJuice=new Set();
   const STIRRED=['oldfashioned','martini','negroni'].includes(st.id);
-  foods.forEach(I=>{let pl=prefs(I,lab);if(STIRRED&&pl.includes('infuse')&&!['mie','dol','agr','spe','gus','cer','for','caf','cac','tea'].includes(I.cat))pl=['infuse',...pl.filter(x=>x!=='infuse')];
+  foods.forEach(I=>{let pl=prefs(I,lab,st);if(STIRRED&&pl.includes('infuse')&&!['mie','dol','agr','spe','gus','cer','for','caf','cac','tea'].includes(I.cat))pl=['infuse',...pl.filter(x=>x!=='infuse')];
     let r=pl.find(x=>has(st,x)||(x==='infuse'&&has(st,'modinfuse')));
     if(r==='clarify'&&!has(st,'clarify'))r=has(st,'milkwash')?'milkwash':null;
     if(!r){if(I.cat==='uov'||LIQDAIRY.includes(I.name)){R.skipped.push(I);return;}r=has(st,'infuse')||has(st,'modinfuse')?'infuse':'garnish';}
@@ -316,7 +342,9 @@ export function buildRecipe(inputs,styleId,mode,baseOverride){
   let tName=infTarget?infTarget.name:'';const treat=[];
   if(R.fats.length)treat.push(`fat-washed con ${listIt(R.fats.map(f=>lc(f.name)))}`);
   if(R.milk)treat.push(`milk-washed con ${lc(R.milk.name)}`);
-  if(R.infuse.length)treat.push(`infuso ${lab?'al roner ':''}con ${listIt(R.infuse.map(i=>lc(i.name)))}`);
+  const SIFOK=['erb','fio','tea','spe','agr','caf','bot'];
+  const sifInf=lab&&R.infuse.length&&R.infuse.every(I=>SIFOK.includes(I.cat))&&pickV(R.infuse.map(i=>i.name).join('+')+st.id+'i',2)===1;
+  if(R.infuse.length)treat.push(`infuso ${lab?(sifInf?'al sifone ':'al roner '):''}con ${listIt(R.infuse.map(i=>lc(i.name)))}`);
   const tLabel=tName+(treat.length?' '+treat.join(' e '):'');
   if(st.base){
     if(base2&&st.split){add(st.base/2,tLabel,{abv:abvOf(base),sp:base});add(st.base/2,base2.name,{abv:abvOf(base2),sp:base2});}
@@ -330,7 +358,10 @@ export function buildRecipe(inputs,styleId,mode,baseOverride){
     :[`Prepara il grasso: ${F.map(f=>fatSrc(f,lab)).join('; ')}.`,`Versalo ancora liquido in 700 ml di ${infTarget.name} in un contenitore largo e agita bene.`,`Lascia 2 h a temperatura ambiente, agitando ogni 30 min.`,`Congelatore per 12 h: il grasso si solidifica in superficie${F.some(f=>f.cat==='gra')?' (gli oli restano in parte liquidi: separali con un imbuto separatore o una siringa)':''}.`,`Rompi lo strato di grasso e filtra con filtro di carta. Conserva in frigo, consuma entro 2 settimane.`]});}
   if(R.milk&&infTarget)R.preps.push({title:`Milk-wash di ${infTarget.name}`,steps:[`Versa 400 ml di ${infTarget.name}${R.fats.length?' (già lavato)':''} in 100 ml di ${R.milk.name==='Tofu'?'latte di soia':lc(R.milk.name)} freddo: sempre l'alcol nel latte, mai il contrario.`,`Aggiungi 2 g di acido citrico sciolti in 10 ml d'acqua: il latte caglia.`,`Riposa 30 min in frigo senza mescolare.`,`Filtra con filtro di carta, ripassando le prime colature torbide: il distillato esce limpido, rotondo e più morbido.`]});
   if(R.infuse.length&&infTarget){
-    if(lab){const ps=R.infuse.map(infP);const T=Math.min(...ps.map(p=>p.T));const longest=ps.map(p=>p.t).sort((a,b)=>parseFloat(b)-parseFloat(a))[0];
+    if(sifInf){const ps=R.infuse.map(infP);
+      R.preps.push({title:`Infusione rapida al sifone di ${infTarget.name}`,steps:[`In un sifone da panna da 0,5 l metti 250 ml di ${infTarget.name}${R.fats.length||R.milk?' già lavato':''} con ${listIt(R.infuse.map((I,i)=>`${ps[i].q.replace(/, tostati.*$/,'').replace(/^(\d+) g/,(m,x)=>Math.max(1,Math.round(x/2))+' g')} di ${lc(I.name)}`))}.`,
+        `Carica 2 cartucce di N₂O, agita 30 s e lascia riposare 2–4 min.`,`Tieni il sifone dritto e sfiata il gas tutto in una volta: le bolle trascinano fuori l'aroma.`,`Apri, aspetta che smetta di frizzare e filtra con filtro di carta. Pronta subito, da usare in giornata.`]});}
+    else if(lab){const ps=R.infuse.map(infP);const T=Math.min(...ps.map(p=>p.T));const longest=ps.map(p=>p.t).sort((a,b)=>parseFloat(b)-parseFloat(a))[0];
       const pre=R.infuse.filter((I,i)=>ps[i].pre);
       R.preps.push({title:`Infusione al roner di ${infTarget.name}`,steps:[...(pre.length?[`Tosta ${listIt(pre.map(i=>lc(i.name)))} in forno a 160 °C per 8–10 min.`]:[]),
         `In un sacchetto sottovuoto metti 500 ml di ${infTarget.name}${R.fats.length||R.milk?' già lavato':''} con ${listIt(R.infuse.map((I,i)=>`${ps[i].q.replace(/, tostati.*$/,'')} di ${lc(I.name)}`))}.`,
@@ -342,8 +373,8 @@ export function buildRecipe(inputs,styleId,mode,baseOverride){
   // acido
   if(st.acid){let left=st.acid;const parts=[];
     const weakA=!lab&&roles.acid.length&&roles.acid.every(I=>I.cat==='agr'&&I.t.acido<4);
-    roles.acid.forEach(I=>{const p=acidJuice.has(I)?prepAcid({...I,cat:'xx'},lab):prepAcid(I,lab);const share=Math.min(p.cap||99,(weakA?st.acid*0.5:st.acid)/roles.acid.length);parts.push({I,p,ml:share});left-=share;});
-    if(left>=5&&(!st.acidOpt||weakA)){const d=bestOf(['Limone','Lime','Verjus'],foods,false,base?[base]:[]);const p=prepAcid(d,lab);parts.push({I:d,p,ml:left,auto:true});}
+    roles.acid.forEach(I=>{const p=acidJuice.has(I)?prepAcid({...I,cat:'xx'},lab):prepAcid(I,lab,st);const share=Math.min(p.cap||99,(weakA?st.acid*0.5:st.acid)/roles.acid.length);parts.push({I,p,ml:share});left-=share;});
+    if(left>=5&&(!st.acidOpt||weakA)){const d=bestOf(['Limone','Lime','Verjus'],foods,false,base?[base]:[]);const p=prepAcid(d,lab,st);parts.push({I:d,p,ml:left,auto:true});}
     parts.forEach(x=>{add(x.ml,x.p.label+(x.p.note?` (${x.p.note})`:''),{auto:x.auto});if(x.p.steps)R.preps.push({title:x.p.label,steps:x.p.steps});});}
   // dolce
   if(st.sweet){let tot=st.sweet;if(roles.muddle.length)tot-=5;if(st.id==='oldfashioned'&&roles.sweet.length>1)tot=10;
@@ -368,7 +399,11 @@ export function buildRecipe(inputs,styleId,mode,baseOverride){
     else if(kind==='Cece'||kind==='Fagiolo'){add(25,`Acquafaba di ${lc(kind)}`);texture='albume';R.preps.push({title:`Acquafaba di ${lc(kind)}`,steps:[`Usa il liquido di cottura di ${lc(kind)} (anche in barattolo, senza sale).`,`Se è poco denso riducilo di un terzo sul fuoco e raffredda: deve montare come un albume.`]});}
     else if(LIQDAIRY.includes(kind)){add(30,kind);texture='panna';}}
   // muddle
-  roles.muddle.forEach(I=>{const q=I.cat==='erb'?'8–10 foglie':FRUIT.includes(I.cat)?'3–4 pezzi (circa 40 g)':'3 fette';lines.push({ml:0,name:`${q} di ${lc(I.name)}, da pestare`,drop:true});});
+  // nei drink shakerati, a volte i pezzi non si pestano: li rompe il ghiaccio (hard shake) e si filtrano fini
+  const SHK=['sour','sour_albume','collins','royale','tiki'];
+  roles.muddle.forEach(I=>{const q=I.cat==='erb'?'8–10 foglie':FRUIT.includes(I.cat)?'3–4 pezzi (circa 40 g)':'3 fette';
+    const shk=SHK.includes(st.id)&&pickV(I.name+st.id+'m',2)===1;
+    lines.push({ml:0,name:shk?`${q} di ${lc(I.name)}, da shakerare interi`:`${q} di ${lc(I.name)}, da pestare`,drop:true});});
   // condimenti e bitter
   R.season.forEach(I=>{const p=prepSeason(I,lab,st);if(p.ml)add(p.ml,p.label);else lines.push({ml:0,name:`${p.qty} di ${lc(p.label)}`,drop:true});if(p.steps)R.preps.push({title:p.label,steps:p.steps});});
   if(st.bitters&&!low){const b=bestOf(['Angostura',"Peychaud's",'Orange bitters'],foods,true,base?[base]:[]);lines.push({ml:0,name:`${st.bitters} dash di ${b.name}`,drop:true});}
@@ -410,6 +445,7 @@ export function garnTxt(I,st){const n=I.name,c=I.cat;
   return`${n} in accompagnamento`;
 }
 export function methodSteps(R,st,lab){const s=[];const hasMud=R.spec.some(l=>/da pestare/.test(l.name));const smoke=R.smoke;
+  const whole=R.spec.filter(l=>/da shakerare interi/.test(l.name));
   const chill=`Raffredda il bicchiere (${lc(st.glass)}) in congelatore o con ghiaccio e acqua.`;
   if(smoke)s.push(`Affumica il bicchiere capovolto su trucioli di legno accesi (ciliegio, melo o quercia) per 10–15 s, o usa una pistola affumicatrice.`);
   switch(st.id){
@@ -429,6 +465,9 @@ export function methodSteps(R,st,lab){const s=[];const hasMud=R.spec.some(l=>/da
     case 'tiki':s.push(`Versa tutto nello shaker con una manciata di ghiaccio tritato e fai un whip shake breve (5 s).`,`Versa senza filtrare nel bicchiere e completa con ghiaccio tritato.`,`Mescola con lo swizzle stick, ruotandolo tra le mani, finché il bicchiere brina.`);break;
     case 'milkpunch':s.push(`Prepara in batch almeno 10 dosi: unisci tutti gli ingredienti tranne il latte.`,`Scalda appena il ${R.clarName} (30 ml per dose) a 40 °C e versaci sopra il mix acido, lentamente: il latte caglia subito.`,`Lascia riposare 30 min senza mescolare.`,`Filtra con filtro di carta; ripassa le prime colature torbide finché esce limpido (anche 2–3 h).`,`Imbottiglia e conserva in frigo fino a 2 mesi. Per servire, mescola 70 ml sul cubo grande per 10 s.`);break;
   }
+  if(whole.length){const i=s.findIndex(x=>/Versa (il resto|tutto) nello shaker|Agita con ghiaccio/.test(x));
+    s.splice(i<0?0:i,0,`Metti nello shaker ${whole.map(l=>l.name.replace(/, da shakerare interi$/,'')).join(' e ')} senza pestare: uno shake energico con il ghiaccio li rompe e libera l'aroma senza note amare.`);
+    const j=s.findIndex(x=>/^Filtra nel tumbler alto/.test(x));if(j>=0)s[j]=s[j].replace('Filtra nel tumbler alto','Filtra con il colino fine nel tumbler alto');}
   s.push(`Guarnisci: ${lc(R.garnish[0])}.`);
   return s;
 }
@@ -465,8 +504,8 @@ export function suggestBases(foods,styleId,group){
     const mean=sc.reduce((a,b)=>a+b,0)/sc.length,mn=Math.min(...sc);
     const ov=FAM.map((_,i)=>[i,foods.reduce((t,f)=>t+Math.min(f.ar[i],s.ar[i]),0)]).filter(x=>x[1]>=2).sort((a,b)=>b[1]-a[1]).slice(0,3).map(x=>FAM[x[0]][1].toLowerCase());
     const best=per.slice().sort((a,b)=>b.r.total-a.r.total)[0];
-    const fit=pref.includes(s.name),dist=s.grp==='bia'||s.grp==='inv';
-    return{s,mean:r05(mean),rank:mean+0.4*mn+(fit?2:0)+(!dist&&!['spritz','highball','negroni'].includes(styleId)?-3:0)+(!dist&&s.t.dolce>=4&&styleId!=='flip'?-3:0),per,ov,best,fit};
+    const fit=pref.includes(s.name),dist=s.grp==='bia'||s.grp==='inv';const pi=pref.indexOf(s.name);
+    return{s,mean:r05(mean),rank:mean+0.4*mn+(fit?2+1.5*(pref.length-pi)/pref.length:0)+(!styleId&&COMMON.has(s.name)?2:0)-1.4*GENW*genOf(s)+(!dist&&!['spritz','highball','negroni'].includes(styleId)?-3:0)+(!dist&&styleId==='negroni'?-2:0)+(!dist&&s.t.dolce>=4&&styleId!=='flip'?-3:0),per,ov,best,fit};
   }).sort((a,b)=>b.rank-a.rank);
 }
 
@@ -549,3 +588,49 @@ export function coherence(ins,styleId,base){
   const altBases=suggestBases(foods,styleId).filter(x=>x.s!==base).slice(0,3).map(x=>x.s);
   return{block,warn,altStyles,altBases,bridges:[...new Set(bridges)].slice(0,3)};
 }
+
+// --- stile automatico ---
+// Lo stile nasce dal carattere degli ingredienti: freschi e agrumati vanno verso sour e drink lunghi, amari verso il Negroni,
+// tostati e affumicati verso l'Old Fashioned, cremosi verso il Flip, tropicali e speziati verso il Tiki, floreali verso le bollicine.
+// A parità di carattere, un piccolo scarto calcolato dagli ingredienti fa variare la scelta da un banco all'altro.
+export const hashStr=str=>{let h=2166136261;for(let i=0;i<str.length;i++){h^=str.charCodeAt(i);h=Math.imul(h,16777619);}return h>>>0;};
+export function profileOf(foods){
+  const n=Math.max(1,foods.length);const a=k=>foods.reduce((s,f)=>s+(f.ar[FI[k]]||0),0)/n;const t=k=>foods.reduce((s,f)=>s+(f.t[k]||0),0)/n;
+  const st=k=>foods.reduce((s,f)=>s+(f.st[k]||0),0)/n;const cat=cs=>foods.filter(f=>cs.includes(f.cat)).length/n;
+  return{fresh:a('ag')+a('ff')+a('ve')*.7+t('acido')*.7+st('f')*.5,herb:a('er')+a('ve')*.4,bitter:t('amaro')+a('re')*.5,
+    rich:a('la')+a('to')+a('ox')+a('ft')*.5+st('g')*.7,smoky:a('af')+a('te')*.6,spice:a('sd')+a('sp'),floral:a('fl')+a('ff')*.4,
+    savory:t('umami')+t('salato')+a('mi')+a('ve')*.3,sweet:t('dolce'),tropical:cat(['tro'])*4+a('ft')*.3,fruit:cat(['pom','dru','bos','tro','mel'])*3};
+}
+const STYLEW={
+  sour:p=>p.fresh*1.1+p.fruit*.6+p.herb*.4,
+  sour_albume:p=>p.fruit*.7+p.floral*.6+p.rich*.4+p.sweet*.3,
+  collins:p=>p.fresh*.9+p.herb*.6+p.floral*.5,
+  highball:p=>p.fresh*.6+p.spice*.7+p.herb*.5+p.savory*.3,
+  spritz:p=>p.bitter*.8+p.fresh*.5+p.fruit*.4,
+  negroni:p=>p.bitter*1.3+p.spice*.3+p.rich*.3,
+  oldfashioned:p=>p.rich*.8+p.smoky*1.2+p.spice*.4+p.sweet*.2,
+  martini:p=>p.savory*1.1+p.herb*.4+p.floral*.3,
+  julep:p=>p.herb*1.4+p.fruit*.4,
+  flip:p=>p.rich*1.1+p.sweet*.5+p.spice*.3,
+  royale:p=>p.floral*1.2+p.fruit*.5,
+  tiki:p=>p.tropical*1.2+p.spice*.6+p.sweet*.2,
+  milkpunch:p=>p.spice*.5+p.rich*.4+p.bitter*.2,
+};
+// ogni peso si confronta con la sua distribuzione sugli alimenti (punteggio z): così nessuno stile vince solo perché somma più termini.
+// Una lieve preferenza va agli stili più comuni nei bar.
+const STYLEPRIOR={sour:.55,highball:.5,collins:.35,spritz:.35,negroni:.35,oldfashioned:.3,julep:.15,sour_albume:.15,martini:0,royale:0,tiki:0,flip:-.25,milkpunch:-.6};
+let ZS=null;
+function zstats(){if(ZS)return ZS;ZS={};const ps=FOODS_ALL().map(f=>profileOf([f]));
+  for(const id in STYLEW){const v=ps.map(STYLEW[id]);const m=v.reduce((a,b)=>a+b,0)/v.length;const sd=Math.sqrt(v.reduce((a,b)=>a+(b-m)**2,0)/v.length)||1;ZS[id]=[m,sd];}
+  return ZS;}
+export function styleRanking(ins,base,{prefer=null}={}){
+  const foods=ins.filter(i=>!i.isSpirit);const p=profileOf(foods);const h=hashStr(ins.map(i=>i.id).sort().join('+'));const Z=zstats();
+  return STYLES.map((st,k)=>{
+    if(!styleFit(base,st.id).ok||coherence(ins,st.id,base).block.length)return null;
+    const [m,sd]=Z[st.id];
+    let v=(STYLEW[st.id](p)-m)/sd+(STYLEPRIOR[st.id]||0)+((PREFB[st.id]||[]).includes(base?.name)?.6:0)+(st.id===prefer?1.2:0);
+    v+=((h>>>(k*2%24))&7)/7*.55; // varietà riproducibile: stesso banco, stessa scelta
+    return{id:st.id,v};
+  }).filter(Boolean).sort((a,b)=>b.v-a.v);
+}
+export function autoStyleFor(ins,base,opts){return styleRanking(ins,base,opts)[0]?.id||null;}
