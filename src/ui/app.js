@@ -10,6 +10,7 @@ import { S as score, howTo, listIt, monthsTxt, partnersOf, spiritsOf, trioSpirit
 import { TLENS, roles, spiritsForTrio, suggestThird, trio, lensReason } from '../domain/trio.js';
 import { BASES, BGROUPS, STY, abvOf, buildRecipe, coherence, fmt, styleFit, suggestBases, autoStyleFor } from '../domain/recipes.js';
 import SPINFO from '../../data/spirits-info.json';
+import { initCapire, renderCapire, routeCapire, capireHash } from './capire.js';
 import { $, $$, esc, tcol, TOUCH, calm, num, cap, aD, VERD, vOf, meter, REL, relTag, LENSP, STRUCT, plain, noChem, firstSentence, mark, kindOf, shortKind,
   pol, arcPath, trunc, spread, labelAt, wrapName, labelLines, radar, GLASSES, glassSVG, makeCombo, toast, copyText } from './kit.js';
 
@@ -30,6 +31,7 @@ const onBench=I=>bench.includes(I);
 
 // ===================== indirizzi e cronologia =====================
 function hashFor(tab){
+  if(tab==='capire')return capireHash();
   if(tab==='esplora')return S.sel?`#esplora/${S.sel.id}`:'#esplora';
   const ids=bench.map(I=>I.id).join('+');
   if(tab==='abbina')return ids?`#abbina/${ids}`:'#abbina';
@@ -45,6 +47,7 @@ function sync(push){setHash(hashFor(S.tab),push);}
 function benchFromIds(s){const arr=s.split('+').map(id=>BYID[id]).filter(Boolean);const out=[];arr.forEach(I=>{if(!out.includes(I)&&out.length<MAXB)out.push(I);});bench=out;saveBench();}
 function route(){
   const raw=decodeURIComponent(location.hash.slice(1));const [t,a,b,c]=raw.split('/');
+  if(t==='capire'){routeCapire(a,b);show('capire');return;}
   if(t==='abbina'||t==='verifica'){if(a)benchFromIds(a);show('abbina');return;}
   if(t==='crea'||t==='cocktail'){if(a)benchFromIds(a);
     if(b&&b!=='-'&&STY[b]){CK.style=b;CK.styleAuto=false;}else if(a&&!b){CK.styleAuto=true;}
@@ -56,11 +59,11 @@ function route(){
 addEventListener('popstate',route);addEventListener('hashchange',route);
 
 // ===================== sezioni =====================
-const TABS=['esplora','abbina','crea'];
+const TABS=['esplora','abbina','crea','capire'];
 function show(t,{push=false}={}){
   S.tab=t;
   TABS.forEach(k=>{$('#v-'+k).hidden=k!==t;const b=$('#tb-'+k);b.setAttribute('aria-selected',String(k===t));b.tabIndex=k===t?0:-1;});
-  if(t==='esplora')renderEsplora();if(t==='abbina')renderAbbina();if(t==='crea')renderCrea();
+  if(t==='esplora')renderEsplora();if(t==='abbina')renderAbbina();if(t==='crea')renderCrea();if(t==='capire')renderCapire({bench:analysable()});
   renderBenches();renderTray();sync(push);}
 TABS.forEach(k=>$('#tb-'+k).addEventListener('click',()=>{if(S.tab===k)return;show(k,{push:true});scrollTo({top:0});}));
 $('#tabbar').addEventListener('keydown',e=>{if(e.key!=='ArrowRight'&&e.key!=='ArrowLeft')return;const i=TABS.indexOf(S.tab);
@@ -74,6 +77,13 @@ $('#openNb').addEventListener('click',()=>openNotebook());
 document.addEventListener('click',e=>{if(e.target.closest('[data-open-bar]'))openBar(barChanged);});
 document.addEventListener('keydown',e=>{if(e.key!=='/'||e.ctrlKey||e.metaKey||e.altKey)return;const t=e.target;if(t.closest&&t.closest('input,textarea,select'))return;
   if(S.tab!=='esplora')show('esplora',{push:true});e.preventDefault();$('#q-main').focus();});
+
+// ===================== CAPIRE =====================
+// UX-44: la sezione scientifica legge il banco e rimanda a Esplora e Abbina; i suoi indirizzi (#capire/f/…, #capire/c/…) si condividono
+initCapire({changed:()=>{if(S.tab==='capire')sync(false);},
+  openFood:f=>{if(f&&!f.isSpirit)select(f);},
+  openAbbina:(A,B)=>{if(!A||!B)return;benchSet([A,B]);show('abbina',{push:true});scrollTo({top:0});}});
+const sciLink=(A,B,txt)=>`<a class="link tiny sci-go" href="#capire/c/${A.id}+${B.id}">${txt||'La scienza di questa coppia'} →</a>`;
 
 // ===================== banco =====================
 function benchChanged(){saveBench();renderBenches();renderTray();
@@ -241,7 +251,7 @@ function renderSide(){const el=$('#side');
   el.innerHTML=`<section class="panel" aria-labelledby="h-prof"><h2 id="h-prof">La sua impronta</h2>
     <div class="ip-read">${impronta(A,176)}<p class="tiny muted">Al centro il gusto prevalente, nell'anello i cinque gusti, intorno i profumi: <b>in alto a destra le note fresche</b>, in basso le centrali, a sinistra le profonde. Più lungo il tratto, più forte la nota.</p></div>
     <h3 class="side-h3">I suoi profumi</h3>
-    ${fams.length?`<ul class="fbars">${fams.map(([v,i])=>`<li><span>${esc(FAM[i][1])}</span><span class="bar" role="img" aria-label="${v} su 5"><i style="width:${v/5*100}%"></i></span></li>`).join('')}</ul>`:'<p class="muted">Profumo neutro: conta soprattutto il gusto.</p>'}
+    ${fams.length?`<ul class="fbars">${fams.map(([v,i])=>`<li><a class="famlink" href="#capire/f/${FAM[i][0]}" title="${esc('Molecole: '+FAM[i][4])}">${esc(FAM[i][1])}</a><span class="bar" role="img" aria-label="${v} su 5"><i style="width:${v/5*100}%"></i></span></li>`).join('')}</ul>`:'<p class="muted">Profumo neutro: conta soprattutto il gusto.</p>'}
     <p class="tiny"><b>Al bancone:</b> ${esc(CATS[A.cat][2])}.</p>
     ${notes.length?`<p class="safety">${esc(notes.join(' · '))}</p>`:''}
     <details class="more-d" id="radarBox"><summary>Profilo completo: gusti e profumi</summary>
@@ -291,7 +301,7 @@ function pairCard(r){const B=r.B;
   return `<article class="card" data-pid="${B.id}">
     ${cardTop(r,`<button type="button" class="nm" data-open="${B.id}">${esc(B.name)}</button>`,`${catIcon(B,14)}${esc(CATS[B.cat][0])}`)}
     ${cardLine(r)}
-    <details><summary>Perché, dosi e una prova veloce</summary>${cardWhy(r)}<p><b>Rapporto:</b> ${esc(r.ratioTxt)}</p><p><b>Prova:</b> ${esc(testTxt(r))}</p><p class="tiny muted">Punteggio ${num(r.total)} su 30 ${info('score','punteggio')}</p></details>
+    <details><summary>Perché, dosi e una prova veloce</summary>${cardWhy(r)}<p><b>Rapporto:</b> ${esc(r.ratioTxt)}</p><p><b>Prova:</b> ${esc(testTxt(r))}</p><p class="tiny muted">Punteggio ${num(r.total)} su 30 ${info('score','punteggio')}</p><p>${sciLink(r.A,B,'Le molecole dietro questa coppia')}</p></details>
     <div class="c-acts">${benchBtn(B)}<button type="button" class="btn sm ghost" data-open="${B.id}">Apri →</button></div>
   </article>`;}
 function testTxt(r){return r.type==='concordanza'?`assaggia ${r.A.name} da solo, poi insieme a ${r.B.name}: se i profumi in comune si allungano senza confondersi, funziona.`
@@ -525,7 +535,7 @@ function renderAbbina(){const out=$('#pbOut');const T=analysable();const n=T.len
   // il perché sta nel giudizio, sotto la frase: niente riquadro quasi vuoto; con due ingredienti la tabella delle coppie ripeterebbe il giudizio
   out.innerHTML=`<article class="panel verdict">
       <div>${names(T)}${total!=null?meter(total,{big:true}):''}<p class="v-sub">${esc(sub)}</p><div class="v-tags">${tags}</div>
-        <div class="v-why"><h2 class="r-h">Perché</h2>${why.length?`<ul class="why">${why.map(s=>`<li>${esc(noChem(plain(s)))}</li>`).join('')}</ul>`:'<p class="add-empty">Serve almeno un alimento.</p>'}</div></div>
+        <div class="v-why"><h2 class="r-h">Perché</h2>${why.length?`<ul class="why">${why.map(s=>`<li>${esc(noChem(plain(s)))}</li>`).join('')}</ul>`:'<p class="add-empty">Serve almeno un alimento.</p>'}${n===2&&V.length?sciLink(V[0].a,V[0].b):''}</div></div>
       <figure class="figs" style="margin:0">${fig}</figure></article>
     <section class="howto" aria-label="Come usarli">${how||'<div><h3>Dosi</h3><p class="add-empty">—</p></div><div><h3>Da bere</h3><p class="add-empty">—</p></div>'}</section>
     ${n>2?`<section class="panel r-sec"><h2 class="r-h">Coppia per coppia</h2>${matrixHTML(T,weak)}</section>`:''}
@@ -598,7 +608,8 @@ function triangleSVG(t){const P=[[180,46],[62,236],[298,236]];const E=[[0,1],[0,
 $('#methodBody').innerHTML=`
   <div><h3>Il profilo di ogni ingrediente</h3><p>Cinque gusti, la sensazione in bocca (grasso, piccante, astringente, fresco) e diciotto famiglie di profumi, tutto da 0 a 5. Il gusto più alto decide il posto nella ruota.</p></div>
   <div><h3>Due modi di stare bene insieme</h3><p><b>≈ Si somigliano:</b> condividono profumi o si rinforzano, come pomodoro e basilico.</p><p><b>⇄ Si bilanciano:</b> un gusto compensa l'altro, come il sale con il dolce o l'acido con il grasso.</p></div>
-  <div><h3>Il giudizio</h3><p>Sei criteri da 0 a 5: profumi in comune, equilibrio dei gusti, intensità, note fresche-centrali-profonde, stagione e territorio, tradizione. La somma diventa una parola: ottimo, buono, azzardato, da evitare. Il numero esatto è sempre nei dettagli.</p></div>`;
+  <div><h3>Il giudizio</h3><p>Sei criteri da 0 a 5: profumi in comune, equilibrio dei gusti, intensità, note fresche-centrali-profonde, stagione e territorio, tradizione. La somma diventa una parola: ottimo, buono, azzardato, da evitare. Il numero esatto è sempre nei dettagli.</p></div>
+  <div><h3>La scienza dietro il metodo</h3><p>Molecole, gusti, regole e limiti sono spiegati nella sezione <a class="link" href="#capire">Capire</a>.</p></div>`;
 
 // ===================== CREA =====================
 const MODELBL={classic:'Classica',lab:'Laboratorio',low:'Leggera'};

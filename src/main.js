@@ -1,6 +1,7 @@
 // Punto di ingresso: stili e interfaccia.
 import './styles/main.css';
 import './styles/libro.css';
+import './styles/capire.css';
 import './ui/app.js';
 
 // app installabile e utilizzabile senza rete (solo nella versione pubblicata)

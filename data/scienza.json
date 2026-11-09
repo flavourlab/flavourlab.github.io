@@ -1,0 +1,253 @@
+{
+  "_nota": "Testi della sezione «Capire». Le molecole di ogni famiglia sono quelle elencate in families.json (campo «composti»): la validazione controlla che coincidano.",
+  "famiglie": {
+    "ag": {
+      "sintesi": "Il profumo delle scorze di agrumi; lo si ritrova anche in citronella, verbena odorosa e semi di coriandolo.",
+      "molecole": [
+        {"n": "limonene", "t": "Monoterpene che costituisce la gran parte dell'olio essenziale delle scorze di arancia e limone. Da solo ha un odore debole: il carattere di ciascun agrume dipende dai componenti presenti in quantità minori."},
+        {"n": "citrale", "t": "Miscela di due aldeidi, geraniale e nerale, responsabile dell'odore tipico del limone; abbonda anche nella citronella e nella verbena odorosa. Si ossida facilmente."}
+      ],
+      "origine": "Sono terpeni prodotti dalla pianta e conservati nelle ghiandole oleifere della buccia: per questo il profumo sta nella scorza, mentre il succo apporta soprattutto acidità.",
+      "pratica": "Molecole volatili e sensibili a ossigeno e calore: la scorza va usata fresca. L'oleo saccharum le estrae nello zucchero senza scaldarle."
+    },
+    "ff": {
+      "sintesi": "Frutta croccante appena tagliata: mela, pera, banana, fragola.",
+      "molecole": [
+        {"n": "esteri", "t": "Composti che nascono dall'unione di un acido e di un alcol, come il butirrato di etile (fruttato) o l'acetato di isoamile (banana). Li producono i frutti durante la maturazione e i lieviti durante la fermentazione."},
+        {"n": "esenale", "t": "Aldeide a sei atomi di carbonio dall'odore verde e fruttato, tipica della mela; si forma quando i tessuti vengono tagliati o masticati."}
+      ],
+      "origine": "Gli esteri derivano dal metabolismo del frutto e dei lieviti; le aldeidi a sei atomi di carbonio dalla via della lipossigenasi, un processo enzimatico che si attiva quando le cellule si rompono.",
+      "pratica": "Gli esteri sono fragili al calore: cotture e sciroppi caldi li disperdono. Sono preferibili sciroppi a freddo e succhi freschi."
+    },
+    "ft": {
+      "sintesi": "Frutta matura, polposa o tropicale: pesca, albicocca, mango, frutto della passione.",
+      "molecole": [
+        {"n": "lattoni", "t": "Esteri ad anello dall'odore di pesca e di cocco, come il γ-decalattone e il δ-decalattone. Si trovano anche nei latticini e nel legno di quercia, dove prendono il nome di «lattoni del whisky»."},
+        {"n": "tioli", "t": "Composti dello zolfo percepibili in concentrazioni minime; danno il carattere di frutto della passione, ribes nero e pompelmo."}
+      ],
+      "origine": "Si accumulano con la maturazione. Molti tioli sono legati a precursori inodori e vengono liberati da enzimi, compresi quelli dei lieviti durante la fermentazione.",
+      "pratica": "I lattoni sono comuni a frutta matura, latticini e legno: è una ragione chimica dell'affinità tra pesca e panna, o tra frutta matura e distillati invecchiati in botte."
+    },
+    "fl": {
+      "sintesi": "Fiori come rosa, lavanda e violetta; note floreali compaiono anche in molte erbe, frutti e tè.",
+      "molecole": [
+        {"n": "linalolo", "t": "Alcol terpenico dall'odore floreale e fresco: abbonda nella lavanda, nel bergamotto e nei semi di coriandolo."},
+        {"n": "geraniolo", "t": "Alcol terpenico dall'odore di rosa, presente anche nel geranio, nella citronella e nei vitigni aromatici come il moscato."},
+        {"n": "iononi", "t": "Derivano dalla scissione dei carotenoidi, i pigmenti gialli e arancioni delle piante. Il β-ionone sa di violetta e contribuisce al profumo del lampone e del tè."}
+      ],
+      "origine": "Terpeni e derivati dei carotenoidi, spesso legati a zuccheri in una forma inodore (glicosidi) e liberati da enzimi o dall'acidità.",
+      "pratica": "Hanno soglie di percezione basse: un'infusione breve basta. Un eccesso copre gli altri ingredienti e, nelle infusioni lunghe, porta amaro."
+    },
+    "ve": {
+      "sintesi": "Erba appena tagliata, foglia, peperone verde, cetriolo.",
+      "molecole": [
+        {"n": "esenali", "t": "Aldeidi a sei atomi di carbonio, come lo (Z)-3-esenale, il cosiddetto odore dell'erba tagliata: la pianta le libera in pochi secondi quando la foglia viene danneggiata."},
+        {"n": "pirazine metossilate", "t": "Composti azotati dall'odore di peperone verde e di pisello, percepibili già a pochi nanogrammi per litro; caratterizzano anche il Sauvignon blanc."}
+      ],
+      "origine": "Gli esenali vengono dalla via della lipossigenasi, che ossida gli acidi grassi delle membrane al momento del taglio. Le pirazine metossilate sono sintetizzate dalla pianta e diminuiscono con la maturazione.",
+      "pratica": "La nota verde si forma al taglio e svanisce presto: estratti e succhi vanno preparati all'ultimo momento e a freddo."
+    },
+    "er": {
+      "sintesi": "Menta, timo, origano, rosmarino, salvia, alloro.",
+      "molecole": [
+        {"n": "mentolo", "t": "Monoterpene della menta piperita. Oltre all'odore, attiva TRPM8, il recettore del freddo: da qui la sensazione di fresco."},
+        {"n": "carvone", "t": "Esiste in due forme speculari, come la mano destra e la sinistra: una sa di menta romana, l'altra di cumino dei prati e aneto. È un esempio classico di come la forma di una molecola ne determini l'odore."},
+        {"n": "timolo", "t": "Fenolo terpenico di timo e origano, caldo e leggermente medicinale; ha anche proprietà antimicrobiche."},
+        {"n": "cineolo", "t": "Detto anche eucaliptolo: odore canforato e balsamico di eucalipto, rosmarino, alloro e cardamomo."}
+      ],
+      "origine": "Oli essenziali terpenici conservati nei peli ghiandolari delle foglie: basta sfregarle per liberarli.",
+      "pratica": "Il pestato va fatto con leggerezza: lacerare troppo le foglie libera anche composti amari ed erbacei."
+    },
+    "sd": {
+      "sintesi": "Cannella, chiodi di garofano, anice, vaniglia: spezie calde, dal profumo dolce.",
+      "molecole": [
+        {"n": "cinnamaldeide", "t": "L'aldeide che dà il carattere alla cannella. In dose alta è anche pungente, perché attiva il recettore TRPA1."},
+        {"n": "eugenolo", "t": "Fenolo dei chiodi di garofano, presente anche in pimento, alloro e basilico; passa nei distillati dal legno di quercia tostato."},
+        {"n": "anetolo", "t": "Dà l'odore di anice, finocchio e anice stellato. È poco solubile in acqua: quando un pastis o un ouzo vengono diluiti si separa in goccioline e il liquido diventa lattiginoso."},
+        {"n": "vanillina", "t": "L'aldeide principale della vaniglia. Si forma anche dalla degradazione della lignina del legno: per questo i distillati invecchiati in botte ne contengono."}
+      ],
+      "origine": "Composti aromatici sintetizzati dalla pianta (fenilpropanoidi); eugenolo e vanillina si formano anche quando il legno viene tostato.",
+      "pratica": "Poco volatili e stabili: reggono cottura e infusioni lunghe, e danno profondità al drink."
+    },
+    "sp": {
+      "sintesi": "Pepe, zenzero, peperoncino, senape, rafano: più che un profumo, una sensazione di calore o di pizzicore.",
+      "molecole": [
+        {"n": "piperina", "t": "Alcaloide del pepe nero; attiva i recettori del calore TRPV1 e TRPA1."},
+        {"n": "gingerolo", "t": "Il principio pungente dello zenzero fresco. Con l'essiccazione e la cottura si trasforma in shogaolo, più piccante, e in zingerone, più dolce."},
+        {"n": "capsaicina", "t": "La molecola del peperoncino: si lega a TRPV1, il recettore che segnala anche il calore sopra i 43 °C circa. Si scioglie nei grassi e nell'alcol, molto poco in acqua."},
+        {"n": "isotiocianati", "t": "Composti volatili di senape, rafano e wasabi. Nella pianta intatta non ci sono: si formano quando l'enzima mirosinasi incontra i glucosinolati, cioè al taglio o alla masticazione. Attivano TRPA1 e, essendo volatili, salgono al naso."}
+      ],
+      "origine": "Difese chimiche delle piante contro animali e microrganismi.",
+      "pratica": "Grassi e zuccheri attenuano il bruciore; l'alcol invece abbassa la soglia di attivazione di TRPV1, per questo un distillato forte lo amplifica.",
+      "nota": "In senso stretto non sono odori ma stimoli chemestetici: agiscono sulle terminazioni del nervo trigemino. Flavour Lab li tratta come una famiglia di profumi per comodità; la piccantezza compare anche tra le sensazioni in bocca."
+    },
+    "re": {
+      "sintesi": "Ginepro, pino, rosmarino, luppolo: note di resina e di bosco di conifere.",
+      "molecole": [
+        {"n": "pinene", "t": "Monoterpene dell'odore di pino e ginepro, presente anche nel rosmarino: è la spina dorsale aromatica del gin."},
+        {"n": "mircene", "t": "Monoterpene erbaceo e resinoso, abbondante nel luppolo, nell'alloro e nel mango."},
+        {"n": "terpinolene", "t": "Note di pino, agrumi e legno; presente nelle conifere e nella pastinaca."}
+      ],
+      "origine": "Terpeni delle resine: la pianta li produce come difesa contro insetti e funghi.",
+      "pratica": "Volatili ma robusti, attraversano bene la distillazione: per questo il ginepro arriva intatto nel gin."
+    },
+    "te": {
+      "sintesi": "Terra bagnata, sottobosco, radici, funghi, legno.",
+      "molecole": [
+        {"n": "geosmina", "t": "Molecola prodotta da batteri del suolo (Streptomyces) e da alcune alghe, presente anche nella barbabietola: è l'odore della terra bagnata. L'olfatto umano la percepisce in tracce estremamente piccole."},
+        {"n": "sesquiterpeni", "t": "Terpeni più pesanti e meno volatili. Tra questi il rotundone, responsabile della nota di pepe di alcuni vini rossi, e i composti del vetiver e del patchouli."},
+        {"n": "octenolo", "t": "L'1-octen-3-olo, detto «alcol dei funghi»: si forma dall'ossidazione dell'acido linoleico e dà il carattere di fungo e di sottobosco."}
+      ],
+      "origine": "Metaboliti di microrganismi del suolo, di funghi e delle stesse piante; molecole poco volatili, che persistono a lungo.",
+      "pratica": "Bastano dosi minime: un tocco dà profondità, una dose eccessiva diventa odore di muffa o di cantina."
+    },
+    "to": {
+      "sintesi": "Pane tostato, caffè, cacao, caramello, frutta secca tostata.",
+      "molecole": [
+        {"n": "pirazine", "t": "Composti azotati che si formano nella reazione di Maillard: odore di crosta di pane, caffè, cacao e nocciola tostata."},
+        {"n": "furanoni", "t": "Come il furaneolo, dall'odore di caramello e di fragola matura: si formano sia nei frutti sia scaldando gli zuccheri."},
+        {"n": "maltolo", "t": "Odore di caramello e di pane appena sfornato; si forma scaldando zuccheri e amidi ed è presente nel malto tostato."}
+      ],
+      "origine": "Due reazioni distinte. La reazione di Maillard, tra zuccheri riducenti e amminoacidi, che accelera sopra i 140 °C circa; la caramellizzazione, che coinvolge solo gli zuccheri. Entrambe richiedono superfici asciutte e temperature alte.",
+      "pratica": "Tostare frutta secca, spezie o cereali prima dell'infusione sposta il loro profilo verso le note profonde."
+    },
+    "af": {
+      "sintesi": "Fumo di legna, torba, brace.",
+      "molecole": [
+        {"n": "guaiacolo", "t": "Fenolo dall'odore di fumo e di medicinale; si forma bruciando la lignina del legno ed è tipico degli whisky torbati."},
+        {"n": "siringolo", "t": "Fenolo affumicato più dolce e speziato, tipico del fumo dei legni duri come quercia e faggio."},
+        {"n": "cresoli", "t": "Fenoli dalle note catramose; insieme al guaiacolo caratterizzano i malti essiccati al fumo di torba."}
+      ],
+      "origine": "La pirolisi, cioè la decomposizione del legno ad alta temperatura con poco ossigeno, spezza la lignina in fenoli; il tipo di legno determina quali.",
+      "pratica": "I fenoli del fumo si percepiscono anche in tracce: spesso basta affumicare il bicchiere o il ghiaccio."
+    },
+    "la": {
+      "sintesi": "Burro, panna, latte, yogurt.",
+      "molecole": [
+        {"n": "diacetile", "t": "Dà l'odore di burro; lo producono i batteri lattici, anche durante la fermentazione malolattica del vino."},
+        {"n": "lattoni", "t": "Gli stessi esteri ad anello della frutta matura: nei latticini danno note di panna e di cocco, che si sviluppano scaldando il burro."},
+        {"n": "acido lattico", "t": "Prodotto dai batteri lattici a partire dagli zuccheri: un'acidità più morbida di quella citrica, tipica di yogurt e kefir."}
+      ],
+      "origine": "Fermentazioni batteriche e trasformazioni dei grassi del latte.",
+      "pratica": "Il grasso scioglie bene gli aromi liposolubili: il fat-washing lo sfrutta per trasferirli al distillato. Nel milk punch, invece, le proteine del latte coagulate dall'acido trattengono tannini e asprezze."
+    },
+    "ca": {
+      "sintesi": "Carne arrostita, brodo, salsa di soia.",
+      "molecole": [
+        {"n": "solforati da Maillard", "t": "Quando l'amminoacido cisteina reagisce con gli zuccheri si formano composti dello zolfo, come il 2-metil-3-furantiolo, tra i principali responsabili dell'odore di carne cotta."},
+        {"n": "aldeidi di Strecker", "t": "Si formano dagli amminoacidi durante la reazione di Maillard: il metionale sa di patata bollita e di brodo, il 3-metilbutanale di malto."}
+      ],
+      "origine": "Cottura di proteine e zuccheri: per questo la nota carnosa compare anche in alimenti non animali, come i funghi arrostiti o i fermentati di soia.",
+      "pratica": "In un drink va dosata a gocce, con brodi chiarificati o fat-washing, e trova sostegno nelle note tostate, terrose e animali."
+    },
+    "fu": {
+      "sintesi": "Formaggi stagionati, erborinati e a crosta lavata, selvaggina.",
+      "molecole": [
+        {"n": "acidi grassi", "t": "Acidi grassi a catena corta, come il butirrico e l'isovalerico, liberati dalla scomposizione dei grassi: odore di formaggio stagionato e, in eccesso, di rancido."},
+        {"n": "metilchetoni", "t": "Si formano quando muffe come il Penicillium roqueforti scompongono i grassi: il 2-eptanone è la firma dei formaggi erborinati."},
+        {"n": "solfuri", "t": "Composti dello zolfo, come il metantiolo, prodotti dai batteri della crosta dei formaggi a crosta lavata: odore di stalla e di cavolo."}
+      ],
+      "origine": "Attività di batteri, muffe ed enzimi su grassi e proteine durante la stagionatura e la fermentazione.",
+      "pratica": "Note polarizzanti: in piccola dose danno complessità, in eccesso dominano. Una dolcezza densa, come miele o fichi, le addomestica."
+    },
+    "fe": {
+      "sintesi": "Aceto, kombucha, frutta fermentata.",
+      "molecole": [
+        {"n": "acido acetico", "t": "Prodotto dai batteri acetici, che ossidano l'alcol: è l'aceto. È volatile, quindi si percepisce anche con il naso e non solo in bocca."},
+        {"n": "acetato di etile", "t": "L'estere più comune di vini e distillati: in piccola dose è fruttato, in dose alta ricorda il solvente. È abbondante nei rum ricchi di esteri."}
+      ],
+      "origine": "Fermentazioni di lieviti e batteri; nei distillati, le fermentazioni lunghe aumentano gli esteri.",
+      "pratica": "L'acidità acetica può sostituire gli agrumi (shrub, poche gocce di aceto), ma porta un profumo proprio, da accordare con il resto."
+    },
+    "ox": {
+      "sintesi": "Sherry, vini ossidativi, frutta secca, mela tagliata.",
+      "molecole": [
+        {"n": "acetaldeide", "t": "Si forma ossidando l'etanolo: odore di mela tagliata e di frutta secca. È tipica dello sherry fino, dove la producono i lieviti del velo (flor)."},
+        {"n": "sotolone", "t": "Lattone dall'odore di curry e fieno greco, che a dosi basse ricorda lo sciroppo d'acero; caratterizza i vini ossidativi invecchiati, come lo sherry e il vin jaune, ed è presente nel fieno greco."}
+      ],
+      "origine": "Contatto controllato con l'ossigeno durante l'invecchiamento, oppure attività dei lieviti in superficie.",
+      "pratica": "Nel metodo si lega alle note tostate, lattiche e terrose: vini ossidativi e frutta secca tostata sono un accostamento ricorrente."
+    },
+    "mi": {
+      "sintesi": "Mare, alghe, ostriche, iodio, pietra bagnata.",
+      "molecole": [
+        {"n": "composti solforati", "t": "Come il dimetilsolfuro, che contribuisce all'odore di mare e di alghe; si trova anche nel mais dolce cotto."},
+        {"n": "bromofenoli", "t": "Composti del bromo che gli animali marini accumulano dalle alghe e dagli organismi di cui si nutrono; danno la nota iodata di crostacei e pesci di mare."}
+      ],
+      "origine": "Ambiente marino: alghe e microrganismi producono i precursori, che si accumulano lungo la catena alimentare.",
+      "pratica": "È la famiglia più difficile da accostare: il metodo la considera in conflitto con frutta fresca, fiori e spezie dolci, e la lega al verde e al fermentato."
+    }
+  },
+  "gusti": {
+    "dolce": {
+      "stimolo": "Zuccheri (saccarosio, glucosio, fruttosio), alcuni amminoacidi e i dolcificanti.",
+      "recettore": "Un recettore formato da due proteine, T1R2 e T1R3.",
+      "ruolo": "Segnala energia. Attenua l'amaro e l'acido, arrotonda il calore dell'alcol e dà corpo."
+    },
+    "acido": {
+      "stimolo": "Ioni idrogeno liberati dagli acidi: citrico, malico, tartarico, lattico, acetico.",
+      "recettore": "Il canale protonico OTOP1, identificato come principale sensore dell'acido tra il 2018 e il 2019.",
+      "ruolo": "Dà freschezza, fa salivare, bilancia il dolce. Acidi diversi hanno profili diversi: il malico è più verde, il lattico più morbido."
+    },
+    "salato": {
+      "stimolo": "Ioni sodio, soprattutto dal sale da cucina.",
+      "recettore": "Alle basse concentrazioni il canale ENaC; alle concentrazioni alte intervengono altri meccanismi, ancora in parte da chiarire.",
+      "ruolo": "Esalta i sapori e attenua l'amaro. Nei drink si usa a gocce, in soluzione salina, sotto la soglia in cui si riconosce come «salato»."
+    },
+    "amaro": {
+      "stimolo": "Migliaia di molecole diverse: alcaloidi (chinino, caffeina), polifenoli, alcuni terpeni.",
+      "recettore": "Una famiglia di circa venticinque recettori TAS2R. Le varianti genetiche spiegano perché alcune persone percepiscono certi amari molto più di altre.",
+      "ruolo": "In origine un segnale d'allarme; in cucina e al bancone dà profondità e chiude il sorso."
+    },
+    "umami": {
+      "stimolo": "Glutammato e ribonucleotidi (inosinato e guanilato). Il gusto fu descritto da Kikunae Ikeda nel 1908, studiando il brodo di alga kombu.",
+      "recettore": "Un recettore formato da T1R1 e T1R3.",
+      "ruolo": "Dà sapidità e persistenza. Glutammato e nucleotidi insieme producono un effetto molto superiore alla somma: è il principio del dashi, kombu più katsuobushi."
+    }
+  },
+  "bocca": {
+    "g": {"nome": "Grassezza", "t": "Non è considerata un gusto di base, ma una sensazione tattile di rivestimento e scorrevolezza. Il grasso trattiene gli aromi liposolubili e li rilascia più lentamente. Che esista anche un gusto del grasso, mediato da recettori come CD36 e GPR120, è un'ipotesi studiata ma non ancora condivisa."},
+    "p": {"nome": "Piccantezza", "t": "Una sensazione chemestetica: capsaicina, piperina e gingerolo attivano TRPV1, il recettore del calore; isotiocianati e cinnamaldeide attivano TRPA1. Il segnale viaggia sul nervo trigemino, non sulle vie del gusto."},
+    "t": {"nome": "Astringenza", "t": "I tannini e altri polifenoli si legano alle proteine della saliva e le fanno precipitare: la bocca perde lubrificazione e si «asciuga». È una sensazione tattile, non un gusto."},
+    "f": {"nome": "Freschezza", "t": "Mentolo, eucaliptolo e altri composti attivano TRPM8, il recettore del freddo: la temperatura non cambia, ma viene percepita più bassa."}
+  },
+  "regole": {
+    "acido|g": {"liv": "pratica", "t": "L'acidità stimola la salivazione e alleggerisce la sensazione di pienezza lasciata dal grasso."},
+    "salato|dolce": {"liv": "studiato", "t": "L'effetto meglio documentato è indiretto: il sale sopprime l'amaro e così libera il dolce. A basse concentrazioni il sale può anche rendere il dolce più rotondo."},
+    "amaro|dolce": {"liv": "studiato", "t": "Dolce e amaro si sopprimono a vicenda: ciascuno riduce l'intensità percepita dell'altro."},
+    "g|p": {"liv": "studiato", "t": "La capsaicina si scioglie nei grassi: alimenti grassi, come il latte intero, riducono il bruciore."},
+    "g|t": {"liv": "studiato", "t": "Grasso e astringenza si oppongono: il grasso lubrifica, i tannini asciugano. Alternarli mantiene il palato in equilibrio."},
+    "acido|dolce": {"liv": "studiato", "t": "Acido e dolce si attenuano a vicenda: è il principio dei sour, in cui zucchero e agrume si bilanciano."},
+    "salato|amaro": {"liv": "studiato", "t": "Il sale riduce la percezione dell'amaro, anche a concentrazioni in cui non si sente come salato."},
+    "f|p": {"liv": "pratica", "t": "Il fresco del mentolo (TRPM8) e il bruciore della capsaicina (TRPV1) agiscono su recettori diversi che si influenzano; l'effetto calmante è noto nella pratica, con evidenze sperimentali parziali."},
+    "dolce|p": {"liv": "studiato", "t": "Soluzioni zuccherine riducono il bruciore della capsaicina, anche se meno del grasso."},
+    "acido|umami": {"liv": "pratica", "t": "Una nota acida ravviva i sapori sapidi e ne alleggerisce la persistenza: è l'uso del limone sul pesce o dell'aceto nei brodi."},
+    "umami|salato": {"liv": "studiato", "t": "Glutammato e sale si sostengono: il glutammato aumenta la sapidità percepita e permette di usare meno sale."},
+    "sinergia": {"liv": "studiato", "t": "Glutammato e ribonucleotidi si potenziano: insieme danno un umami molto più intenso della somma delle parti."},
+    "somma": {"liv": "pratica", "t": "Due ingredienti con lo stesso tratto molto forte (acido, amaro, sale, piccante, astringente) ne sommano l'intensità invece di bilanciarla."},
+    "stridore": {"liv": "metodo", "t": "Alcune famiglie di profumi tendono a respingersi: note marine o animali accanto a frutta fresca, fiori o spezie dolci. È una convenzione del metodo, ricavata dalla pratica di cucina e non da una misura; gli abbinamenti classici ne sono esenti."}
+  },
+  "livelli": {
+    "studiato": "Documentato da studi sensoriali",
+    "pratica": "Pratica di cucina consolidata",
+    "metodo": "Convenzione del metodo"
+  },
+  "fonti": [
+    {"g": "Libri", "a": "Harold McGee", "t": "On Food and Cooking: The Science and Lore of the Kitchen", "x": "Scribner, 2004"},
+    {"g": "Libri", "a": "Karen Page, Andrew Dornenburg", "t": "The Flavor Bible", "x": "Little, Brown, 2008"},
+    {"g": "Libri", "a": "Niki Segnit", "t": "The Flavour Thesaurus", "x": "Bloomsbury, 2010"},
+    {"g": "Libri", "a": "Dave Arnold", "t": "Liquid Intelligence: The Art and Science of the Perfect Cocktail", "x": "W. W. Norton, 2014"},
+    {"g": "Libri", "a": "Alex Day, Nick Fauchald, David Kaplan", "t": "Cocktail Codex", "x": "Ten Speed Press, 2018"},
+    {"g": "Libri", "a": "Amy Stewart", "t": "The Drunken Botanist", "x": "Algonquin Books, 2013"},
+    {"g": "Abbinamenti", "a": "Y.-Y. Ahn, S. E. Ahnert, J. P. Bagrow, A.-L. Barabási", "t": "Flavor network and the principles of food pairing", "x": "Scientific Reports 1, 196 (2011)"},
+    {"g": "Abbinamenti", "a": "Foodpairing", "t": "Analisi dei composti aromatici condivisi tra ingredienti", "x": "foodpairing.com"},
+    {"g": "Gusto e interazioni", "a": "R. S. J. Keast, P. A. S. Breslin", "t": "An overview of binary taste–taste interactions", "x": "Food Quality and Preference 14, 111–124 (2003)"},
+    {"g": "Gusto e interazioni", "a": "P. A. S. Breslin, G. K. Beauchamp", "t": "Salt enhances flavour by suppressing bitterness", "x": "Nature 387, 563 (1997)"},
+    {"g": "Gusto e interazioni", "a": "J. Chandrashekar, M. A. Hoon, N. J. P. Ryba, C. S. Zuker", "t": "The receptors and cells for mammalian taste", "x": "Nature 444, 288–294 (2006)"},
+    {"g": "Gusto e interazioni", "a": "S. Yamaguchi", "t": "The synergistic taste effect of monosodium glutamate and disodium 5′-inosinate", "x": "Journal of Food Science 32, 473–478 (1967)"},
+    {"g": "Sensazioni in bocca", "a": "C. Peyrot des Gachons et al.", "t": "Opponency of astringent and fat sensations", "x": "Current Biology 22, R829–R830 (2012)"},
+    {"g": "Sensazioni in bocca", "a": "C. W. Nasrawi, R. M. Pangborn", "t": "Temporal effectiveness of mouth-rinsing on capsaicin mouth-burn", "x": "Physiology & Behavior 47, 617–623 (1990)"},
+    {"g": "Percezione", "a": "G. M. Shepherd", "t": "Smell images and the flavour system in the human brain", "x": "Nature 444, 316–321 (2006)"},
+    {"g": "Percezione", "a": "C. Spence", "t": "Multisensory flavor perception", "x": "Cell 161, 24–35 (2015)"}
+  ]
+}

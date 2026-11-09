@@ -53,6 +53,19 @@ spirits.forEach((s) => {
 classics.alimenti.forEach((c) => { if (!names.has(c.a) || !names.has(c.b)) err(`Classico ${c.a} + ${c.b}: alimento non trovato`); });
 classics.alcolici.forEach((c) => { if (!names.has(c.a) || !snames.has(c.b)) err(`Classico ${c.a} + ${c.b}: alimento o alcolico non trovato`); });
 
+// sezione «Capire»: ogni famiglia ha il suo testo e le stesse molecole di families.json
+const sci = load('scienza.json');
+const famData = load('families.json').famiglie;
+famData.forEach((f) => {
+  const e = sci.famiglie[f.id];
+  if (!e) { err(`Capire: manca il testo della famiglia "${f.id}"`); return; }
+  const want = f.composti.split(',').map((x) => x.trim());
+  const got = e.molecole.map((m) => m.n);
+  if (want.join('|') !== got.join('|')) err(`Capire, famiglia "${f.id}": molecole ${got.join(', ')} diverse da families.json (${want.join(', ')})`);
+});
+Object.keys(sci.famiglie).forEach((k) => { if (!famData.some((f) => f.id === k)) err(`Capire: famiglia "${k}" inesistente`); });
+Object.values(sci.regole).forEach((r) => { if (!(r.liv in sci.livelli)) err(`Capire: livello di evidenza "${r.liv}" sconosciuto`); });
+
 if (errors.length) {
   console.error(`\n✗ Dati non validi (${errors.length} errori):\n` + errors.map((e) => '  - ' + e).join('\n') + '\n');
   process.exit(1);
