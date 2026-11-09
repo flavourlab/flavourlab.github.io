@@ -6,9 +6,9 @@ import { ALLERG, BYID, BYNAME, CATS, FAM, FOODS, ORIG, SBYNAME, SGROUP, SPIRITS,
 import { bar, owns, preferOwned, barLineHTML, openBar, openNotebook, noteAdd, openBancone, shareImage } from './tools.js';
 import { homeHTML, moodHTML, MOODS, CLASSICS, classicTwists } from './home.js';
 import { impronta, sharedFams, famLbl, catIcon, catIconOf, icon } from './visual.js';
-import { S as score, howTo, listIt, monthsTxt, partnersOf, spiritsOf, trioSpirits } from '../domain/scoring.js';
+import { S as score, howTo, listIt, monthsTxt, partnersOf, spiritsOf, trioSpirits, spec as specT } from '../domain/scoring.js';
 import { TLENS, roles, spiritsForTrio, suggestThird, trio, lensReason } from '../domain/trio.js';
-import { BASES, BGROUPS, STY, abvOf, buildRecipe, coherence, fmt, styleFit, suggestBases } from '../domain/recipes.js';
+import { BASES, BGROUPS, STY, abvOf, buildRecipe, coherence, fmt, styleFit, suggestBases, autoStyleFor } from '../domain/recipes.js';
 import SPINFO from '../../data/spirits-info.json';
 import { $, $$, esc, tcol, TOUCH, calm, num, cap, aD, VERD, vOf, meter, REL, relTag, LENSP, STRUCT, plain, firstSentence, mark, kindOf, shortKind,
   pol, arcPath, trunc, spread, labelAt, wrapName, labelLines, radar, GLASSES, glassSVG, makeCombo, toast, copyText } from './kit.js';
@@ -83,10 +83,15 @@ function benchAdd(I,{quiet=false}={}){if(onBench(I))return true;if(bench.length>
 function benchRemove(I){const i=bench.indexOf(I);if(i<0)return;bench.splice(i,1);if(CK.base===I)CK.base=null;benchChanged();}
 function benchToggle(I){onBench(I)?benchRemove(I):benchAdd(I);}
 function benchSet(arr){bench=arr.slice(0,MAXB);CK.base=null;CK.styleAuto=true;CK.style=null;benchChanged();}
+// suggerimenti per il banco: 16 ingredienti (al massimo 3 per categoria, per varietà) e 6 alcolici, ordinati per il legame più debole con il banco
 function benchSuggest(){if(!bench.length)return null;
-  const items=FOODS.concat(SPIRITS).filter(x=>!bench.includes(x)).map(x=>{const ts=bench.map(i=>pairT(i,x)).filter(Boolean).map(r=>r.total);return{x,m:ts.length?Math.min(...ts):-1};})
-    .filter(o=>o.m>=0).sort((a,b)=>b.m-a.m).slice(0,8).map(o=>o.x);
-  return {label:bench.length===1?`Stanno bene ${aD(bench[0].name)}`:'Stanno bene con il tuo banco',items};}
+  const rank=pool=>pool.filter(x=>!bench.includes(x)).map(x=>{const ts=bench.map(i=>pairT(i,x)).filter(Boolean).map(r=>r.total);const m=ts.length?Math.min(...ts):-1;return{x,m,k:x.isSpirit?specT(m,x):m};})
+    .filter(o=>o.m>=14).sort((a,b)=>b.k-a.k);
+  const per={};const foods=rank(FOODS).filter(o=>{per[o.x.cat]=(per[o.x.cat]||0)+1;return per[o.x.cat]<=3;}).slice(0,16).map(o=>o.x);
+  const DASH=['Angostura',"Peychaud's",'Orange bitters'];// si usano a gocce: non sono «da bere»
+  const sps=rank(SPIRITS.filter(x=>!DASH.includes(x.name))).slice(0,6).map(o=>o.x);
+  const who=bench.length===1?aD(bench[0].name):'con il tuo banco';
+  return {label:`Stanno bene ${who}`,items:foods.concat(sps),groups:[{label:`Ingredienti che stanno bene ${who}`,items:foods},{label:'Da bere',items:sps}]};}
 
 const PAIR_EX=[['Gorgonzola','Pera'],['Fragola','Basilico'],['Cioccolato fondente','Arancia'],['Pomodoro','Fragola']].map(p=>p.map(n=>BYNAME[n])).filter(p=>p[0]&&p[1]);
 const DRINK_EX=[['Fragola','Basilico'],['Pompelmo','Rosmarino'],['Caffè','Arancia'],['Cetriolo','Menta']].map(p=>p.map(n=>BYNAME[n])).filter(p=>p[0]&&p[1]);
@@ -553,7 +558,7 @@ function netSVG(T,P){const n=T.length,cx=180,cy=150,R=88;const pos=T.map((_,i)=>
     h+=`<text text-anchor="${anc}" style="font-size:13.5px;font-weight:600;fill:var(--ink)">${ln.map((l,k)=>`<tspan x="${lx.toFixed(1)}" y="${(y0+k*16).toFixed(1)}">${esc(l)}</tspan>`).join('')}</text>`;});
   return h+`</svg><p class="flegend"><span><svg width="24" height="8"><line x1="0" y1="4" x2="24" y2="4" style="stroke:var(--ink);stroke-width:2.2"/></svg>si somigliano</span><span><svg width="24" height="8"><line x1="0" y1="4" x2="24" y2="4" style="stroke:var(--ink);stroke-width:2.2;stroke-dasharray:6 5"/></svg>si bilanciano</span><span>più spessa, più forte</span></p>`;}
 // cosa aggiungere quando il banco ha già tre o più ingredienti
-function addHTML(){const full=bench.length>=MAXB;const sg=full?null:benchSuggest();const items=sg?sg.items.slice(0,4):[];
+function addHTML(){const full=bench.length>=MAXB;const sg=full?null:benchSuggest();const items=sg?sg.groups[0].items.slice(0,6).concat(sg.groups[1].items.slice(0,2)):[];
   return `<section class="panel r-sec add-s" aria-labelledby="h-add"><div class="r-sec-h"><h2 class="r-h" id="h-add">${full?'Il banco è pieno':'Aggiungi un ingrediente'}</h2></div>
     ${full?'<p class="add-empty">Cinque ingredienti al massimo: togline uno per provarne un altro. La tabella qui sopra ti dice quale pesa di più.</p>'
       :`<p class="tiny muted">Quelli che stanno meglio con tutto il banco.</p><ul class="sug">${items.map(C=>{const ts=bench.map(i=>pairT(i,C)).filter(Boolean).map(r=>r.total);const m=Math.min(...ts);
@@ -566,7 +571,7 @@ $('#pbOut').addEventListener('click',e=>{const x=e.target.closest('[data-set]');
   if(e.target.closest('[data-save-pair]')){const T=analysable();const ts=T.map(I=>I.name);noteAdd({kind:'coppia',title:ts.join(' + '),sub:$('#pbOut .meter .m-w')?.textContent||'Abbinamento',hash:location.hash});}});
 
 function lensTable(r){return `<table class="lens"><tbody>${r.lens.map(l=>`<tr><td>${esc(l.k)}${info(l.k)}</td><td>${esc(plain(l.why))}</td><td class="v">${num(l.v)}/5</td></tr>`).join('')}</tbody></table>`;}
-const SUG_N=12,SUG_PER=4,SUGP={key:'',list:[],page:0};
+const SUG_N=24,SUG_PER=6,SUGP={key:'',list:[],page:0};
 function thirdHTML(A,B){
   const key=A.id+'|'+B.id+'|'+S.lens;if(SUGP.key!==key){SUGP.key=key;SUGP.list=suggestThird(A,B,S.lens,SUG_N);SUGP.page=0;}
   const list=SUGP.list,pages=Math.max(1,Math.ceil(list.length/SUG_PER));SUGP.page=Math.max(0,Math.min(SUGP.page,pages-1));
@@ -602,9 +607,9 @@ const ckFoods=()=>bench.filter(i=>!i.isSpirit);
 const ingBase=()=>bench.find(i=>i.isSpirit&&(i.grp==='bia'||i.grp==='inv'))||null;
 // con la bottigliera compilata, tra le basi proposte vince la prima che hai (se non è molto peggiore)
 function effBase(){return CK.base||ingBase()||preferOwned(suggestBases(ckFoods(),CK.style))?.s||null;}
+// lo stile proposto nasce dal carattere del banco (fresco, amaro, tostato, cremoso, tropicale, floreale…), non da un ordine fisso
 function autoStyle(){const fs=ckFoods();const b0=CK.base||ingBase()||preferOwned(suggestBases(fs,null))?.s||null;if(!b0)return null;
-  let best=null,bv=-1;STY_VERSATILE.filter(id=>STY[id]).forEach(id=>{if(!styleFit(b0,id).ok)return;let v=1;
-    if(!coherence(bench,id,b0).block.length)v+=4;if(fs.length&&suggestBases(fs,id).find(y=>y.s===b0)?.fit)v+=2;if(v>bv){bv=v;best=id;}});return best;}
+  return autoStyleFor(bench,b0)||STY_VERSATILE.find(id=>STY[id]&&styleFit(b0,id).ok)||null;}
 function styleShort(R){const st=R.st,b=R.base?R.base.name:'';
   switch(st.id){case 'oldfashioned':return'Old Fashioned';case 'martini':return R.base&&R.base.grp==='ver'?'Reverse Martini':/Gin|Vodka|Genever/.test(b)?'Martini':'Manhattan';
     case 'negroni':return /Bourbon|Rye|Scotch|whisky/i.test(b)?'Boulevardier':'Negroni';case 'sour':return R.spec.some(l=>l.sp&&l.sp.grp==='liq')?'Daisy':'Sour';

@@ -142,7 +142,8 @@ export function makeCombo(host,{id,placeholder,source,onPick,keep,onClear,sugges
   function show(){const q=norm(inp.value.trim());const src=source();
     if(!SYNI){SYNI={};Object.entries(SYN).forEach(([k,v])=>{SYNI[norm(k)]=v;});}
     const groups=[];
-    if(!q&&suggest){const sug=suggest()||{items:[]};const top=sug.items.filter(it=>src.includes(it)).slice(0,8);if(top.length)groups.push({label:sug.label,items:top});}
+    // a campo vuoto: i suggerimenti, anche in più gruppi (ingredienti, da bere)
+    if(!q&&suggest){const sug=suggest()||{items:[]};(sug.groups||[{label:sug.label,items:sug.items}]).forEach(g=>{const its=(g.items||[]).filter(it=>src.includes(it));if(its.length)groups.push({label:g.label,items:its});});}
     const syn=q&&SYNI[q]?src.filter(it=>it.name===SYNI[q]):[];
     const hit=it=>{const n=norm(it.name);return n.includes(q)||(it.ex&&norm(it.ex).includes(q));};
     let main=src.filter(it=>!syn.includes(it)&&(!q||hit(it))).sort((a,b)=>{const sa=norm(a.name).startsWith(q)?0:1,sb=norm(b.name).startsWith(q)?0:1;return sa-sb||a.name.localeCompare(b.name,'it');});

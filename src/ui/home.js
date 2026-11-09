@@ -3,7 +3,7 @@
 // «Rifai un classico» parte da un drink famoso. Tutti i calcoli usano le funzioni di dominio esistenti.
 import { FOODS, FI, MESI, SBYNAME, TLABEL } from '../domain/core.js';
 import { S as score, partnersOf } from '../domain/scoring.js';
-import { STY, buildRecipe, coherence, styleFit, suggestBases, fmt } from '../domain/recipes.js';
+import { STY, buildRecipe, coherence, styleFit, styleRanking, suggestBases, fmt } from '../domain/recipes.js';
 import { esc, glassSVG } from './kit.js';
 import { impronta, catIcon, famLbl } from './visual.js';
 
@@ -53,8 +53,7 @@ export function moodFoods(mood, n = 8) {
 }
 // stile che regge con una base data, nell'ordine dei più versatili
 export function fittingStyle(ins, base, prefer) {
-  const order = prefer ? [prefer, ...VERSATILE.filter(x => x !== prefer)] : VERSATILE;
-  return order.find(id => STY[id] && styleFit(base, id).ok && !coherence(ins, id, base).block.length) || null;
+  return styleRanking(ins, base, { prefer })[0]?.id || VERSATILE.find(id => STY[id] && styleFit(base, id).ok && !coherence(ins, id, base).block.length) || null;
 }
 // drink del giorno: un ingrediente di stagione e il suo compagno migliore, scelti in base alla data
 const DRINKY = new Set(['agr', 'pom', 'dru', 'bos', 'tro', 'mel', 'sec', 'gus', 'erb', 'spe', 'bot', 'fio', 'mie', 'tea', 'caf', 'cac']);
