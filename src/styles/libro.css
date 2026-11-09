@@ -206,3 +206,19 @@ dialog.bancone{max-width:min(680px,100vw)}
 .bc-timer{align-self:flex-start}
 .bc-nav{display:flex;justify-content:space-between;align-items:center;gap:10px}
 .bc-nav .btn{min-height:48px;padding-inline:20px}
+
+/* ---------- UX-31 · un po' di vita (solo se il sistema non chiede movimento ridotto) ---------- */
+@media (prefers-reduced-motion:no-preference){
+  /* il bicchiere della ricetta si riempie a ogni nuova versione del drink */
+  .sheet-hero .gl .lq,.dod-gl .gl .lq{transform-box:fill-box;transform-origin:50% 100%;animation:fl-fill .9s cubic-bezier(.3,.7,.2,1) both}
+  .sheet-hero .gl .acf,.dod-gl .gl .acf{animation:fl-pop .4s .7s cubic-bezier(.3,1.6,.5,1) both;transform-box:fill-box;transform-origin:50% 50%}
+  @keyframes fl-fill{from{transform:scaleY(0)}}
+  @keyframes fl-pop{from{transform:scale(0);opacity:0}}
+  /* l'impronta grande sboccia quando apri un ingrediente o confronti una coppia */
+  .ip-big .ip-p,.ip-read .ip-p,.pairfig .ip-p{transform-box:view-box;transform-origin:50% 50%;animation:fl-bloom .7s cubic-bezier(.2,.8,.2,1) both}
+  .ip-read .ip-p:nth-of-type(3n+1),.pairfig .ip-p:nth-of-type(3n+1){animation-delay:.06s}
+  .ip-read .ip-p:nth-of-type(3n+2),.pairfig .ip-p:nth-of-type(3n+2){animation-delay:.12s}
+  @keyframes fl-bloom{from{transform:scale(.55);opacity:0}}
+  .mood-out:not([hidden]),.sea,.cls{animation:fl-in .35s ease-out both}
+  @keyframes fl-in{from{opacity:0;transform:translateY(6px)}}
+}

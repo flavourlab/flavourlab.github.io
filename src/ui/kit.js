@@ -1,5 +1,5 @@
 // Kit dell'interfaccia: helper senza stato, lingua visiva unica (verdetti, relazioni), bicchieri, radar, campo di ricerca.
-import { CATS, SGROUP, TLABEL, norm } from '../domain/core.js';
+import { CATS, SGROUP, TLABEL, TORDER, FAM, norm } from '../domain/core.js';
 import { verdict } from '../domain/scoring.js';
 
 export const $=s=>document.querySelector(s);
@@ -109,17 +109,52 @@ export function glassSVG(id,size,label,on){
   return `<svg class="gl${on?' on':''}" width="${size}" height="${size}" viewBox="0 0 48 48" role="img" aria-label="${esc(label||'')}">${lq}${ac}${s}</svg>`;
 }
 
+// ---------- ricerca tollerante ----------
+// nomi in inglese o d'uso comune → nome nell'app (quelli che non esistono nei dati vengono ignorati)
+const SYN={lemon:'Limone',lime:'Lime',orange:'Arancia',grapefruit:'Pompelmo',strawberry:'Fragola',raspberry:'Lampone',blueberry:'Mirtillo',
+  pineapple:'Ananas',coconut:'Cocco',peach:'Pesca',apricot:'Albicocca',cherry:'Ciliegia',apple:'Mela',pear:'Pera',fig:'Fico',grape:'Uva',
+  watermelon:'Anguria',melon:'Melone',pomegranate:'Melograno',rhubarb:'Rabarbaro',basil:'Basilico',mint:'Menta',rosemary:'Rosmarino',
+  thyme:'Timo',sage:'Salvia',lavender:'Lavanda',dill:'Aneto',parsley:'Prezzemolo',fennel:'Finocchio',celery:'Sedano',cucumber:'Cetriolo',
+  tomato:'Pomodoro',ginger:'Zenzero',cinnamon:'Cannella',vanilla:'Vaniglia',cardamom:'Cardamomo','star anise':'Anice stellato',nutmeg:'Noce moscata',
+  chili:'Peperoncino',chilli:'Peperoncino',coffee:'Caffè',espresso:'Caffè',chocolate:'Cioccolato fondente',cioccolata:'Cioccolato fondente',
+  honey:'Miele di acacia',miele:'Miele di acacia','maple syrup':'Sciroppo d\'acero',almond:'Mandorla',hazelnut:'Nocciola',pistachio:'Pistacchio',
+  'black tea':'Tè nero',te:'Tè nero',campari:'Bitter rosso',aperol:'Aperitivo',cointreau:'Triple sec',whiskey:'Bourbon',
+  champagne:'Champagne',prosecco:'Prosecco',tequila:'Tequila blanco',rum:'Rum bianco'};
+let SYNI=null;
+const lev=(a,b)=>{const m=a.length,n=b.length;if(Math.abs(m-n)>2)return 9;let p=Array.from({length:n+1},(_,j)=>j);
+  for(let i=1;i<=m;i++){const c=[i];for(let j=1;j<=n;j++)c[j]=Math.min(p[j]+1,c[j-1]+1,p[j-1]+(a[i-1]===b[j-1]?0:1));p=c;}return p[n];};
+// profumi e gusti cercabili: «affumicato», «floreale», «amaro»…
+function aromaHit(q){if(q.length<4)return null;
+  const i=FAM.findIndex(f=>norm(f[1]).split('/').some(w=>w.startsWith(q))||norm(f[2]).startsWith(q));
+  if(i>=0)return {label:`Sanno di ${FAM[i][1].toLowerCase()}`,f:it=>it.ar[i]||0};
+  const t=TORDER.find(k=>norm(TLABEL[k]).startsWith(q));
+  if(t)return {label:`Gusto ${TLABEL[t].toLowerCase()} prevalente`,f:it=>it.dom===t?it.t[t]:0};
+  return null;}
+
 // ---------- campo di ricerca con menù ----------
 // suggest(): a campo vuoto, gli elementi da proporre per primi; poi tutti dalla A alla Z
 export function makeCombo(host,{id,placeholder,source,onPick,keep,onClear,suggest,label}){
   host.innerHTML=`<input type="search" id="${id}" role="combobox" aria-expanded="false" aria-autocomplete="list" autocomplete="off" placeholder="${esc(placeholder)}"${label?` aria-label="${esc(label)}"`:''}><div class="list" role="listbox" hidden></div>`;
   const inp=host.querySelector('input'),list=host.querySelector('.list');let opts=[],act=0,cur=null,quiet=false;
   const optH=(it,i)=>`<div class="opt" role="option" data-i="${i}" aria-selected="${i===act}">${mark(it)}<span>${esc(it.name)}</span><small>${esc(it.isSpirit?SGROUP[it.grp][0]:CATS[it.cat][1]+' · '+TLABEL[it.dom].toLowerCase())}</small></div>`;
+  // cerca nel nome, negli esempi di marca degli alcolici (Aperol → Aperitivo) e nei sinonimi;
+  // con pochi risultati prova anche con un errore di battitura; un profumo o un gusto propone gli ingredienti che lo hanno
   function show(){const q=norm(inp.value.trim());const src=source();
-    const sug=!q&&suggest?(suggest()||{items:[]}):{items:[]};const top=sug.items.filter(it=>src.includes(it)).slice(0,8);
-    const rest=src.filter(it=>!top.includes(it)&&(!q||norm(it.name).includes(q))).sort((a,b)=>{const sa=norm(a.name).startsWith(q)?0:1,sb=norm(b.name).startsWith(q)?0:1;return sa-sb||a.name.localeCompare(b.name,'it');}).slice(0,top.length?200:60);
-    opts=top.concat(rest);
-    list.innerHTML=top.length?`<div class="lgrp" role="presentation">${esc(sug.label)}</div>${top.map(optH).join('')}<div class="lgrp" role="presentation">Tutti, dalla A alla Z</div>${rest.map((it,i)=>optH(it,i+top.length)).join('')}`:(opts.length?opts.map(optH).join(''):'');
+    if(!SYNI){SYNI={};Object.entries(SYN).forEach(([k,v])=>{SYNI[norm(k)]=v;});}
+    const groups=[];
+    if(!q&&suggest){const sug=suggest()||{items:[]};const top=sug.items.filter(it=>src.includes(it)).slice(0,8);if(top.length)groups.push({label:sug.label,items:top});}
+    const syn=q&&SYNI[q]?src.filter(it=>it.name===SYNI[q]):[];
+    const hit=it=>{const n=norm(it.name);return n.includes(q)||(it.ex&&norm(it.ex).includes(q));};
+    let main=src.filter(it=>!syn.includes(it)&&(!q||hit(it))).sort((a,b)=>{const sa=norm(a.name).startsWith(q)?0:1,sb=norm(b.name).startsWith(q)?0:1;return sa-sb||a.name.localeCompare(b.name,'it');});
+    main=syn.concat(main);
+    if(q){const ar=aromaHit(q);if(ar){const items=src.filter(it=>!main.includes(it)&&ar.f(it)>=3).sort((a,b)=>ar.f(b)-ar.f(a)).slice(0,8);if(items.length)groups.push({label:ar.label,items});}
+      if(q.length>=4&&main.length<3&&!syn.length){const tol=q.length>=7?2:1;const fz=src.filter(it=>!main.includes(it)&&norm(it.name).split(/[^a-z0-9]+/).some(w=>w.length>=3&&lev(q,w.slice(0,q.length))<=tol)).slice(0,8);
+        if(fz.length)groups.unshift({label:'Forse cercavi',items:fz});}}
+    const rest=main.slice(0,groups.length?200:60);
+    if(groups.length&&rest.length)groups.push({label:q?'Nel nome':'Tutti, dalla A alla Z',items:rest});else if(rest.length)groups.push({label:'',items:rest});
+    opts=[];let html='';const used=new Set();groups.forEach(g=>{const its=g.items.filter(it=>!used.has(it));if(!its.length)return;its.forEach(it=>used.add(it));
+      if(g.label)html+=`<div class="lgrp" role="presentation">${esc(g.label)}</div>`;its.forEach(it=>{html+=optH(it,opts.length);opts.push(it);});});
+    list.innerHTML=html;
     if(!opts.length&&q){list.innerHTML=`<div class="lgrp none" role="presentation">Nessun risultato per «${esc(inp.value.trim())}»</div>`;}
     list.scrollTop=0;list.hidden=!opts.length&&!q;inp.setAttribute('aria-expanded',String(!list.hidden));}
   const close=()=>{list.hidden=true;inp.setAttribute('aria-expanded','false');};
