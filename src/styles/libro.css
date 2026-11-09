@@ -93,3 +93,8 @@
 @media (max-width:980px){#side .ip-read{display:none}}
 @media (max-width:520px){.ip-read{flex-direction:column;align-items:flex-start}}
 .sug li>.ip{margin:-6px -4px -6px -8px}
+@media (max-width:640px){
+  .nav{background:var(--surface)}
+  .block-h .seg{max-width:100%;overflow-x:auto;scrollbar-width:none;flex-wrap:nowrap}
+  .block-h .seg button{white-space:nowrap}
+}
