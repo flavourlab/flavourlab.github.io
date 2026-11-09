@@ -2,7 +2,8 @@
 // Un solo banco di lavoro attraversa le tre sezioni: in «Esplora» si scoprono gli ingredienti e si mettono sul banco,
 // in «Abbina» si capisce se il banco sta in piedi, in «Crea» il banco diventa una ricetta.
 // Ogni vista ha un indirizzo (#esplora/…, #abbina/…, #crea/…): si condivide e il tasto «indietro» funziona.
-import { ALLERG, BYID, BYNAME, CATS, FAM, FOODS, ORIG, SGROUP, SPIRITS, TLABEL, TORDER, W } from '../domain/core.js';
+import { ALLERG, BYID, BYNAME, CATS, FAM, FOODS, ORIG, SBYNAME, SGROUP, SPIRITS, TLABEL, TORDER, W } from '../domain/core.js';
+import { homeHTML, moodHTML, MOODS, CLASSICS, classicTwists } from './home.js';
 import { impronta, sharedFams, famLbl, catIcon, catIconOf, icon } from './visual.js';
 import { S as score, howTo, listIt, monthsTxt, partnersOf, spiritsOf, trioSpirits } from '../domain/scoring.js';
 import { TLENS, roles, spiritsForTrio, suggestThird, trio, lensReason } from '../domain/trio.js';
@@ -19,7 +20,7 @@ const listY=a=>a.length<=1?a.join(''):a.slice(0,-1).join(', ')+' e '+a[a.length-
 
 // ===================== stato =====================
 const S={tab:'esplora',sel:null,mode:'browse',zoom:null,cat:null,filter:'all',egoAll:false,spAll:false,pAll:false,parts:[],sps:[],trio:{},lens:'piramide'};
-const CK={style:null,styleAuto:false,base:null,view:'classic',bgroup:'all',baseOpen:false,mixView:'gusti'};
+const CK={style:null,styleAuto:false,base:null,view:'classic',bgroup:'all',baseOpen:false,mixView:'gusti',classic:null};
 const MAXB=5;
 let bench=[];
 try{bench=(JSON.parse(localStorage.getItem('flavourlab.bench')||'[]')||[]).map(id=>BYID[id]).filter(Boolean).slice(0,MAXB);}catch(e){bench=[];}
@@ -174,6 +175,8 @@ function select(f,{nav=true,keepMode=false}={}){S.sel=f;S.egoAll=false;S.spAll=f
 
 function renderEsplora(){const A=S.sel;
   $('#v-esplora').classList.toggle('has-food',!!A);
+  $('#home').hidden=!!A;$('#wheelTitle').hidden=!!A;
+  if(!A&&!$('#home').dataset.ready){$('#home').innerHTML=homeHTML(drinkName);$('#home').dataset.ready='1';}
   $('#exHero').hidden=!!A;$('#exFood').hidden=!A;$('#pairs').hidden=!A;$('#spirits').hidden=!A;
   if(A)renderFood();renderWheel();renderSide();if(A){renderPairs();renderSpirits();}}
 function refreshBenchMarks(){if(!S.sel)return;renderFood();renderPairs();renderSpirits();}
@@ -203,6 +206,18 @@ $('#exFood').addEventListener('click',e=>{const A=S.sel;if(!A)return;if(e.target
   if(g.dataset.fgo==='abbina'){benchAdd(A,{quiet:true});show('abbina',{push:true});scrollTo({top:0});if(bench.length<2)setTimeout(()=>$('#q-bench-abbina')?.focus(),60);}
   else{if(!bench.length)benchSet([A,...S.parts.slice(0,2).map(r=>r.B)]);else benchAdd(A,{quiet:true});show('crea',{push:true});scrollTo({top:0});}});
 document.addEventListener('click',e=>{const b=e.target.closest('[data-bench-t]');if(!b)return;benchToggle(BYID[b.dataset.benchT]);});
+
+// ---------- prima pagina: drink del giorno, stagione, voglie, classici ----------
+// porta il banco in «Crea» con uno stile proposto; se con la base scelta lo stile non regge, decide il metodo
+function openDrink(arr,sty,low){bench=arr.slice(0,MAXB);saveBench();CK.base=null;CK.classic=null;CK.view=low?'low':'classic';CK.style=null;CK.styleAuto=true;
+  const b=effBase();if(sty&&STY[sty]&&styleFit(b,sty).ok&&!coherence(bench,sty,b).block.length){CK.style=sty;CK.styleAuto=false;}
+  show('crea',{push:true});scrollTo({top:0});}
+function openClassic(c){CK.classic=c;CK.style=c.sty;CK.styleAuto=false;CK.base=SBYNAME[c.base]||null;CK.view='classic';show('crea',{push:true});scrollTo({top:0});}
+$('#home').addEventListener('click',e=>{const o=e.target.closest('[data-home-open]');if(o){select(BYID[o.dataset.homeOpen]);return;}
+  const d=e.target.closest('[data-home-drink]');if(d){openDrink(d.dataset.homeDrink.split('+').map(id=>BYID[id]).filter(Boolean),d.dataset.sty,!!d.dataset.low);return;}
+  const m=e.target.closest('[data-mood]');if(m){const on=m.getAttribute('aria-pressed')==='true';$$('#home [data-mood]').forEach(b=>b.setAttribute('aria-pressed','false'));const out=$('#moodOut');
+    if(on){out.hidden=true;return;}m.setAttribute('aria-pressed','true');out.innerHTML=moodHTML(MOODS.find(x=>x.id===m.dataset.mood));out.hidden=false;return;}
+  const c=e.target.closest('[data-classic]');if(c)openClassic(CLASSICS[+c.dataset.classic]);});
 
 // ---------- scheda laterale: profilo, oppure indice delle categorie ----------
 function renderSide(){const el=$('#side');
@@ -600,7 +615,7 @@ function renderCrea(){
 $('#ckMixBox').addEventListener('toggle',()=>{if($('#ckMixBox').open)$('#ckMix').innerHTML=mixProfile();});
 
 function renderBaseCtl(){const host=$('#ckBase');const fs=ckFoods();const eb=effBase();const ib=ingBase();
-  if(!bench.length){host.innerHTML='<p class="tiny muted">La sceglo io appena metti un ingrediente sul banco.</p>';return;}
+  if(!bench.length){host.innerHTML=CK.base?`<div class="bline"><span class="tiny muted">Del classico</span><b>${esc(CK.base.name)}${spInfo(CK.base)}</b></div>`:'<p class="tiny muted">La scelgo io appena metti un ingrediente sul banco.</p>';return;}
   if(!eb){host.innerHTML='<p class="tiny muted">Nessuna base adatta: prova con un altro ingrediente.</p>';return;}
   const sug=suggestBases(fs,CK.style);const ex=sug.find(x=>x.s===eb);
   const lbl=CK.base?'Scelta da te':ib?'Dal tuo banco':'Consigliata';
@@ -628,7 +643,7 @@ $('#ckGlass').addEventListener('click',e=>{const b=e.target.closest('[data-sty]'
   if(glPT==='touch'&&glPeek!==b.dataset.sty&&b.dataset.sty!==CK.style){glPeek=b.dataset.sty;const el=$('#ckGlassPeek');
     el.innerHTML=`<p class="tiny">${tipHTML(b)}</p><div class="pk-acts"><button type="button" class="btn sm primary" data-pick-sty="${b.dataset.sty}">Scegli ${esc(STY[b.dataset.sty].name)}</button></div>`;el.hidden=false;
     $$('#ckGlass .glass').forEach(x=>x.classList.toggle('peeked',x===b));return;}
-  CK.style=b.dataset.sty;CK.styleAuto=false;hideInfo();renderCrea();sync(false);});
+  CK.style=b.dataset.sty;CK.styleAuto=false;CK.classic=null;hideInfo();renderCrea();sync(false);});
 $('#ckGlassPeek').addEventListener('click',e=>{const b=e.target.closest('[data-pick-sty]');if(!b)return;CK.style=b.dataset.pickSty;CK.styleAuto=false;renderCrea();sync(false);});
 
 function mixProfile(){const fs=ckFoods();if(!fs.length)return'';
@@ -646,6 +661,9 @@ function recipeText(R){const L=[drinkName(R,bench),`${R.st.name} · ${MODELBL[R.
   ...(R.preps.length?['Mise en place',...R.preps.flatMap(p=>[`· ${p.title}`,...p.steps.map(s=>'  '+s)]),'']:[]),
   'Preparazione',...R.method.map((s,i)=>`${i+1}. ${s}`),'',location.href];return L.join('\n');}
 function renderRecipe(){const out=$('#ckOut');
+  if(!bench.length&&CK.classic&&CK.style===CK.classic.sty){const c=CK.classic;
+    out.innerHTML=`<div class="empty classic-empty"><div class="ce-h">${glassSVG(c.sty,72,'')}<h2>Il tuo ${esc(c.w)}, con…</h2></div><p class="muted">Aggiungi al banco l'ingrediente che vuoi metterci dentro: tengo lo stile del ${esc(c.w)} e una base ${esc(CK.base?CK.base.name:'classica')}, e adatto la ricetta. Stanno bene con questa base:</p>
+      <div class="pairex">${classicTwists(c).map(f=>`<button type="button" class="ex" data-goadd="${f.id}">${catIcon(f,15)}${esc(f.name)}</button>`).join('')}</div></div>`;return;}
   if(!bench.length){out.innerHTML=`<div class="empty"><h2>La ricetta comparirà qui</h2><p class="muted">Metti sul banco da uno a cinque ingredienti: scelgo io base e bicchiere, tu cambi quello che vuoi.</p><div class="pairex">${DRINK_EX.map(p=>`<button type="button" class="ex" data-set="${p.map(I=>I.id).join('+')}">${mark(p[0])}${esc(p[0].name)} + ${esc(p[1].name)}</button>`).join('')}</div></div>`;return;}
   const rs=genRecipes();
   if(!rs.length){out.innerHTML=`<div class="empty"><h2>Scegli un bicchiere</h2><p class="muted">Con questi ingredienti non trovo uno stile adatto: scegline uno a sinistra.</p></div>`;return;}
