@@ -1,6 +1,6 @@
 // Analisi del trio: lenti, ruoli e terzo ingrediente consigliato.
 import { FAM, FOODS, LEVEL, SPIRITS, TK, clamp, r05 } from './core.js';
-import { CLASH, FIX, RULES, S, listIt, ratio, tv } from './scoring.js';
+import { CLASH, FIX, RULES, S, listIt, ratio, spec, tv } from './scoring.js';
 export var TLENS=[
   ['piramide','Piramide','Testa, cuore e fondo coperti dai tre insieme: il terzo ingrediente consigliato è quello che completa i livelli mancanti.'],
   ['equilibrio','Equilibrio','I cinque gusti del trio: premia i contrasti che si compensano e penalizza le somme (tre acidi, due amari forti).'],
@@ -88,5 +88,5 @@ export function suggestThird(A,B,lens,n=6){
   for(const x of cands){per[x.C.cat]=(per[x.C.cat]||0)+1;if(per[x.C.cat]>2)continue;out.push(x);if(out.length>=n)break;}
   return out;
 }
-export function spiritsForTrio(T,n=4){return SPIRITS.map(s=>{const sc=T.filter(x=>!x.isSpirit).map(f=>S(f,s).total);return{s,m:Math.min(...sc),avg:sc.reduce((a,b)=>a+b,0)/sc.length};}).filter(x=>!T.includes(x.s)).sort((a,b)=>b.m-a.m||b.avg-a.avg).slice(0,n);}
+export function spiritsForTrio(T,n=4){return SPIRITS.map(s=>{const sc=T.filter(x=>!x.isSpirit).map(f=>S(f,s).total);return{s,m:Math.min(...sc),avg:sc.reduce((a,b)=>a+b,0)/sc.length};}).filter(x=>!T.includes(x.s)).sort((a,b)=>spec(b.m,b.s)-spec(a.m,a.s)||b.avg-a.avg).slice(0,n);}
 

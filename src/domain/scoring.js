@@ -113,13 +113,27 @@ export function verdict(t){if(t>=24)return['forte','Abbinamento forte, da provar
 export const cache=new Map();
 export function S(A,B){const k=A.id+'>'+B.id;let r=cache.get(k);if(!r){r=score(A,B);cache.set(k,r);}return r;}
 
+// --- alcolici «generalisti» ---
+// Alcuni alcolici (l'amaro al carciofo su tutti) hanno un profilo che si accorda un po' con tutto: ordinati per punteggio puro
+// finirebbero primi quasi sempre. Per scegliere e ordinare i suggerimenti si sottrae quanto un alcolico supera la media
+// su un campione fisso di alimenti. Il punteggio /30 e il verdetto mostrati restano quelli di sempre.
+let GEN=null;
+export function genOf(s){
+  if(!GEN){GEN={};const sample=FOODS.filter((_,i)=>i%4===0);let tot=0;
+    for(const x of SPIRITS){let m=0;for(const f of sample)m+=S(f,x).total;m/=sample.length;GEN[x.id]=m;tot+=m;}
+    GEN._avg=tot/SPIRITS.length;}
+  return Math.max(0,(GEN[s.id]??GEN._avg)-GEN._avg);
+}
+export const GENW=1.8;
+export const spec=(t,s)=>t-GENW*genOf(s);
+
 export function partnersOf(A,max=18){
   const all=FOODS.filter(f=>f!==A&&f.cat!==A.cat).map(f=>S(A,f)).filter(r=>r.total>=14).sort((x,y)=>y.total-x.total||y.bridge-x.bridge);
   const per={},out=[];for(const r of all){per[r.B.cat]=(per[r.B.cat]||0)+1;if(per[r.B.cat]>2)continue;out.push(r);if(out.length>=max)break;}
   return out;
 }
 export function spiritsOf(A,max=10){
-  const all=SPIRITS.map(s=>S(A,s)).sort((x,y)=>y.total-x.total);
+  const all=SPIRITS.map(s=>S(A,s)).sort((x,y)=>spec(y.total,y.B)-spec(x.total,x.B));
   const per={},out=[];for(const r of all){per[r.B.grp]=(per[r.B.grp]||0)+1;if(per[r.B.grp]>3)continue;out.push(r);if(out.length>=max)break;}
   return out;
 }
@@ -127,6 +141,6 @@ export function bridgesFor(A,B,n=3){
   return FOODS.filter(c=>c!==A&&c!==B&&!c.isSpirit).map(c=>{const a=S(A,c).total,b=B.isSpirit?S(c,B).total:S(B,c).total;return {c,m:Math.min(a,b),a,b};}).sort((x,y)=>y.m-x.m).slice(0,n);
 }
 export function trioSpirits(A,B,n=3){
-  return SPIRITS.filter(s=>s!==B).map(s=>{const a=S(A,s).total,b=S(B,s).total;return{s,m:Math.min(a,b),a,b};}).sort((x,y)=>y.m-x.m).slice(0,n);
+  return SPIRITS.filter(s=>s!==B).map(s=>{const a=S(A,s).total,b=S(B,s).total;return{s,m:Math.min(a,b),a,b};}).sort((x,y)=>spec(y.m,y.s)-spec(x.m,x.s)).slice(0,n);
 }
 export function howTo(A,sp){return `${CATS[A.cat][2].charAt(0).toUpperCase()+CATS[A.cat][2].slice(1)}. Struttura di partenza: ${SGROUP[sp.grp][1]}.`;}
