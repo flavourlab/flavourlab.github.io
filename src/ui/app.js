@@ -3,6 +3,7 @@
 // in «Abbina» si capisce se il banco sta in piedi, in «Crea» il banco diventa una ricetta.
 // Ogni vista ha un indirizzo (#esplora/…, #abbina/…, #crea/…): si condivide e il tasto «indietro» funziona.
 import { ALLERG, BYID, BYNAME, CATS, FAM, FOODS, ORIG, SBYNAME, SGROUP, SPIRITS, TLABEL, TORDER, W } from '../domain/core.js';
+import { bar, owns, preferOwned, barLineHTML, openBar, openNotebook, noteAdd, openBancone, shareImage } from './tools.js';
 import { homeHTML, moodHTML, MOODS, CLASSICS, classicTwists } from './home.js';
 import { impronta, sharedFams, famLbl, catIcon, catIconOf, icon } from './visual.js';
 import { S as score, howTo, listIt, monthsTxt, partnersOf, spiritsOf, trioSpirits } from '../domain/scoring.js';
@@ -66,6 +67,11 @@ $('#tabbar').addEventListener('keydown',e=>{if(e.key!=='ArrowRight'&&e.key!=='Ar
   const nx=TABS[(i+(e.key==='ArrowRight'?1:TABS.length-1))%TABS.length];show(nx,{push:true});$('#tb-'+nx).focus();});
 $('.brand').addEventListener('click',e=>{e.preventDefault();goHome();});
 $('#share').addEventListener('click',()=>copyText(location.href,'Link copiato'));
+// la bottigliera cambia le basi proposte e le etichette «ce l'hai»: si ridisegna la sezione aperta
+function barChanged(){if(S.tab==='crea')renderCrea();if(S.tab==='esplora'&&S.sel)renderSpirits();}
+$('#openBar').addEventListener('click',()=>openBar(barChanged));
+$('#openNb').addEventListener('click',()=>openNotebook());
+document.addEventListener('click',e=>{if(e.target.closest('[data-open-bar]'))openBar(barChanged);});
 document.addEventListener('keydown',e=>{if(e.key!=='/'||e.ctrlKey||e.metaKey||e.altKey)return;const t=e.target;if(t.closest&&t.closest('input,textarea,select'))return;
   if(S.tab!=='esplora')show('esplora',{push:true});e.preventDefault();$('#q-main').focus();});
 
@@ -272,9 +278,10 @@ function famsLine(A,B){const sh=sharedFams(A,B).slice(0,3);
   return best?`<p class="c-fams"><span class="muted">Si legano</span> <b>${esc(famLbl(best[0]))}</b><span class="dot" aria-hidden="true">↔</span><span class="sr"> con </span><b>${esc(famLbl(best[1]))}</b></p>`:'';}
 function cardLine(r){const fl=r.type==='concordanza'?famsLine(r.A,r.B):'';return fl||`<p class="c-why">${esc(firstSentence(r.summary))}</p>`;}
 function cardWhy(r){return (r.type==='concordanza'&&famsLine(r.A,r.B)?why2(r):why2(r).slice(1)).map(s=>`<p>${esc(plain(s))}</p>`).join('');}
+const ownTag=B=>owns(B)?`<span class="rel own">Ce l'hai</span>`:'';
 const classicTag=r=>r.classic?`<span class="rel classic" title="Coppia della tradizione, in cucina o al bancone">Classico</span>`:'';
 function cardTop(r,nameHTML,kindHTML){return `<div class="c-top"><div class="c-id">${impronta(r.B,46,{hi:sharedFams(r.A,r.B),label:false})}<div><h3 class="c-name">${nameHTML}</h3><span class="c-kind">${kindHTML}</span></div></div>${meter(r.total)}</div>
-    <div class="c-tags">${relTag(r)}${classicTag(r)}</div>`;}
+    <div class="c-tags">${relTag(r)}${classicTag(r)}${ownTag(r.B)}</div>`;}
 function pairCard(r){const B=r.B;
   return `<article class="card" data-pid="${B.id}">
     ${cardTop(r,`<button type="button" class="nm" data-open="${B.id}">${esc(B.name)}</button>`,`${catIcon(B,14)}${esc(CATS[B.cat][0])}`)}
@@ -475,7 +482,6 @@ function pairFig(A,B){const sh=sharedFams(A,B);
     <p class="pf-cap">${sh.length?`<span class="muted">In comune</span> ${sh.slice(0,4).map(i=>`<b>${esc(famLbl(i))}</b>`).join('<span class="dot" aria-hidden="true">·</span>')}`:'<span class="muted">Nessuna famiglia di profumi in comune: stanno insieme per il gusto.</span>'}</p>
     <p class="flegend"><span>${esc(A.name)}</span><span>${esc(B.name)}</span></p>`;}
 function names(T){return `<p class="v-names">${T.map(I=>`${mark(I)}<b>${esc(I.name)}</b>`).join('<span aria-hidden="true">+</span>')}</p>`;}
-const ctaCrea=()=>`<div class="r-cta"><button type="button" class="btn primary" data-go-crea>Crea un drink con questi ingredienti →</button></div>`;
 // Abbina ha sempre la stessa impaginazione, da 2 a 5 ingredienti: giudizio con figura, perché, come usarli,
 // coppia per coppia, cosa aggiungere, dettagli. Cambia il contenuto delle sezioni, non la loro posizione.
 function renderAbbina(){const out=$('#pbOut');const T=analysable();const n=T.length;
@@ -520,7 +526,7 @@ function renderAbbina(){const out=$('#pbOut');const T=analysable();const n=T.len
     ${n>2?`<section class="panel r-sec"><h2 class="r-h">Coppia per coppia</h2>${matrixHTML(T,weak)}</section>`:''}
     ${add}
     <details class="panel more-d"><summary>Come si arriva al giudizio</summary>${details||'<p class="add-empty">Nessun punteggio: servono un alimento e un altro ingrediente.</p>'}</details>
-    ${ctaCrea()}`;
+    <div class="r-cta"><button type="button" class="btn" data-save-pair>Salva nel quaderno</button><button type="button" class="btn primary" data-go-crea>Crea un drink con questi ingredienti →</button></div>`;
   fitRadars($('#pbOut'));}
 const spiritChips=list=>list.length?`<div class="chips">${list.map(s=>`<span class="chip">${mark(s)}${esc(s.name)}${spInfo(s)}</span>`).join('')}</div>`:'<p class="add-empty">Nessun alcolico adatto a tutti.</p>';
 const BENCHT={forte:'Il banco sta in piedi: da provare.',promettente:'Funziona nel complesso: dosa con cura le coppie più deboli.',rischioso:'Alcune coppie dialogano poco: togli un ingrediente o aggiungine uno che faccia da ponte.',sconsigliato:'Troppe coppie in conflitto: riparti da due o tre ingredienti.'};
@@ -556,7 +562,8 @@ $('#pbOut').addEventListener('click',e=>{const x=e.target.closest('[data-set]');
   if(e.target.closest('[data-go-crea]')){show('crea',{push:true});scrollTo({top:0});return;}
   const l=e.target.closest('[data-lens]');if(l){S.lens=l.dataset.lens;renderAbbina();return;}
   const pg=e.target.closest('[data-sugp]');if(pg){SUGP.page+=+pg.dataset.sugp;renderAbbina();$(`#pbOut [data-sugp="${pg.dataset.sugp}"]:not([disabled])`)?.focus();return;}
-  const rm=e.target.closest('[data-drop]');if(rm){benchRemove(BYID[rm.dataset.drop]);}});
+  const rm=e.target.closest('[data-drop]');if(rm){benchRemove(BYID[rm.dataset.drop]);return;}
+  if(e.target.closest('[data-save-pair]')){const T=analysable();const ts=T.map(I=>I.name);noteAdd({kind:'coppia',title:ts.join(' + '),sub:$('#pbOut .meter .m-w')?.textContent||'Abbinamento',hash:location.hash});}});
 
 function lensTable(r){return `<table class="lens"><tbody>${r.lens.map(l=>`<tr><td>${esc(l.k)}${info(l.k)}</td><td>${esc(plain(l.why))}</td><td class="v">${num(l.v)}/5</td></tr>`).join('')}</tbody></table>`;}
 const SUG_N=12,SUG_PER=4,SUGP={key:'',list:[],page:0};
@@ -593,8 +600,9 @@ const SHELVES=[['Mescolati',['oldfashioned','martini','negroni']],['Shakerati',[
 const STY_VERSATILE=['sour','highball','collins','spritz','negroni','oldfashioned','julep','martini','royale','sour_albume','flip','tiki','milkpunch'];
 const ckFoods=()=>bench.filter(i=>!i.isSpirit);
 const ingBase=()=>bench.find(i=>i.isSpirit&&(i.grp==='bia'||i.grp==='inv'))||null;
-function effBase(){return CK.base||ingBase()||suggestBases(ckFoods(),CK.style)[0]?.s||null;}
-function autoStyle(){const fs=ckFoods();const b0=CK.base||ingBase()||suggestBases(fs,null)[0]?.s||null;if(!b0)return null;
+// con la bottigliera compilata, tra le basi proposte vince la prima che hai (se non è molto peggiore)
+function effBase(){return CK.base||ingBase()||preferOwned(suggestBases(ckFoods(),CK.style))?.s||null;}
+function autoStyle(){const fs=ckFoods();const b0=CK.base||ingBase()||preferOwned(suggestBases(fs,null))?.s||null;if(!b0)return null;
   let best=null,bv=-1;STY_VERSATILE.filter(id=>STY[id]).forEach(id=>{if(!styleFit(b0,id).ok)return;let v=1;
     if(!coherence(bench,id,b0).block.length)v+=4;if(fs.length&&suggestBases(fs,id).find(y=>y.s===b0)?.fit)v+=2;if(v>bv){bv=v;best=id;}});return best;}
 function styleShort(R){const st=R.st,b=R.base?R.base.name:'';
@@ -618,12 +626,12 @@ function renderBaseCtl(){const host=$('#ckBase');const fs=ckFoods();const eb=eff
   if(!bench.length){host.innerHTML=CK.base?`<div class="bline"><span class="tiny muted">Del classico</span><b>${esc(CK.base.name)}${spInfo(CK.base)}</b></div>`:'<p class="tiny muted">La scelgo io appena metti un ingrediente sul banco.</p>';return;}
   if(!eb){host.innerHTML='<p class="tiny muted">Nessuna base adatta: prova con un altro ingrediente.</p>';return;}
   const sug=suggestBases(fs,CK.style);const ex=sug.find(x=>x.s===eb);
-  const lbl=CK.base?'Scelta da te':ib?'Dal tuo banco':'Consigliata';
+  const lbl=CK.base?'Scelta da te':ib?'Dal tuo banco':owns(eb)?'Ce l\'hai':'Consigliata';
   let h=`<div class="bline"><span class="tiny muted">${lbl}</span><b>${esc(eb.name)}${spInfo(eb)}</b>${fs.length?`<button type="button" class="link" data-bopen aria-expanded="${!!CK.baseOpen}">${CK.baseOpen?'Chiudi':'Cambia'}</button>`:''}${ex&&ex.ov.length?`<span class="bl-w">Profumi in comune: ${esc(listIt(ex.ov))}</span>`:''}</div>`;
   if(CK.baseOpen&&fs.length){const groups=[['all','Tutte']].concat(BGROUPS.map(g=>[g[0],g[1]])).filter(g=>g[0]==='all'||suggestBases(fs,CK.style,g[0]).length);
     const list=suggestBases(fs,CK.style,CK.bgroup).slice(0,5);if(eb&&!list.some(x=>x.s===eb)){const e=sug.find(x=>x.s===eb);if(e)list.push(e);}
     h+=`<div class="bopts"><div class="bfilter" role="group" aria-label="Tipo di base">${groups.map(g=>`<button type="button" data-bg="${g[0]}" aria-pressed="${CK.bgroup===g[0]}">${g[1]}</button>`).join('')}</div>
-      <ul class="blist">${list.map(x=>`<li><button type="button" data-base="${x.s.id}" aria-pressed="${x.s===eb}"><span class="bt"><b>${esc(x.s.name)}</b>${meter(x.mean)}</span><small>${esc(x.ov.length?'Profumi in comune: '+listIt(x.ov):'Lega per contrasto più che per somiglianza')}${x.fit?' · tipica di questo stile':''}</small></button></li>`).join('')}</ul>
+      <ul class="blist">${list.map(x=>`<li><button type="button" data-base="${x.s.id}" aria-pressed="${x.s===eb}"><span class="bt"><b>${esc(x.s.name)}${owns(x.s)?' <span class="own">ce l\'hai</span>':''}</b>${meter(x.mean)}</span><small>${esc(x.ov.length?'Profumi in comune: '+listIt(x.ov):'Lega per contrasto più che per somiglianza')}${x.fit?' · tipica di questo stile':''}</small></button></li>`).join('')}</ul>
       <label class="tiny muted" for="ckBaseSel">Oppure scegli tra tutte</label>
       <select id="ckBaseSel" class="sel"><option value="">${ib&&!CK.base?'Dal tuo banco: '+esc(ib.name):'Consigliata'+(sug[0]?': '+esc(sug[0].s.name):'')}</option>${BGROUPS.map(([g,l,fn])=>`<optgroup label="${l}">${BASES.filter(fn).map(s=>`<option value="${s.id}"${CK.base===s?' selected':''}>${esc(s.name)}${styleFit(s,CK.style).ok?'':' · non adatta allo stile'}</option>`).join('')}</optgroup>`).join('')}</select>
       ${CK.base?'<button type="button" class="link tiny" data-breset>Torna alla consigliata</button>':''}</div>`;}
@@ -679,12 +687,12 @@ function renderRecipe(){const out=$('#ckOut');
   const warns=[...(coh.warn||[]),...R.warn];
   out.innerHTML=`<article class="sheet" aria-labelledby="dname">
     <div class="sheet-hero">${glassSVG(R.st.id,96,R.st.name,true)}<div><h2 class="dname" id="dname">${esc(drinkName(R,bench))}</h2><p class="dmeta">${esc(R.st.name)} · base ${esc(baseTxt)}</p>
-      <div class="sheet-acts"><button type="button" class="btn sm" data-copy-recipe>Copia la ricetta</button><button type="button" class="btn sm ghost" data-copy-link>Copia il link</button></div></div></div>
+      <div class="sheet-acts"><button type="button" class="btn sm primary" data-bancone>Preparalo</button><button type="button" class="btn sm" data-save-drink>Salva</button><button type="button" class="btn sm" data-share-img>Immagine</button><button type="button" class="btn sm ghost" data-copy-recipe>Copia la ricetta</button><button type="button" class="btn sm ghost" data-copy-link>Copia il link</button></div></div></div>
     <div class="versions"><div class="versions-h"><h3 id="vers-h">Scegli la versione</h3><span class="tiny muted">${rs.length===3?'tre modi':'due modi'} di fare lo stesso drink</span></div>
       <div class="vers" role="radiogroup" aria-labelledby="vers-h">${rs.map(r=>`<button type="button" role="radio" data-view="${r.mode}" aria-checked="${r.mode===CK.view}" tabindex="${r.mode===CK.view?0:-1}"><b>${MODELBL[r.mode]}</b><small>${esc(MODEDESC[r.mode])}</small><span class="vm">~${fmt(r.abv)}% vol · ${r.vol} ml</span></button>`).join('')}</div></div>
     <dl class="rstats"><div><dt>Volume</dt><dd>${R.vol} ml</dd></div><div><dt>Alcol</dt><dd>~${fmt(R.abv)}%</dd></div><div><dt>Bicchiere</dt><dd>${esc(R.st.glass)}</dd></div><div><dt>Ghiaccio</dt><dd>${esc(R.st.ice)}</dd></div></dl>
     <div class="sheet-b">
-      <div><section><h3>Ricetta</h3><ul class="spec">${spec}</ul></section><section><h3>Guarnizione</h3><p>${esc(cap(R.garnish[0]))}.</p></section></div>
+      <div><section><h3>Ricetta</h3><ul class="spec">${spec}</ul>${barLineHTML(R)}</section><section><h3>Guarnizione</h3><p>${esc(cap(R.garnish[0]))}.</p></section></div>
       <div>${R.preps.length?`<section><h3>Da preparare prima</h3>${R.preps.map((p,i)=>`<details class="prep"${i<1?' open':''}><summary>${esc(p.title)}</summary><ol>${p.steps.map(s=>`<li>${esc(s)}</li>`).join('')}</ol></details>`).join('')}</section>`:''}
         <section><h3>Preparazione</h3><ol class="steps">${R.method.map(s=>`<li>${esc(s)}</li>`).join('')}</ol></section>
         ${R.why.length?`<section><h3>Perché funziona</h3><ul class="why">${R.why.map(s=>`<li>${esc(plain(s))}</li>`).join('')}</ul></section>`:''}
@@ -702,6 +710,10 @@ $('#ckOut').addEventListener('click',e=>{const x=e.target.closest('[data-set]');
   const s=e.target.closest('[data-gosty]');if(s){CK.style=s.dataset.gosty;CK.styleAuto=false;renderCrea();sync(false);return;}
   const g=e.target.closest('[data-gobase]');if(g){CK.base=BYID[g.dataset.gobase];renderCrea();sync(false);return;}
   const a=e.target.closest('[data-goadd]');if(a){benchAdd(BYID[a.dataset.goadd]);return;}
+  if(e.target.closest('[data-bancone]')&&renderRecipe.R){const R=renderRecipe.R,nm=drinkName(R,bench),h=location.hash;
+    openBancone(R,nm,{onDone:()=>{const n=noteAdd({kind:'drink',title:nm,sub:`${R.st.name} · base ${R.base?R.base.name:''}`,hash:h,sty:R.st.id});openNotebook(n.id);}});return;}
+  if(e.target.closest('[data-save-drink]')&&renderRecipe.R){const R=renderRecipe.R;noteAdd({kind:'drink',title:drinkName(R,bench),sub:`${R.st.name} · ${MODELBL[R.mode].toLowerCase()} · base ${R.base?R.base.name:''}`,hash:location.hash,sty:R.st.id});return;}
+  if(e.target.closest('[data-share-img]')&&renderRecipe.R){shareImage(renderRecipe.R,drinkName(renderRecipe.R,bench),bench);return;}
   if(e.target.closest('[data-copy-recipe]')&&renderRecipe.R){copyText(recipeText(renderRecipe.R),'Ricetta copiata');return;}
   if(e.target.closest('[data-copy-link]'))copyText(location.href,'Link copiato');});
 

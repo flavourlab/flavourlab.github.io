@@ -137,3 +137,72 @@
 @media (max-width:640px){.classics{grid-template-columns:repeat(4,minmax(0,1fr))}.cls{font-size:12.5px;padding:10px 4px}.cls .gl{width:36px;height:36px}}
 .cls:hover .gl .s,.cls:focus-visible .gl .s{stroke:var(--ink)}
 .cls:hover .gl .acf,.cls:focus-visible .gl .acf{fill:var(--c);stroke:var(--ink);opacity:1}
+
+/* ---------- UX-25..28 · strumenti personali ---------- */
+.tools{display:flex;align-items:center;gap:2px}
+.tl svg,.share svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.tl{padding-inline:12px}
+@media (max-width:1180px){.tools .btn span{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}.tools .btn{padding:8px 10px;min-width:44px}}
+@media (max-width:640px){.tools{margin-left:auto}}
+.rel.own{background:transparent;border:1px solid var(--line2)}
+.own{font-family:var(--f-ui);font-size:11.5px;font-weight:600;color:var(--accent);text-transform:uppercase;letter-spacing:.06em}
+.barline{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:6px 12px;margin-top:14px;padding:10px 14px;border-radius:12px;background:var(--raise);border:1px solid var(--line);font-size:14px}
+.barline span{display:flex;align-items:center;gap:8px}
+.barline.ok{border-color:color-mix(in srgb,var(--t-amaro) 40%,var(--line))}
+.barline.miss b{color:var(--accent)}
+.sheet-acts{flex-wrap:wrap}
+
+dialog.sheet-d{border:0;padding:0;background:transparent;max-width:min(760px,calc(100vw - 32px));width:100%;max-height:min(86vh,900px);color:var(--ink)}
+dialog.sheet-d::backdrop{background:rgba(20,18,16,.42);backdrop-filter:blur(2px)}
+.sh-in{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);box-shadow:var(--shadow-up);padding:24px;display:flex;flex-direction:column;gap:16px;max-height:min(86vh,900px);overflow:auto;overscroll-behavior:contain}
+.sh-h{display:flex;justify-content:space-between;gap:16px;align-items:flex-start}
+.sh-h h2{font-family:var(--f-display);font-weight:400;font-size:30px;letter-spacing:-.02em;font-variation-settings:"opsz" 60}
+.sh-x{border:0;background:var(--sunk);width:40px;height:40px;border-radius:50%;font-size:22px;line-height:1;cursor:pointer;flex:none}
+@media (max-width:640px){
+  dialog.sheet-d{max-width:100vw;margin:auto 0 0;max-height:92vh}
+  .sh-in{border-radius:22px 22px 0 0;padding:20px 16px calc(20px + env(safe-area-inset-bottom,0px));max-height:92vh}
+}
+@media (prefers-reduced-motion:no-preference){dialog.sheet-d[open] .sh-in{animation:shUp .25s cubic-bezier(.2,.7,.2,1)}@keyframes shUp{from{transform:translateY(24px);opacity:0}}}
+.bar-tools{display:flex;gap:12px;align-items:center;position:sticky;top:-24px;background:var(--surface);padding:6px 0;z-index:1}
+.bar-q{flex:1;min-height:44px;border:1px solid var(--line2);border-radius:999px;padding:8px 16px;font:inherit;background:var(--raise);color:var(--ink)}
+.bar-g{border:0;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.bar-g legend{font-size:13px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;padding:0}
+.bar-g legend small{font-family:var(--f-mono);letter-spacing:0;font-weight:400}
+.bar-body{display:flex;flex-direction:column;gap:20px}
+.bar-items{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,210px),1fr));gap:6px}
+.bar-it{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border:1px solid var(--line);border-radius:12px;cursor:pointer;background:var(--raise)}
+.bar-it:has(input:checked){border-color:var(--ink);background:var(--surface)}
+.bar-it input{width:18px;height:18px;margin:2px 0 0;accent-color:var(--accent);flex:none}
+.bar-it span{display:flex;flex-direction:column;min-width:0}
+.bar-it b{font-weight:600;font-size:14.5px}
+.bar-it small{color:var(--muted);font-size:12.5px}
+.nb{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px}
+.nb-it{border:1px solid var(--line);border-radius:16px;padding:14px;display:flex;flex-direction:column;gap:10px;background:var(--raise)}
+.nb-top{display:flex;gap:12px;align-items:center}
+.nb-t{flex:1;min-width:0;display:flex;flex-direction:column}
+.nb-t b{font-family:var(--f-display);font-weight:500;font-size:19px}
+.nb-t small{color:var(--muted);font-size:13px}
+.nb-k{display:grid;place-items:center;width:40px;height:40px;color:var(--muted)}
+.nb-rate{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.nb-rate button{border:1px solid var(--line2);background:var(--surface);border-radius:999px;padding:5px 12px;font-size:13.5px;cursor:pointer;min-height:34px}
+.nb-rate button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.nb-it textarea{font:inherit;font-size:14px;border:1px solid var(--line);border-radius:12px;padding:8px 12px;background:var(--surface);color:var(--ink);resize:vertical}
+.nb-it .link{align-self:flex-start}
+/* modalità bancone: testo grande, pochi elementi, pensata per un telefono appoggiato */
+dialog.bancone{max-width:min(680px,100vw)}
+.bc{display:flex;flex-direction:column;gap:18px}
+.bc-id{display:flex;gap:14px;align-items:center}
+.bc-ctl{display:flex;flex-wrap:wrap;gap:8px;justify-content:space-between}
+.bc-ing{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px;font-size:18px}
+.bc-ing li{border-bottom:1px solid var(--line)}
+.bc-ing label,.bc-ing .garn{display:flex;gap:12px;align-items:center;padding:10px 2px;cursor:pointer}
+.bc-ing .garn{color:var(--ink2);font-style:italic}
+.bc-ing input{width:22px;height:22px;accent-color:var(--accent);flex:none}
+.bc-ing label:has(input:checked) span{color:var(--muted);text-decoration:line-through}
+.bc-ing .q{font-family:var(--f-mono);min-width:76px;font-size:16px}
+.bc-step{background:var(--raise);border:1px solid var(--line);border-radius:18px;padding:20px;min-height:150px;display:flex;flex-direction:column;gap:10px}
+.bc-t{font-size:13px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--accent)}
+.bc-d{font-size:clamp(20px,4.6vw,26px);line-height:1.35;font-family:var(--f-display);font-variation-settings:"opsz" 36}
+.bc-timer{align-self:flex-start}
+.bc-nav{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.bc-nav .btn{min-height:48px;padding-inline:20px}
