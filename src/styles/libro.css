@@ -222,3 +222,9 @@ dialog.bancone{max-width:min(680px,100vw)}
   .mood-out:not([hidden]),.sea,.cls{animation:fl-in .35s ease-out both}
   @keyframes fl-in{from{opacity:0;transform:translateY(6px)}}
 }
+
+/* tabella delle coppie: su telefono scorre dentro il suo riquadro invece di allargare la pagina */
+.result>*{min-width:0;max-width:100%}
+.matrix-w{max-width:100%;overscroll-behavior-x:contain}
+@media (max-width:640px){.matrix thead th,.matrix td{min-width:84px;width:84px}.matrix thead th{height:84px}.matrix tbody th{white-space:normal;max-width:96px;font-size:13px}}
+@media (max-width:640px){.seasonal{grid-template-columns:repeat(2,minmax(0,1fr))}.sea{padding:6px 8px 6px 2px;min-height:52px}.sea b{font-size:14px}}

@@ -167,7 +167,7 @@ const DICE='<svg viewBox="0 0 16 16" aria-hidden="true"><rect x="1.5" y="1.5" wi
 $('#examples').innerHTML=`<span class="lbl">Prova</span>${EXAMPLES.map(f=>`<button type="button" class="ex" data-ex="${f.id}">${mark(f)}${esc(f.name)}</button>`).join('')}<button type="button" class="ex ex-rand" data-rand>${DICE}A caso</button>`;
 $('#examples').addEventListener('click',e=>{const b=e.target.closest('[data-ex]');if(b){select(BYID[b.dataset.ex]);return;}
   if(e.target.closest('[data-rand]')){let f;do{f=FOODS[Math.floor(Math.random()*FOODS.length)];}while(f===S.sel);select(f);}});
-const mainCombo=makeCombo($('#mainSearch'),{id:'q-main',placeholder:'Cerca un alimento: limone, miso, cardamomo…',source:()=>FOODS,keep:true,onPick:f=>{select(f);$('#q-main').blur();},
+const mainCombo=makeCombo($('#mainSearch'),{id:'q-main',placeholder:innerWidth<560?'Cerca un alimento':'Cerca un alimento: limone, miso, cardamomo…',source:()=>FOODS,keep:true,onPick:f=>{select(f);$('#q-main').blur();},
   onClear:()=>{if(S.sel)goHome();}});
 
 function assignTrio(){const used={};S.trio={};
