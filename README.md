@@ -2,11 +2,12 @@
 
 Profili aromatici degli alimenti, un metodo per abbinarli e un generatore di cocktail, pensati da un punto di vista di miscelazione.
 
-L'app ha tre sezioni:
+L'app ha quattro sezioni:
 
 - **Ruota degli abbinamenti**: scegli un alimento. Al centro trovi i suoi cinque gusti (dolce, acido, amaro, umami, salato), intorno gli alimenti con cui si sposa, per concordanza o per contrasto, e all'esterno gli alcolici adatti. Accanto c'è la scheda dell'alimento con i diagrammi spider di gusti e aromi.
 - **Pairing Studio**: verifica una coppia o un trio di ingredienti, anche con un alcolico. Il punteggio su 30 somma sei lenti di valutazione. Con due ingredienti scegli una lente (piramide, equilibrio, intensità, anello debole) e l'app ti consiglia il terzo ingrediente.
 - **Cocktail creator**: da 1 a 5 ingredienti, una base suggerita per vicinanza aromatica e uno stile di drink. Ottieni una ricetta da bancone, una da laboratorio (roner, fat-wash, acidi corretti) e, quando la base è forte, una a bassa gradazione. Le combinazioni che non reggono non diventano ricette.
+- **Capire**: la scienza dietro il metodo. Le molecole di ciascuna delle 18 famiglie di profumi e come si formano, i cinque gusti e i loro recettori, le sensazioni in bocca, le interazioni tra gusti con il loro grado di evidenza, l'analisi di una coppia (famiglie e molecole in comune, regole che scattano, piramide, intensità), come si calcola il giudizio, i limiti del metodo e le fonti. I testi stanno in `data/scienza.json`.
 
 Contenuto attuale: 352 alimenti in 53 categorie, 105 alcolici, 340 abbinamenti classici, 13 stili di drink.
 
@@ -74,7 +75,7 @@ npm test           # esegue i test del motore
 npm run test:watch # rilancia i test a ogni modifica
 ```
 
-- **La validazione** blocca la build se un file di dati ha un errore: valore fuori scala, famiglia aromatica inesistente, categoria sbagliata, abbinamento classico che cita un alimento mancante. Il messaggio indica la voce da correggere.
+- **La validazione** blocca la build se un file di dati ha un errore (controlla anche che le molecole di `scienza.json` coincidano con quelle di `families.json`): valore fuori scala, famiglia aromatica inesistente, categoria sbagliata, abbinamento classico che cita un alimento mancante. Il messaggio indica la voce da correggere.
 - **I test** controllano che il metodo resti sensato anche quando si ritoccano pesi e profili:
   - i classici (pomodoro e basilico, Parmigiano e balsamico) devono superare 17/30;
   - le coppie strane (fragola e acciuga) devono restare sotto 12;
@@ -160,6 +161,7 @@ flavour-lab/
 │  ├─ families.json         # 18 famiglie aromatiche, livello della piramide, affinità
 │  ├─ categories.json       # 53 categorie con tecnica di estrazione e allergeni
 │  ├─ classics.json         # abbinamenti della tradizione (cucina e bancone)
+│  ├─ scienza.json          # testi della sezione «Capire»: molecole, gusti, regole, fonti
 │  ├─ origins.json          # aree d'origine
 │  └─ spirit-groups.json    # gruppi di alcolici e struttura di drink consigliata
 ├─ src/
@@ -169,6 +171,7 @@ flavour-lab/
 │  │  ├─ trio.js            # analisi del trio, ruoli, terzo ingrediente consigliato
 │  │  └─ recipes.js         # stili, preparazioni, garnish, coerenza base-stile
 │  ├─ ui/app.js             # interfaccia: ruota, Pairing Studio, Cocktail creator, icone dei bicchieri
+│  ├─ ui/capire.js          # sezione «Capire»: legge il motore in sola lettura
 │  ├─ styles/main.css       # stili, token colore, tema chiaro e scuro
 │  └─ main.js               # punto di ingresso
 ├─ public/favicon.svg
