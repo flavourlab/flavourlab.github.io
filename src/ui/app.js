@@ -20,7 +20,7 @@ const dots=n=>'●'.repeat(n)+'○'.repeat(5-n);
 const listY=a=>a.length<=1?a.join(''):a.slice(0,-1).join(', ')+' e '+a[a.length-1];
 
 // ===================== stato =====================
-const S={tab:'esplora',sel:null,mode:'browse',zoom:null,cat:null,filter:'all',egoAll:false,spAll:false,pAll:false,parts:[],sps:[],trio:{},lens:'piramide'};
+const S={tab:'esplora',sel:null,mode:'browse',zoom:null,cat:null,filter:'all',egoAll:false,spAll:false,pAll:false,parts:[],sps:[],trio:{},lens:'debole'};
 const CK={style:null,styleAuto:false,base:null,view:'classic',bgroup:'all',baseOpen:false,mixView:'gusti',classic:null};
 const MAXB=5;
 let bench=[];
@@ -571,6 +571,8 @@ $('#pbOut').addEventListener('click',e=>{const x=e.target.closest('[data-set]');
   if(e.target.closest('[data-save-pair]')){const T=analysable();const ts=T.map(I=>I.name);noteAdd({kind:'coppia',title:ts.join(' + '),sub:$('#pbOut .meter .m-w')?.textContent||'Abbinamento',hash:location.hash});}});
 
 function lensTable(r){return `<table class="lens"><tbody>${r.lens.map(l=>`<tr><td>${esc(l.k)}${info(l.k)}</td><td>${esc(plain(l.why))}</td><td class="v">${num(l.v)}/5</td></tr>`).join('')}</tbody></table>`;}
+// UX-40: si parte dal criterio che dà le proposte più affidabili (lega bene con tutti e due); gli altri restano a un tocco
+const LENSORD=['debole','piramide','equilibrio','intensita'].filter(k=>TLENS.some(l=>l[0]===k));
 const SUG_N=24,SUG_PER=6,SUGP={key:'',list:[],page:0};
 function thirdHTML(A,B){
   const key=A.id+'|'+B.id+'|'+S.lens;if(SUGP.key!==key){SUGP.key=key;SUGP.list=suggestThird(A,B,S.lens,SUG_N);SUGP.page=0;}
@@ -579,7 +581,7 @@ function thirdHTML(A,B){
   const full=bench.length>=MAXB;
   return `<section class="panel r-sec add-s" aria-labelledby="h-third"><div class="r-sec-h"><h2 class="r-h" id="h-third">Aggiungi un terzo ingrediente</h2>
       ${pages>1?`<div class="pager" role="group" aria-label="Altre proposte"><button type="button" data-sugp="-1" aria-label="Proposte precedenti"${SUGP.page?'':' disabled'}>‹</button><span aria-live="polite">${from+1}–${from+shown.length} di ${list.length}</span><button type="button" data-sugp="1" aria-label="Altre proposte"${SUGP.page<pages-1?'':' disabled'}>›</button></div>`:''}</div>
-    <div class="lensbar" role="group" aria-label="Che cosa deve fare il terzo ingrediente">${TLENS.map(l=>`<button type="button" data-lens="${l[0]}" aria-pressed="${S.lens===l[0]}">${LENSP[l[0]][0]}</button>`).join('')}</div>
+    <div class="lensbar" role="group" aria-label="Che cosa deve fare il terzo ingrediente">${LENSORD.map(k=>`<button type="button" data-lens="${k}" aria-pressed="${S.lens===k}">${LENSP[k][0]}</button>`).join('')}</div>
     <p class="tiny muted">${LENSP[S.lens][1]}</p>
     <ul class="sug">${shown.map(x=>`<li>${impronta(x.C,40,{label:false})}<span class="sg"><b>${esc(x.C.name)}</b><small>${esc(plain(lensReason(S.lens,A,B,x.C,x.t)))}</small></span>${full?'':benchBtn(x.C,'Aggiungi')}</li>`).join('')}</ul></section>`;}
 function triangleSVG(t){const P=[[180,46],[62,236],[298,236]];const E=[[0,1],[0,2],[1,2]];
