@@ -588,6 +588,9 @@ function lensTable(r){return `<table class="lens"><tbody>${r.lens.map(l=>`<tr><t
 // UX-40: si parte dal criterio che dà le proposte più affidabili (lega bene con tutti e due); gli altri restano a un tocco
 const LENSORD=['debole','piramide','equilibrio','intensita'].filter(k=>TLENS.some(l=>l[0]===k));
 const SUG_N=24,SUG_PER=6,SUGP={key:'',list:[],page:0};
+// UX-53: con «Rinforza la coppia» il motivo usa i verdetti in parola, come il resto dell'app, invece dei punti su 30
+function thirdWhy(A,B,x){if(S.lens!=='debole')return plain(lensReason(S.lens,A,B,x.C,x.t));
+  const w=I=>{const r=pairT(I,x.C);return r?vOf(r.total).w.toLowerCase():'';};const a=w(A),b=w(B);return a===b?`${cap(a)} con tutti e due`:`${cap(a)} con ${A.name} · ${b} con ${B.name}`;}
 function thirdHTML(A,B){
   const key=A.id+'|'+B.id+'|'+S.lens;if(SUGP.key!==key){SUGP.key=key;SUGP.list=suggestThird(A,B,S.lens,SUG_N);SUGP.page=0;}
   const list=SUGP.list,pages=Math.max(1,Math.ceil(list.length/SUG_PER));SUGP.page=Math.max(0,Math.min(SUGP.page,pages-1));
@@ -597,7 +600,7 @@ function thirdHTML(A,B){
       ${pages>1?`<div class="pager" role="group" aria-label="Altre proposte"><button type="button" data-sugp="-1" aria-label="Proposte precedenti"${SUGP.page?'':' disabled'}>‹</button><span aria-live="polite">${from+1}–${from+shown.length} di ${list.length}</span><button type="button" data-sugp="1" aria-label="Altre proposte"${SUGP.page<pages-1?'':' disabled'}>›</button></div>`:''}</div>
     <div class="lensbar" role="group" aria-label="Che cosa deve fare il terzo ingrediente">${LENSORD.map(k=>`<button type="button" data-lens="${k}" aria-pressed="${S.lens===k}">${LENSP[k][0]}</button>`).join('')}</div>
     <p class="tiny muted">${LENSP[S.lens][1]}</p>
-    <ul class="sug">${shown.map(x=>`<li>${impronta(x.C,40,{label:false})}<span class="sg"><b>${esc(x.C.name)}</b><small>${esc(plain(lensReason(S.lens,A,B,x.C,x.t)))}</small></span>${full?'':benchBtn(x.C,'Aggiungi')}</li>`).join('')}</ul></section>`;}
+    <ul class="sug">${shown.map(x=>`<li>${impronta(x.C,40,{label:false})}<span class="sg"><b>${esc(x.C.name)}</b><small>${esc(thirdWhy(A,B,x))}</small></span>${full?'':benchBtn(x.C,'Aggiungi')}</li>`).join('')}</ul></section>`;}
 function triangleSVG(t){const P=[[180,46],[62,236],[298,236]];const E=[[0,1],[0,2],[1,2]];
   let h=`<svg class="tri" viewBox="0 0 360 290" role="img" aria-label="Le tre coppie del trio: lo spessore delle linee indica la forza del legame">`;
   E.forEach(([i,j],k)=>{const p=t.P[k];const w=(1.4+Math.max(0,p.total-10)/3.6).toFixed(1);const weak=k===t.wi&&!t.isBridge&&p.total<17;
