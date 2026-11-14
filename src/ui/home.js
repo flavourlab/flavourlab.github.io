@@ -100,18 +100,18 @@ export function homeHTML(drinkName) {
   const { m } = today(); const dd = drinkOfDay(drinkName); const ss = seasonal(9);
   const day = dd ? `<article class="dod">
       <div class="dod-gl">${glassSVG(dd.sty, 104, STY[dd.sty].name, true)}</div>
-      <div class="dod-b"><p class="eyebrow">Il drink di oggi</p><h3 class="dod-n">${esc(dd.name)}</h3>
+      <div class="dod-b"><p class="eyebrow">Il drink di oggi</p><h2 class="dod-n">${esc(dd.name)}</h2>
         <p class="tiny muted">${esc(STY[dd.sty].name)} · ~${fmt(dd.R.abv)}% vol · con ${esc(dd.ins[0].name)} di stagione</p>
         <ul class="dod-spec">${dd.R.spec.slice(0, 5).map(l => `<li><span class="q">${l.drop ? '—' : fmt(l.ml) + ' ml'}</span>${esc(l.name)}</li>`).join('')}</ul>
         <div class="dod-acts"><button type="button" class="btn primary" data-home-drink="${dd.ins.map(I => I.id).join('+')}" data-sty="${dd.sty}">Preparalo</button><button type="button" class="btn ghost" data-home-open="${dd.ins[0].id}">Scopri ${esc(dd.ins[0].name)}</button></div></div>
     </article>` : '';
-  const season = ss.length ? `<section class="hs" aria-labelledby="h-season"><h3 class="hs-h" id="h-season">Di stagione a ${MESE[m - 1]}</h3>
+  const season = ss.length ? `<section class="hs" aria-labelledby="h-season"><h2 class="hs-h" id="h-season">Di stagione a ${MESE[m - 1]}</h2>
       <div class="seasonal">${ss.map(f => `<button type="button" class="sea" data-home-open="${f.id}">${impronta(f, 40, { label: false })}<span><b>${esc(f.name)}</b><small>${catIcon(f, 13)}${esc(TLABEL[f.dom].toLowerCase())}</small></span></button>`).join('')}</div></section>` : '';
   return `<div class="home-top">${day}${season}</div>
-    <section class="hs" aria-labelledby="h-mood"><h3 class="hs-h" id="h-mood">Che voglia hai?</h3>
+    <section class="hs" aria-labelledby="h-mood"><h2 class="hs-h" id="h-mood">Che voglia hai?</h2>
       <div class="moods" role="group" aria-label="Scegli un desiderio">${MOODS.map(x => `<button type="button" class="mood" data-mood="${x.id}" aria-pressed="false">${esc(x.w)}</button>`).join('')}</div>
       <div class="mood-out" id="moodOut" aria-live="polite" hidden></div></section>
-    <section class="hs" aria-labelledby="h-cls"><h3 class="hs-h" id="h-cls">Rifai un classico, con quello che hai</h3>
+    <section class="hs" aria-labelledby="h-cls"><h2 class="hs-h" id="h-cls">Rifai un classico, con quello che hai</h2>
       <div class="classics">${CLASSICS.map((c, i) => `<button type="button" class="cls" data-classic="${i}">${glassSVG(c.sty, 44, '')}<span>${esc(c.w)}</span></button>`).join('')}</div></section>`;
 }
 
