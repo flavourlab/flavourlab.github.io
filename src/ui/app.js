@@ -433,7 +433,7 @@ function renderBrowse(){
 
 function renderWheel(){hidePeek();if(!S.sel&&S.mode==='ego')S.mode='browse';S.mode==='ego'?renderEgo():renderBrowse();rove();
   $('#wheelMode').hidden=!S.sel;$('#mEgo').setAttribute('aria-pressed',String(S.mode==='ego'));$('#mBrowse').setAttribute('aria-pressed',String(S.mode==='browse'));
-  $('#wheelbox').setAttribute('aria-label',S.mode==='ego'?`Ruota degli abbinamenti di ${S.sel.name}`:'Ruota dei gusti e delle categorie');}
+  const wl=S.mode==='ego'?`Ruota degli abbinamenti di ${S.sel.name}`:'Ruota dei gusti e delle categorie';$('#wheelbox').setAttribute('aria-label',wl);wheel.setAttribute('aria-label',wl);}
 let rzT;addEventListener('resize',()=>{clearTimeout(rzT);rzT=setTimeout(()=>{fitRadars();stickRecipe();if(S.tab==='esplora')renderWheel();if(S.tab==='crea'&&$('#ckMixBox').open)$('#ckMix').innerHTML=mixProfile();},150);});
 $('#mEgo').addEventListener('click',()=>{if(!S.sel)return;S.mode='ego';S.cat=null;renderWheel();renderSide();});
 $('#mBrowse').addEventListener('click',()=>{S.mode='browse';S.zoom=S.sel?S.sel.dom:null;S.cat=S.sel?S.sel.dom+'|'+S.sel.cat:null;renderWheel();renderSide();});

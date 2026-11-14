@@ -7,7 +7,7 @@
 /* ---------- UX-15 · carta e tipografia ---------- */
 :root{
   --bg:#F4EFE5; --surface:#FFFDF9; --sunk:#EBE4D6; --raise:#FAF6EE;
-  --line:#E3DACA; --line2:#D0C5B2; --muted:#6C665E; --ink2:#3B3733;
+  --line:#E3DACA; --line2:#D0C5B2; --muted:#655F57; --ink2:#3B3733;
   --f-display:'Fraunces',Georgia,'Times New Roman',serif;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){

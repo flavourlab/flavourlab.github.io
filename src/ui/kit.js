@@ -108,7 +108,7 @@ export function glassSVG(id,size,label,on){
   const lq=g.lq.map(([d,c])=>`<path class="lq" d="${d}" style="--c:${c}"/>`).join('');
   const ac=g.ac.map(([d,c,k])=>`<path class="ac ${k==='l'?'acl':'acf'}" d="${d}" style="--c:${c}"/>`).join('');
   const s=g.s.map(d=>`<path class="s" d="${d}"/>`).join('');
-  return `<svg class="gl${on?' on':''}" width="${size}" height="${size}" viewBox="0 0 48 48" role="img" aria-label="${esc(label||'')}">${lq}${ac}${s}</svg>`;
+  return `<svg class="gl${on?' on':''}" width="${size}" height="${size}" viewBox="0 0 48 48" ${label?`role="img" aria-label="${esc(label)}"`:'aria-hidden="true" focusable="false"'}>${lq}${ac}${s}</svg>`;
 }
 
 // ---------- ricerca tollerante ----------
