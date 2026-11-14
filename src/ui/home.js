@@ -1,7 +1,7 @@
 // Prima pagina: più porte d'ingresso oltre alla ricerca.
 // «Drink del giorno» e «Di stagione» cambiano col calendario; «Che voglia hai?» parte da un desiderio;
 // «Rifai un classico» parte da un drink famoso. Tutti i calcoli usano le funzioni di dominio esistenti.
-import { FOODS, FI, MESI, SBYNAME, TLABEL } from '../domain/core.js';
+import { BYID, FOODS, FI, MESI, SBYNAME, TLABEL } from '../domain/core.js';
 import { S as score, partnersOf } from '../domain/scoring.js';
 import { STY, buildRecipe, coherence, styleFit, styleRanking, suggestBases, fmt } from '../domain/recipes.js';
 import { esc, glassSVG } from './kit.js';
@@ -57,7 +57,29 @@ export function fittingStyle(ins, base, prefer) {
 }
 // drink del giorno: un ingrediente di stagione e il suo compagno migliore, scelti in base alla data
 const DRINKY = new Set(['agr', 'pom', 'dru', 'bos', 'tro', 'mel', 'sec', 'gus', 'erb', 'spe', 'bot', 'fio', 'mie', 'tea', 'caf', 'cac']);
+// il calcolo costa (tutte le basi per la coppia): la scelta del giorno si ricorda fino a mezzanotte.
+// La firma include l'indirizzo del file JavaScript della build, che cambia a ogni modifica di codice o dati: in quel caso si ricalcola.
+const DOD_KEY = 'flavourlab.dod';
+const dodSig = () => { const d = new Date(); return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}|${new URL(import.meta.url).pathname}`; };
+// in memoria resta solo ciò che la scheda mostra: rileggerla non richiede alcun calcolo
+function dodCached() {
+  try {
+    const c = JSON.parse(localStorage.getItem(DOD_KEY) || 'null');
+    if (!c || c.sig !== dodSig() || !STY[c.sty] || !Array.isArray(c.spec)) return null;
+    const ins = c.ins.map(id => BYID[id]); if (ins.some(x => !x)) return null;
+    return { ins, sty: c.sty, R: { abv: c.abv, spec: c.spec }, name: c.name };
+  } catch (e) { return null; }
+}
 export function drinkOfDay(drinkName) {
+  const hit = dodCached(); if (hit) return hit;
+  const dd = drinkOfDayCalc(drinkName);
+  if (dd) try {
+    localStorage.setItem(DOD_KEY, JSON.stringify({ sig: dodSig(), ins: dd.ins.map(I => I.id), sty: dd.sty, name: dd.name, abv: dd.R.abv,
+      spec: dd.R.spec.slice(0, 5).map(l => ({ drop: !!l.drop, ml: l.ml, name: l.name })) }));
+  } catch (e) { }
+  return dd;
+}
+function drinkOfDayCalc(drinkName) {
   const { day, m } = today();
   // al bancone si parte volentieri da frutta, erbe, fiori e spezie: prima quelli di stagione, poi quelli di tutto l'anno
   const pool = FOODS.filter(f => DRINKY.has(f.cat) && f.season && f.season.includes(m) && f.season.length <= 8);
