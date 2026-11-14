@@ -608,3 +608,5 @@ details[open]>summary::before{transform:rotate(45deg) translate(-2px,-2px)}
 .vers button[aria-checked="true"]{border-color:var(--ink);background:var(--raise);box-shadow:inset 0 0 0 1px var(--ink)}
 .vers button[aria-checked="true"] b::before{border-color:var(--ink);box-shadow:inset 0 0 0 3.5px var(--surface),inset 0 0 0 10px var(--ink)}
 .vers button[aria-checked="true"] .vm{color:var(--ink)}
+/* la tabella dei criteri non deve superare la colonna su telefoni stretti */
+@media (max-width:420px){.lens td{padding:9px 5px}.lens td:first-child{white-space:normal;min-width:7.5em}}
