@@ -69,7 +69,11 @@ TABS.forEach(k=>$('#tb-'+k).addEventListener('click',()=>{if(S.tab===k)return;sh
 $('#tabbar').addEventListener('keydown',e=>{if(e.key!=='ArrowRight'&&e.key!=='ArrowLeft')return;const i=TABS.indexOf(S.tab);
   const nx=TABS[(i+(e.key==='ArrowRight'?1:TABS.length-1))%TABS.length];show(nx,{push:true});$('#tb-'+nx).focus();});
 $('.brand').addEventListener('click',e=>{e.preventDefault();goHome();});
-$('#share').addEventListener('click',()=>copyText(location.href,'Link copiato'));
+// UX-51: sui dispositivi touch che lo permettono il link si condivide con il foglio di sistema (che include «Copia»)
+const NSHARE=!!navigator.share&&matchMedia('(hover: none)').matches;
+if(NSHARE){$('#share').setAttribute('aria-label','Condividi il link');$('#share').title='Condividi il link di questa pagina';}
+$('#share').addEventListener('click',()=>{if(!NSHARE){copyText(location.href,'Link copiato');return;}
+  navigator.share({title:document.title,url:location.href}).catch(e=>{if(e&&e.name!=='AbortError')copyText(location.href,'Link copiato');});});
 // la bottigliera cambia le basi proposte e le etichette «ce l'hai»: si ridisegna la sezione aperta
 function barChanged(){if(S.tab==='crea')renderCrea();if(S.tab==='esplora'&&S.sel)renderSpirits();}
 $('#openBar').addEventListener('click',()=>openBar(barChanged));

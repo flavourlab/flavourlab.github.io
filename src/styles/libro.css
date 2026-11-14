@@ -142,8 +142,18 @@
 .tools{display:flex;align-items:center;gap:2px}
 .tl svg,.share svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
 .tl{padding-inline:12px}
-@media (max-width:1180px){.tools .btn span{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}.tools .btn{padding:8px 10px;min-width:44px}}
 @media (max-width:640px){.tools{margin-left:auto}}
+/* UX-51: gli strumenti non restano mai solo icona. Dove manca spazio l'etichetta va sotto l'icona */
+@media (max-width:960px){
+  .tools{gap:0}
+  .tools .btn{flex-direction:column;gap:3px;min-height:44px;min-width:48px;padding:4px 6px;border-radius:12px}
+  .tools .btn>span{display:block!important;font-size:12px;line-height:1;font-weight:500;color:var(--ink2);white-space:nowrap}
+  .tools .btn>span::first-letter{text-transform:uppercase}
+  .tools .lg{display:none}
+}
+@media (max-width:860px) and (min-width:641px){.bar .nav button{padding:7px 10px}}
+@media (max-width:760px) and (min-width:641px){.bar .nav button{padding:7px 8px}.bar .nav{gap:2px}}
+@media (max-width:359px){.tools .btn>span{display:none!important}.tools .btn{min-width:44px;padding:4px}}
 .rel.own{background:transparent;border:1px solid var(--line2)}
 .own{font-family:var(--f-ui);font-size:11.5px;font-weight:600;color:var(--accent);text-transform:uppercase;letter-spacing:.06em}
 .barline{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:6px 12px;margin-top:14px;padding:10px 14px;border-radius:12px;background:var(--raise);border:1px solid var(--line);font-size:14px}
