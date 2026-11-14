@@ -240,4 +240,5 @@ dialog.bancone{max-width:min(680px,100vw)}
 @media (max-width:640px){.seasonal{grid-template-columns:repeat(2,minmax(0,1fr))}.sea{padding:6px 8px 6px 2px;min-height:52px}.sea b{font-size:14px}}
 
 /* ---------- UX-41 · telefono: con un alimento aperto gli esempi lasciano spazio al nome ---------- */
-@media (max-width:640px){#v-esplora.has-food .examples{display:none}}
+/* UX-55: con un alimento aperto gli esempi «Prova» non servono più, a tutte le larghezze */
+#v-esplora.has-food .examples{display:none}

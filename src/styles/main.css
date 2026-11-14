@@ -404,7 +404,8 @@ details[open]>summary::before{transform:rotate(45deg) translate(-2px,-2px)}
 .glass:hover span{color:var(--ink)}
 .glass[aria-pressed="true"]{border-color:var(--ink);background:var(--raise)}
 .glass[aria-pressed="true"] span{color:var(--ink);font-weight:600}
-.glass .tag{position:absolute;top:4px;right:4px;font-size:10px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--accent)}
+/* UX-55: «scelto per te» sotto il nome, non più sopra il bordo */
+.glass .tag{font-size:12px;line-height:1.2;font-weight:500;color:var(--accent);text-align:center;margin-top:-1px}
 .glass.nofit{opacity:.38}
 .glass.nofit:hover{background:transparent}
 .glass.peeked{border-color:var(--ink2);border-style:dashed}

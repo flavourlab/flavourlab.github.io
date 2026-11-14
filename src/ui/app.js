@@ -670,7 +670,7 @@ $('#ckBase').addEventListener('change',e=>{if(e.target.id!=='ckBaseSel')return;C
 let glPT='mouse',glPeek=null;
 function renderGlasses(){glPeek=null;$('#ckGlassPeek').hidden=true;const eb=effBase();
   $('#ckGlass').innerHTML=SHELVES.map(([lbl,ids])=>`<div class="shelf"><span class="shelf-l">${lbl}</span><div class="shelf-row" style="--n:${ids.length}">${ids.filter(id=>STY[id]).map(id=>{const s=STY[id];const fit=styleFit(eb,id);const on=id===CK.style;
-    return `<button type="button" class="glass${fit.ok?'':' nofit'}" data-sty="${id}" style="--gc:${GLASSES[id]?.lq[0][1]||'transparent'}" aria-pressed="${on}" aria-label="${esc(s.name)}${fit.ok?'':', non adatto alla base'}${on&&CK.styleAuto?', scelto per te':''}">${on&&CK.styleAuto?'<span class="tag" aria-hidden="true">per te</span>':''}${glassSVG(id,48,'')}<span>${esc(s.name)}</span></button>`;}).join('')}</div></div>`).join('');}
+    return `<button type="button" class="glass${fit.ok?'':' nofit'}" data-sty="${id}" style="--gc:${GLASSES[id]?.lq[0][1]||'transparent'}" aria-pressed="${on}" aria-label="${esc(s.name)}${fit.ok?'':', non adatto alla base'}${on&&CK.styleAuto?', scelto per te':''}">${glassSVG(id,48,'')}<span>${esc(s.name)}</span>${on&&CK.styleAuto?'<small class="tag" aria-hidden="true">scelto per te</small>':''}</button>`;}).join('')}</div></div>`).join('');}
 $('#ckGlass').addEventListener('pointerdown',e=>{glPT=e.pointerType||'mouse';});
 $('#ckGlass').addEventListener('click',e=>{const b=e.target.closest('[data-sty]');if(!b)return;
   if(glPT==='touch'&&glPeek!==b.dataset.sty&&b.dataset.sty!==CK.style){glPeek=b.dataset.sty;const el=$('#ckGlassPeek');
