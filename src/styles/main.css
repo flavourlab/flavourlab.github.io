@@ -488,7 +488,9 @@ details[open]>summary::before{transform:rotate(45deg) translate(-2px,-2px)}
   .nogo{grid-template-columns:minmax(0,1fr)}
 }
 
-.r-cta{display:flex;justify-content:flex-end}
+.r-cta{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:8px}
+/* su telefono le due azioni si impilano a tutta larghezza, la principale per prima */
+@media (max-width:640px){.r-cta{flex-direction:column-reverse;align-items:stretch}.r-cta .btn{white-space:normal;text-align:center}}
 /* ---- ritocchi dopo la prima revisione ---- */
 .side>.panel{flex:1}
 .cidx-g h3 .cz{border:0;background:none;padding:0;cursor:pointer;display:inline-flex;align-items:center;gap:8px;font:inherit}
@@ -501,6 +503,9 @@ details[open]>summary::before{transform:rotate(45deg) translate(-2px,-2px)}
 .shelf-row{display:grid;grid-template-columns:repeat(var(--n),minmax(0,1fr));gap:4px}
 .sheet-acts{display:flex;flex-wrap:wrap;gap:6px;padding:0;margin-top:14px}
 @media (max-width:760px){.sheet-acts{padding:0}}
+/* azioni della ricetta: sotto il titolo su schermi larghi, a tutta larghezza sotto bicchiere e titolo su telefono */
+.sheet-hero{row-gap:14px}.sheet-hero>.sheet-acts{grid-column:2;margin-top:0}
+@media (max-width:640px){.sheet-hero>.sheet-acts{grid-column:1/-1}}
 
 /* telefono: il menù delle sezioni va su una riga sua, a tutta larghezza; la scheda viene prima della ruota */
 @media (max-width:640px){
